@@ -1,0 +1,19 @@
+{
+  "assets": [
+    { "id": 1, "name": "Tesouro Selic", "type": "Renda Fixa", "suitability": 10, "retorno": 20, "seguranca": 100, "desc": "Segurança máxima." },
+    { "id": 2, "name": "CDB Banco", "type": "Renda Fixa", "suitability": 20, "retorno": 30, "seguranca": 90, "desc": "Garantia FGC." },
+    { "id": 3, "name": "Fundo DI", "type": "Fundo", "suitability": 25, "retorno": 35, "seguranca": 85, "desc": "Conservador." },
+    { "id": 4, "name": "LCI/LCA", "type": "Isento", "suitability": 30, "retorno": 40, "seguranca": 85, "desc": "Isento de IR." },
+    { "id": 5, "name": "Debênture", "type": "Crédito", "suitability": 35, "retorno": 45, "seguranca": 75, "desc": "Dívida privada." },
+    { "id": 6, "name": "Multimercado", "type": "Fundo", "suitability": 45, "retorno": 55, "seguranca": 65, "desc": "Diversificado." },
+    { "id": 7, "name": "FII Papel", "type": "Imobiliário", "suitability": 50, "retorno": 60, "seguranca": 60, "desc": "Recebíveis." },
+    { "id": 8, "name": "FII Tijolo", "type": "Imobiliário", "suitability": 55, "retorno": 65, "seguranca": 55, "desc": "Imóveis físicos." },
+    { "id": 9, "name": "ETF S&P500", "type": "Internacional", "suitability": 60, "retorno": 70, "seguranca": 50, "desc": "Bolsa EUA." },
+    { "id": 10, "name": "Blue Chips", "type": "Ações", "suitability": 65, "retorno": 75, "seguranca": 45, "desc": "Grandes empresas." },
+    { "id": 11, "name": "Small Caps", "type": "Ações", "suitability": 75, "retorno": 85, "seguranca": 30, "desc": "Alto crescimento." },
+    { "id": 12, "name": "Dólar Futuro", "type": "Derivativos", "suitability": 80, "retorno": 80, "seguranca": 35, "desc": "Câmbio." },
+    { "id": 13, "name": "Bitcoin", "type": "Cripto", "suitability": 90, "retorno": 95, "seguranca": 10, "desc": "Ouro digital." },
+    { "id": 14, "name": "Altcoins", "type": "Cripto", "suitability": 95, "retorno": 100, "seguranca": 5, "desc": "Alto risco." },
+    { "id": 15, "name": "Opções", "type": "Derivativos", "suitability": 100, "retorno": 100, "seguranca": 0, "desc": "Alavancagem." }
+  ]
+}
