@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Phygital Finance Football</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;700;900&family=Poppins:wght@400;600&display=swap"
+    rel="stylesheet">
+
+  <link rel="stylesheet" href="./style.css" />
+  <script defer src="/src/main.js"></script>
+</head>
+
+<body class="h-screen flex flex-col bg-slate-950">
+
+  <div id="name-screen"
+    class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/95 backdrop-blur-md p-4">
+    <div class="w-full max-w-md bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl overflow-hidden">
+      <div class="p-4 border-b border-slate-700 bg-slate-800/40">
+        <h2 class="font-display text-xl font-black tracking-wide text-white">Digite seu nome</h2>
+        <p class="text-xs text-slate-400 mt-1">Use o teclado virtual abaixo.</p>
+      </div>
+
+      <div class="p-4">
+        <div class="flex items-center gap-2 mb-3">
+          <div class="text-slate-400 text-[10px] uppercase tracking-widest">Jogador</div>
+          <div class="flex-1"></div>
+          <button id="name-clear" type="button" class="vk-action">Limpar</button>
+        </div>
+
+        <div class="vk-display">
+          <input id="name-input" type="text" maxlength="18" autocomplete="off" autocapitalize="characters"
+            spellcheck="false" readonly />
+        </div>
+
+        <div id="name-warning" class="text-[11px] text-red-400 mt-2 hidden">
+          Digite um nome para continuar.
+        </div>
+
+        <div id="vk-keys" class="vk-keys mt-4"></div>
+
+        <button id="start-game-btn" type="button"
+          class="w-full mt-4 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 disabled:hover:bg-emerald-600 text-white font-bold py-3 rounded-xl shadow-lg uppercase text-sm"
+          disabled>
+          Começar
+        </button>
+
+        <p class="text-[10px] text-slate-500 mt-3 text-center">
+          Dica: ENTER para começar • BACKSPACE para apagar
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- APP DO JOGO -->
+  <div id="game-root" class="h-screen flex flex-col">
+    <!-- Header -->
+    <header
+      class="bg-slate-900 p-2 shadow-xl border-b border-slate-700 z-10 flex justify-between items-center h-16 shrink-0">
+      <div class="ml-2">
+        <h1 class="text-xl font-bold font-display italic text-green-400">
+          FINANCIAL <span class="text-white">FOOTBALL</span>
+        </h1>
+      </div>
+
+      <div class="flex gap-2 items-center bg-slate-800 px-3 py-1 rounded-xl border border-slate-700 shadow-inner mr-2">
+        <div class="text-center max-w-[90px]">
+          <p class="text-[8px] text-slate-400 uppercase tracking-wider">Jogador</p>
+          <div id="player-name" class="text-xs font-bold text-white truncate max-w-[90px]">--</div>
+        </div>
+
+        <div class="h-6 w-px bg-slate-600"></div>
+
+        <div class="text-center">
+          <p class="text-[8px] text-slate-400 uppercase tracking-wider">Perfil</p>
+          <div id="target-profile" class="text-sm font-bold font-display text-yellow-400">--</div>
+        </div>
+
+        <div class="h-6 w-px bg-slate-600"></div>
+
+        <div class="text-center">
+          <p class="text-[8px] text-slate-400 uppercase tracking-wider">Meta</p>
+          <div id="target-range" class="text-xs font-bold text-slate-200">--</div>
+        </div>
+
+        <div class="h-6 w-px bg-slate-600"></div>
+
+        <div class="text-center w-10">
+          <p class="text-[8px] text-slate-400 uppercase tracking-wider">Time</p>
+          <div id="players-count" class="text-sm font-bold font-display text-white limit-indicator">0/6</div>
+        </div>
+      </div>
+
+      <button id="finish-btn"
+        class="hidden bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1 rounded shadow-lg text-xs font-bold mr-2 animate-bounce transition transform active:scale-95"
+        type="button">
+        OK
+      </button>
+    </header>
+
+    <!-- Main Content -->
+    <div class="flex flex-1 overflow-hidden relative">
+
+      <!-- Sidebar -->
+      <aside class="w-[280px] bg-slate-900 border-r border-slate-700 flex flex-col z-10 shadow-2xl relative shrink-0">
+        <div class="p-3 bg-slate-800/50 border-b border-slate-700 text-center">
+          <h2 class="font-bold text-slate-200 font-display text-xs tracking-widest">MERCADO DE ATIVOS</h2>
+        </div>
+
+        <div id="cards-container" class="custom-scrollbar"></div>
+
+        <div
+          class="absolute bottom-0 left-0 w-full h-8 bg-gradient-to-t from-slate-900 to-transparent pointer-events-none">
+        </div>
+      </aside>
+
+      <!-- Campo -->
+      <main class="flex-1 relative bg-slate-800 p-2 flex justify-center items-center overflow-hidden">
+
+        <div id="error-toast"
+          class="absolute top-4 left-1/2 transform -translate-x-1/2 bg-red-500 text-white px-4 py-2 rounded-lg shadow-2xl opacity-0 transition-all duration-300 z-50 pointer-events-none font-bold text-xs translate-y-[-20px] text-center w-max max-w-[90%]">
+          Mensagem de erro
+        </div>
+
+        <div
+          class="absolute left-2 top-1/2 transform -translate-y-1/2 flex flex-col h-[90%] justify-between py-8 text-slate-500/30 text-3xl font-black font-display uppercase tracking-widest pointer-events-none z-0 select-none">
+          <div class="rotate-[-90deg] origin-center">ATQ</div>
+          <div class="rotate-[-90deg] origin-center">MEI</div>
+          <div class="rotate-[-90deg] origin-center">DEF</div>
+        </div>
+
+        <button id="reset-btn" type="button"
+          class="absolute bottom-4 right-4 bg-slate-700/50 hover:bg-red-600 text-white p-2 rounded-full z-10 transition">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+        </button>
+
+        <div id="field-container"
+          class="football-field w-full h-full rounded-xl flex flex-col relative shadow-2xl max-w-[500px] max-h-[800px]">
+          <div id="field-interactive-layer"></div>
+
+          <div class="corner tl"></div>
+          <div class="corner tr"></div>
+          <div class="corner bl"></div>
+          <div class="corner br"></div>
+
+          <div class="penalty-box top"></div>
+          <div class="goal-box top"></div>
+          <div class="mid-line"></div>
+          <div class="center-circle"></div>
+          <div class="center-dot"></div>
+          <div class="penalty-box bottom"></div>
+          <div class="goal-box bottom"></div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- Modal Resultado -->
+  <div id="result-modal"
+    class="hidden fixed inset-0 bg-black/90 z-50 flex items-center justify-center backdrop-blur-md p-4">
+    <div
+      class="bg-slate-900 p-6 rounded-2xl border border-slate-700 relative overflow-hidden w-full max-w-sm text-center shadow-2xl">
+      <div class="absolute top-0 right-0 w-40 h-40 bg-green-500/20 rounded-full blur-3xl -mr-20 -mt-20"></div>
+      <div class="absolute bottom-0 left-0 w-40 h-40 bg-blue-500/20 rounded-full blur-3xl -ml-20 -mb-20"></div>
+
+      <h2 class="text-2xl font-bold mb-4 text-white font-display">Fim de Jogo</h2>
+
+      <div class="grid grid-cols-2 gap-3 my-6">
+        <div class="bg-slate-800/80 p-3 rounded-lg border border-slate-600">
+          <p class="text-[10px] text-slate-400 uppercase tracking-widest mb-1">Risco Médio</p>
+          <div id="final-risk-val" class="text-2xl font-bold text-white font-display">0</div>
+          <p id="final-risk-target" class="text-[10px] text-slate-500 mt-1 font-mono">Alvo: 0-0</p>
+        </div>
+
+        <div class="bg-slate-800/80 p-3 rounded-lg border border-slate-600">
+          <p class="text-[10px] text-slate-400 uppercase tracking-widest mb-1">Pontuação</p>
+          <div id="final-score" class="text-2xl font-bold text-green-400 font-display">0</div>
+        </div>
+      </div>
+
+      <p id="final-message" class="text-slate-300 mb-6 text-xs leading-relaxed">...</p>
+
+      <button id="play-again-btn" type="button"
+        class="w-full bg-gradient-to-r from-blue-600 to-blue-500 text-white font-bold py-3 rounded-xl shadow-lg uppercase text-sm">
+        Jogar Novamente
+      </button>
+    </div>
+  </div>
+
+</body>
+
+</html>

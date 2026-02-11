@@ -1,0 +1,567 @@
+body {
+  font-family: 'Poppins', sans-serif;
+  background-color: #0f172a;
+  color: white;
+  overflow: hidden;
+  user-select: none;
+  touch-action: none;
+}
+
+h1,
+h2,
+.font-display {
+  font-family: 'Exo 2', sans-serif;
+}
+
+/* --- CAMPO --- */
+.football-field {
+  background-color: #38a169;
+  background-image:
+    repeating-linear-gradient(0deg, transparent, transparent 50px, rgba(0, 0, 0, 0.1) 50px, rgba(0, 0, 0, 0.1) 100px),
+    radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 60%);
+  border: 4px solid #fff;
+  position: relative;
+  overflow: hidden;
+  box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.6);
+  height: 100%;
+  width: 100%;
+}
+
+#field-interactive-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 20;
+}
+
+.field-line,
+.mid-line,
+.center-circle,
+.center-dot,
+.penalty-box,
+.goal-box,
+.corner {
+  position: absolute;
+  border-color: rgba(255, 255, 255, 0.7);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.mid-line {
+  top: 50%;
+  width: 100%;
+  height: 2px;
+  background-color: rgba(255, 255, 255, 0.7);
+}
+
+.center-circle {
+  top: 50%;
+  left: 50%;
+  width: 120px;
+  height: 120px;
+  border: 2px solid;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.center-dot {
+  top: 50%;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  background: white;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.penalty-box {
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60%;
+  height: 16%;
+  border: 2px solid;
+}
+
+.penalty-box.top {
+  top: -2px;
+  border-top: none;
+}
+
+.penalty-box.bottom {
+  bottom: -2px;
+  border-bottom: none;
+}
+
+.goal-box {
+  left: 50%;
+  transform: translateX(-50%);
+  width: 30%;
+  height: 6%;
+  border: 2px solid;
+}
+
+.goal-box.top {
+  top: -2px;
+  border-top: none;
+}
+
+.goal-box.bottom {
+  bottom: -2px;
+  border-bottom: none;
+}
+
+.corner {
+  width: 24px;
+  height: 24px;
+  border: 2px solid;
+  border-radius: 50%;
+}
+
+.corner.tl {
+  top: -12px;
+  left: -12px;
+}
+
+.corner.tr {
+  top: -12px;
+  right: -12px;
+}
+
+.corner.bl {
+  bottom: -12px;
+  left: -12px;
+}
+
+.corner.br {
+  bottom: -12px;
+  right: -12px;
+}
+
+/* --- ESTILOS DE CARDS PREMIUM (SIDEBAR) --- */
+.premium-card {
+  width: 240px;
+  height: 320px;
+  background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+  border: 3px solid #475569;
+  border-radius: 16px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.4);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding: 14px;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s;
+  margin-bottom: 20px;
+  flex-shrink: 0;
+  cursor: grab;
+  touch-action: none;
+  /* permite drag suave no touch */
+}
+
+.premium-card:active {
+  cursor: grabbing;
+}
+
+/* Cores Temáticas */
+.theme-low {
+  border-color: #4ade80;
+  background: radial-gradient(circle at top right, #065f46 0%, #022c22 100%);
+}
+
+.theme-med {
+  border-color: #facc15;
+  background: radial-gradient(circle at top right, #854d0e 0%, #451a03 100%);
+}
+
+.theme-high {
+  border-color: #ef4444;
+  background: radial-gradient(circle at top right, #991b1b 0%, #450a0a 100%);
+}
+
+.premium-card:hover {
+  transform: scale(1.03) translateY(-2px);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5);
+  z-index: 10;
+  border-color: #fff;
+}
+
+/* Elementos Internos do Card */
+.score-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 45px;
+  height: 45px;
+  background: #fbbf24;
+  clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  color: #78350f;
+  font-size: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5);
+  z-index: 20;
+  transform: rotate(15deg);
+}
+
+.card-header-title {
+  font-family: 'Exo 2', sans-serif;
+  font-weight: 900;
+  text-transform: uppercase;
+  font-size: 1.2rem;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+  margin-bottom: 2px;
+  color: white;
+  line-height: 1.1;
+}
+
+.star-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+
+.star-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.9);
+  text-transform: uppercase;
+}
+
+.stars {
+  color: #fbbf24;
+  font-size: 0.9rem;
+  letter-spacing: 1px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+.star-dim {
+  opacity: 0.2;
+  color: #fff;
+}
+
+.card-footer-pill {
+  margin-top: auto;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 20px;
+  padding: 6px 0;
+  text-align: center;
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* --- FIELD CARD & GHOST (Compacto) --- */
+.field-card {
+  position: absolute;
+  width: 90px;
+  height: 126px;
+  background: linear-gradient(145deg, #1e293b, #0f172a);
+  border: 1px solid #334155;
+  border-radius: 8px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  padding: 4px;
+  font-size: 0.7rem;
+  cursor: grab;
+  z-index: 30;
+  box-sizing: border-box;
+  touch-action: none;
+  animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.field-card:active {
+  cursor: grabbing;
+}
+
+.field-card.risk-low {
+  border-bottom: 4px solid #4ade80;
+}
+
+.field-card.risk-med {
+  border-bottom: 4px solid #facc15;
+}
+
+.field-card.risk-high {
+  border-bottom: 4px solid #ef4444;
+}
+
+/* Fantasma */
+.drag-ghost {
+  position: fixed;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.95;
+  box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.8);
+  transition: transform 0.1s cubic-bezier(0.2, 0, 0.4, 1);
+  will-change: transform, left, top;
+}
+
+/* Juice */
+@keyframes popIn {
+  0% {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes shakeError {
+
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  20% {
+    transform: translateX(-6px) rotate(-5deg);
+  }
+
+  40% {
+    transform: translateX(6px) rotate(5deg);
+  }
+
+  60% {
+    transform: translateX(-3px) rotate(-2deg);
+  }
+
+  80% {
+    transform: translateX(3px) rotate(2deg);
+  }
+}
+
+.error-anim {
+  animation: shakeError 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+}
+
+/* Zonas */
+.zone-indicators {
+  display: flex;
+  gap: 2px;
+  margin-top: auto;
+  margin-bottom: 2px;
+  justify-content: space-between;
+}
+
+.zone-box {
+  flex: 1;
+  height: 14px;
+  border-radius: 3px;
+  border: 1px solid #334155;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 7px;
+  font-weight: 800;
+  background: #0f172a;
+  color: #475569;
+}
+
+.zone-box.active-def {
+  background: rgba(16, 185, 129, 0.2);
+  border-color: #10b981;
+  color: #10b981;
+}
+
+.zone-box.active-mid {
+  background: rgba(234, 179, 8, 0.2);
+  border-color: #eab308;
+  color: #eab308;
+}
+
+.zone-box.active-atk {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
+.compact-bar {
+  height: 3px;
+  background: #334155;
+  border-radius: 2px;
+  overflow: hidden;
+  width: 100%;
+  margin-top: 2px;
+}
+
+.compact-fill {
+  height: 100%;
+}
+
+#cards-container {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow-y: auto;
+  touch-action: pan-y;
+  /* permite scroll na sidebar */
+}
+
+/* Ocultar card original enquanto arrasta */
+.is-dragging {
+  opacity: 0.3 !important;
+  filter: grayscale(1);
+  transform: scale(0.95);
+  transition: all 0.2s;
+}
+
+.limit-indicator {
+  transition: color 0.3s;
+}
+
+.limit-warning {
+  color: #f56565;
+  font-weight: bold;
+  animation: pulse 1s infinite;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #1e293b;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #475569;
+  border-radius: 2px;
+}
+
+/* =========================
+   TELA DE NOME + TECLADO
+   ========================= */
+
+.vk-display {
+  background: rgba(2, 6, 23, 0.6);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 14px;
+  padding: 12px 14px;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+}
+
+#name-input {
+  width: 100%;
+  background: transparent;
+  color: #fff;
+  font-family: 'Exo 2', sans-serif;
+  font-weight: 900;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  font-size: 22px;
+  outline: none;
+  border: none;
+}
+
+.vk-keys {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  user-select: none;
+}
+
+.vk-row {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.vk-key {
+  height: 46px;
+  min-width: 34px;
+  padding: 0 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  background: rgba(15, 23, 42, 0.9);
+  color: rgba(255, 255, 255, 0.92);
+  font-weight: 800;
+  font-family: 'Exo 2', sans-serif;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+  transition: transform 0.06s ease, background 0.12s ease;
+  touch-action: manipulation;
+}
+
+.vk-key:active {
+  transform: translateY(1px) scale(0.98);
+  background: rgba(30, 41, 59, 0.95);
+}
+
+.vk-key.wide {
+  min-width: 78px;
+}
+
+.vk-key.space {
+  flex: 1;
+  min-width: 160px;
+}
+
+.vk-key.danger {
+  border-color: rgba(239, 68, 68, 0.35);
+}
+
+.vk-key.ok {
+  border-color: rgba(16, 185, 129, 0.35);
+}
+
+.vk-action {
+  font-size: 11px;
+  font-weight: 800;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  background: rgba(15, 23, 42, 0.8);
+  color: rgba(255, 255, 255, 0.9);
+  transition: transform 0.06s ease, background 0.12s ease;
+}
+
+.vk-action:active {
+  transform: scale(0.98);
+}
+
+/* =========================
+   ZONAS também nos cards da sidebar
+   ========================= */
+.premium-card .zone-indicators {
+  margin-top: 10px;
+}
+
+.premium-card .zone-box {
+  height: 18px;
+  font-size: 9px;
+  letter-spacing: 0.5px;
+  background: rgba(0, 0, 0, 0.25);
+}
+
+/* =========================
+   TEMA/COR do card também no campo
+   (pra manter igual ao da lista)
+   ========================= */
+.field-card.theme-low {
+  background: radial-gradient(circle at top right, #065f46 0%, #022c22 100%);
+  border-color: #4ade80;
+}
+
+.field-card.theme-med {
+  background: radial-gradient(circle at top right, #854d0e 0%, #451a03 100%);
+  border-color: #facc15;
+}
+
+.field-card.theme-high {
+  background: radial-gradient(circle at top right, #991b1b 0%, #450a0a 100%);
+  border-color: #ef4444;
+}
