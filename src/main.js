@@ -1,7 +1,10 @@
 /* ============================================================
    Financial Football Manager
-   - Tela inicial: nome do jogador com teclado virtual
-   - Nome aparece no header e pode ser usado no modal final
+   NOVA LÓGICA:
+   - Cada ativo tem 1 posição correta (DEF/MEI/ATQ) por perfil
+   - Colocar na posição errada: perde pontos (mas pode colocar)
+   - Sem indicadores visuais de zona / agressivo etc
+   - DEBUG MODE: tecla P liga/desliga e mostra tudo
    ============================================================ */
 
 const PROFILES = {
@@ -16,17 +19,24 @@ const FIELD_CARD_H = 126;
 
 const PLAYER_NAME_KEY = "ffm_player_name";
 
+const SCORE_CORRECT = 10;
+const SCORE_WRONG = -5; // perde pontos, mas nunca fica < 0
+
 const els = {};
 let assetsData = [];
 let currentProfileKey = null;
 let currentProfile = null;
-let placedCards = [];
 
-// Player
+let placedCards = []; // { id, asset, x, y, zone, correct, delta }
+let gameScore = 0;
+
 let playerName = "";
 
 // Drag state
 let activeDrag = null;
+
+// Debug mode
+let debugMode = false;
 
 const FALLBACK_ASSETS = [
   { id: 1, name: "Tesouro Selic", type: "Renda Fixa", suitability: 10, retorno: 20, seguranca: 100, desc: "Segurança máxima." },
@@ -58,10 +68,31 @@ function normalizeName(raw) {
   return s.toUpperCase();
 }
 
+
+function getRiskKey(assetSuit) {
+  if (assetSuit <= 40) return "low";
+  if (assetSuit <= 70) return "med";
+  return "high";
+}
+
+
 function setPlayerName(name) {
   playerName = normalizeName(name);
   els.playerName.innerText = playerName || "--";
   try { localStorage.setItem(PLAYER_NAME_KEY, playerName); } catch (_) { }
+}
+
+function setDebugMode(on) {
+  debugMode = !!on;
+  document.body.classList.toggle("debug", debugMode);
+  if (els.debugBadge) {
+    els.debugBadge.classList.toggle("hidden", !debugMode);
+  }
+  showToast(debugMode ? "DEBUG: ON" : "DEBUG: OFF", "info");
+}
+
+function toggleDebug() {
+  setDebugMode(!debugMode);
 }
 
 function getThemeClass(suitability) {
@@ -70,6 +101,60 @@ function getThemeClass(suitability) {
   return "theme-high";
 }
 
+function getRiskBorderClass(asset) {
+  if (asset.suitability > 70) return "risk-high";
+  if (asset.suitability > 40) return "risk-med";
+  return "risk-low";
+}
+
+function zoneFromPoint(centerY, fieldHeight) {
+  const zoneHeight = fieldHeight / 3;
+  if (centerY < zoneHeight) return "attack";      // topo
+  if (centerY < zoneHeight * 2) return "midfield"; // meio
+  return "defense";                                // baixo
+}
+
+/**
+ * POSIÇÃO CORRETA POR PERFIL
+ * (o mesmo ativo pode mudar de zona dependendo do perfil)
+ */
+function expectedZoneFor(assetSuit, profileKey) {
+// thresholds escolhidos para permitir:
+// Ex: um ativo “médio” pode ser ATQ no conservador e MEI no arrojado.
+  if (profileKey === "CONSERVADOR") {
+    if (assetSuit <= 25) return "defense";
+    if (assetSuit <= 45) return "midfield";
+    return "attack";
+  }
+  if (profileKey === "MODERADO") {
+    if (assetSuit <= 35) return "defense";
+    if (assetSuit <= 60) return "midfield";
+    return "attack";
+  }
+  // ARROJADO
+  if (assetSuit <= 50) return "defense";
+  if (assetSuit <= 80) return "midfield";
+  return "attack";
+}
+
+function zoneFlags(expectedZone) {
+  return {
+    def: expectedZone === "defense",
+    mid: expectedZone === "midfield",
+    atk: expectedZone === "attack"
+  };
+}
+
+function deltaForPlacement(correct) {
+  return correct ? SCORE_CORRECT : SCORE_WRONG;
+}
+
+function applyScoreDelta(delta) {
+  gameScore = Math.max(0, gameScore + delta);
+  if (els.scoreVal) els.scoreVal.innerText = String(gameScore);
+}
+
+// ---------- Stars (mantém) ----------
 function getStars(percentage) {
   const starsCount = Math.round((percentage / 100) * 5);
   let html = "";
@@ -77,40 +162,11 @@ function getStars(percentage) {
   return html;
 }
 
-function isZoneAllowed(assetSuit, zone, profileKey) {
-  const isSafe = assetSuit <= 40;
-  const isRisky = assetSuit > 70;
-
-  if (profileKey === "CONSERVADOR") {
-    if (zone === "defense" && isRisky) return "Muito arriscado para a Defesa!";
-    if (zone === "midfield" && isRisky) return "Alto risco deve ficar isolado no Ataque!";
-  } else if (profileKey === "MODERADO") {
-    if (zone === "defense" && isRisky) return "Defesa não suporta Alta Volatilidade!";
-    if (zone === "attack" && isSafe) return "Conservador demais para o Ataque!";
-  } else if (profileKey === "ARROJADO") {
-    if (zone === "attack" && isSafe) return "Desperdício de Ataque!";
-    if (zone === "midfield" && isSafe) return "Falta pimenta no Meio de Campo!";
-  }
-
-  return true;
-}
-
-function getAllowedZones(assetSuit, profileKey) {
-  return {
-    def: isZoneAllowed(assetSuit, "defense", profileKey) === true,
-    mid: isZoneAllowed(assetSuit, "midfield", profileKey) === true,
-    atk: isZoneAllowed(assetSuit, "attack", profileKey) === true
-  };
-}
-
-function getRiskBorderClass(asset) {
-  if (asset.suitability > 70) return "risk-high";
-  if (asset.suitability > 40) return "risk-med";
-  return "risk-low";
-}
-
 // ---------- HTML generators ----------
-function createPremiumCardHTML(asset, allowedZones) {
+function createPremiumCardHTML(asset) {
+  const exp = expectedZoneFor(asset.suitability, currentProfileKey);
+  const flags = zoneFlags(exp);
+
   return `
     <div class="score-badge">${asset.suitability}</div>
 
@@ -130,49 +186,79 @@ function createPremiumCardHTML(asset, allowedZones) {
       <div class="star-row"><span class="star-label">Segurança</span><div class="stars">${getStars(asset.seguranca)}</div></div>
     </div>
 
-    <!-- NOVO: ZONAS PERMITIDAS -->
-    <div class="mt-2 pt-2 border-t border-white/10">
-      <div class="text-[10px] text-white/70 font-bold uppercase tracking-widest mb-1">Posições</div>
+    <!-- DEBUG: mostra posição correta -->
+    <div class="debug-only mt-2 pt-2 border-t border-white/10">
+      <div class="text-[10px] text-white/70 font-bold uppercase tracking-widest mb-1">Posição correta</div>
       <div class="zone-indicators">
-        <span class="zone-box ${allowedZones.def ? "active-def" : ""}">DEF</span>
-        <span class="zone-box ${allowedZones.mid ? "active-mid" : ""}">MEI</span>
-        <span class="zone-box ${allowedZones.atk ? "active-atk" : ""}">ATQ</span>
+        <span class="zone-box ${flags.def ? "active-def" : ""}">DEF</span>
+        <span class="zone-box ${flags.mid ? "active-mid" : ""}">MEI</span>
+        <span class="zone-box ${flags.atk ? "active-atk" : ""}">ATQ</span>
       </div>
     </div>
 
-    <div class="card-footer-pill mt-2">
+    <!-- DEBUG: rótulo agressivo/moderado/conservador -->
+    <div class="debug-only card-footer-pill mt-2">
       ${asset.suitability > 70 ? "AGRESSIVO" : asset.suitability > 40 ? "MODERADO" : "CONSERVADOR"}
     </div>
   `;
 }
 
-
-function createFieldCardHTML(asset, allowedZones) {
+function createFieldCardHTML(asset) {
   return `
     <div class="flex flex-col h-full relative z-10 pointer-events-none">
+
       <div class="flex justify-between items-start mb-1">
         <span class="text-[10px]">🪙</span>
-        <span class="text-[8px] font-mono bg-slate-800/80 px-1 rounded text-white border border-white/20">${asset.suitability}</span>
+        <span class="text-[8px] font-mono bg-slate-800/80 px-1 rounded text-white border border-white/20">
+          ${asset.suitability}
+        </span>
       </div>
 
       <div class="text-center mb-1">
-        <div class="font-bold text-[8px] text-white leading-tight font-display mb-0.5 truncate px-1">${asset.name}</div>
-        <div class="text-[6px] text-slate-400 truncate">${asset.type}</div>
+        <div class="font-bold text-[8px] text-white leading-tight font-display mb-0.5 truncate px-1">
+          ${asset.name}
+        </div>
+        <div class="text-[6px] text-slate-300 truncate">${asset.type}</div>
       </div>
 
-      <div class="space-y-1 mt-auto">
-        <div class="compact-bar"><div class="compact-fill" style="width:${asset.retorno}%; background:#3b82f6;"></div></div>
-        <div class="compact-bar"><div class="compact-fill" style="width:${asset.seguranca}%; background:#10b981;"></div></div>
+      <!-- (opcional) descrição curtinha -->
+      <div class="field-desc text-slate-300 italic truncate px-1 mb-1">"${asset.desc}"</div>
+
+      <!-- AGORA IGUAL À LISTA: atributos com estrelas -->
+      <div class="mt-auto">
+        <div class="star-row">
+          <span class="star-label">RISCO</span>
+          <div class="stars">${getStars(asset.suitability)}</div>
+        </div>
+
+        <div class="star-row">
+          <span class="star-label">RETORNO</span>
+          <div class="stars">${getStars(asset.retorno)}</div>
+        </div>
+
+        <div class="star-row">
+          <span class="star-label">SEGURANÇA</span>
+          <div class="stars">${getStars(asset.seguranca)}</div>
+        </div>
+
+        <!-- DEBUG: posição correta (se você estiver mantendo isso) -->
+        <div class="debug-only zone-indicators pt-1 mt-1 border-t border-slate-700/50">
+          ${(() => {
+      const exp = expectedZoneFor(asset.suitability, currentProfileKey);
+      const flags = zoneFlags(exp);
+      return `
+              <span class="zone-box ${flags.def ? "active-def" : ""}">D</span>
+              <span class="zone-box ${flags.mid ? "active-mid" : ""}">M</span>
+              <span class="zone-box ${flags.atk ? "active-atk" : ""}">A</span>
+            `;
+    })()}
+        </div>
       </div>
 
-      <div class="zone-indicators pt-1 mt-1 border-t border-slate-700/50">
-        <span class="zone-box ${allowedZones.def ? "active-def" : ""}">D</span>
-        <span class="zone-box ${allowedZones.mid ? "active-mid" : ""}">M</span>
-        <span class="zone-box ${allowedZones.atk ? "active-atk" : ""}">A</span>
-      </div>
     </div>
   `;
 }
+
 
 // ---------- Data loading ----------
 async function loadAssets() {
@@ -188,7 +274,7 @@ async function loadAssets() {
   }
 }
 
-// ---------- Name Screen / Virtual Keyboard ----------
+// ---------- Name Screen / Virtual Keyboard (mantém do seu) ----------
 function buildVirtualKeyboard() {
   const rows = [
     ["Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P"],
@@ -216,7 +302,6 @@ function buildVirtualKeyboard() {
     els.vkKeys.appendChild(row);
   });
 
-  // linha de ações
   const rowActions = document.createElement("div");
   rowActions.className = "vk-row";
 
@@ -268,7 +353,6 @@ function applyNameKey(key) {
     startGameFromNameScreen();
     return;
   } else {
-    // letra
     if (value.length >= 18) return;
     value += key;
   }
@@ -289,56 +373,37 @@ function startGameFromNameScreen() {
   setPlayerName(name);
   els.nameScreen.classList.add("hidden");
 
-  initGame(); // inicia jogo com nome já setado
+  initGame();
 }
 
 function initNameScreen() {
   buildVirtualKeyboard();
 
-  // Preenche com o último nome usado (se existir)
   let saved = "";
   try { saved = localStorage.getItem(PLAYER_NAME_KEY) || ""; } catch (_) { }
   els.nameInput.value = saved || "";
   updateNameUI();
 
-  // Clique nos botões do teclado
   els.vkKeys.addEventListener("click", (e) => {
     const btn = e.target?.closest?.("button[data-key]");
     if (!btn) return;
     applyNameKey(btn.dataset.key);
   });
 
-  // Limpar
   els.nameClear.addEventListener("click", () => {
     els.nameInput.value = "";
     updateNameUI();
   });
 
-  // Começar
   els.startGameBtn.addEventListener("click", startGameFromNameScreen);
 
-  // Teclado físico (sem abrir teclado do celular)
   window.addEventListener("keydown", (e) => {
-    // só quando a tela de nome está visível
     if (els.nameScreen.classList.contains("hidden")) return;
 
-    if (e.key === "Enter") {
-      e.preventDefault();
-      startGameFromNameScreen();
-      return;
-    }
-    if (e.key === "Backspace") {
-      e.preventDefault();
-      applyNameKey("BACKSPACE");
-      return;
-    }
-    if (e.key === " ") {
-      e.preventDefault();
-      applyNameKey("SPACE");
-      return;
-    }
+    if (e.key === "Enter") { e.preventDefault(); startGameFromNameScreen(); return; }
+    if (e.key === "Backspace") { e.preventDefault(); applyNameKey("BACKSPACE"); return; }
+    if (e.key === " ") { e.preventDefault(); applyNameKey("SPACE"); return; }
 
-    // letras/números básicos
     const ch = e.key;
     if (/^[a-zA-Z0-9]$/.test(ch)) {
       e.preventDefault();
@@ -366,8 +431,9 @@ function bindEls() {
 
   els.toast = document.getElementById("error-toast");
 
-  // Nome no header
   els.playerName = document.getElementById("player-name");
+  els.scoreVal = document.getElementById("score-val");
+  els.debugBadge = document.getElementById("debug-badge");
 
   // Tela de nome
   els.nameScreen = document.getElementById("name-screen");
@@ -378,21 +444,30 @@ function bindEls() {
   els.nameClear = document.getElementById("name-clear");
 }
 
-function initGame() {
-  placedCards = [];
-  els.cardsContainer.innerHTML = "";
-  els.fieldLayer.innerHTML = "";
-
-  els.resultModal.classList.add("hidden");
-  els.finishBtn.classList.add("hidden");
-
+function pickProfile() {
   const keys = Object.keys(PROFILES);
   currentProfileKey = keys[Math.floor(Math.random() * keys.length)];
   currentProfile = PROFILES[currentProfileKey];
 
   els.profile.innerText = currentProfile.label;
   els.profile.className = `text-sm font-bold font-display uppercase tracking-widest ${currentProfile.color}`;
-  els.targetRange.innerText = `${currentProfile.min} - ${currentProfile.max}`;
+
+  // Mantemos no código (debug-only no HTML)
+  if (els.targetRange) els.targetRange.innerText = `${currentProfile.min} - ${currentProfile.max}`;
+}
+
+function initGame() {
+  placedCards = [];
+  gameScore = 0;
+  if (els.scoreVal) els.scoreVal.innerText = "0";
+
+  els.cardsContainer.innerHTML = "";
+  els.fieldLayer.innerHTML = "";
+
+  els.resultModal.classList.add("hidden");
+  els.finishBtn.classList.add("hidden");
+
+  pickProfile();
 
   updateStats();
   renderSidebar();
@@ -403,13 +478,11 @@ function renderSidebar() {
 
   assetsData.forEach(asset => {
     const card = document.createElement("div");
-    const themeClass = getThemeClass(asset.suitability);
 
-    const allowedZones = getAllowedZones(asset.suitability, currentProfileKey);
-
-    card.className = `premium-card sidebar-item ${themeClass}`;
+    card.className = `premium-card sidebar-item`; // sem theme-...
     card.dataset.id = String(asset.id);
-    card.innerHTML = createPremiumCardHTML(asset, allowedZones);
+    card.dataset.risk = getRiskKey(asset.suitability); // <- novo
+    card.innerHTML = createPremiumCardHTML(asset);
 
     card.addEventListener("pointerdown", (e) => initDrag(e, asset, "sidebar", card));
     els.cardsContainer.appendChild(card);
@@ -417,34 +490,32 @@ function renderSidebar() {
 }
 
 
-// ---------- Drag system (Pointer Events) ----------
+// ---------- Drag system ----------
 function initDrag(e, asset, sourceType, originalEl) {
   if (e.pointerType === "mouse" && e.button !== 0) return;
-
   e.preventDefault();
 
   const ghost = document.createElement("div");
-  const borderClass = getRiskBorderClass(asset);
 
+  const borderClass = getRiskBorderClass(asset);
   const themeClass = getThemeClass(asset.suitability);
-  ghost.className = `field-card ${borderClass} ${themeClass} drag-ghost`;
+
+  ghost.className = `field-card ${borderClass} drag-ghost`;
+  ghost.dataset.risk = getRiskKey(asset.suitability);
   ghost.style.width = `${FIELD_CARD_W}px`;
   ghost.style.height = `${FIELD_CARD_H}px`;
   ghost.style.left = `${e.clientX}px`;
   ghost.style.top = `${e.clientY}px`;
   ghost.style.transform = `translate(-50%, -50%) scale(1.2)`;
 
-  const allowed = getAllowedZones(asset.suitability, currentProfileKey);
-  ghost.innerHTML = createFieldCardHTML(asset, allowed);
+  ghost.innerHTML = createFieldCardHTML(asset);
 
   document.body.appendChild(ghost);
-
   originalEl.classList.add("is-dragging");
 
   activeDrag = {
     pointerId: e.pointerId,
     asset,
-    sourceType,
     originalEl,
     ghost,
     lastX: e.clientX
@@ -489,6 +560,7 @@ function handleEnd(e) {
   originalEl.classList.remove("is-dragging");
 
   processDrop(asset.id, e.clientX, e.clientY, FIELD_CARD_W / 2, FIELD_CARD_H / 2);
+
   activeDrag = null;
 }
 
@@ -499,6 +571,7 @@ function processDrop(assetId, clientX, clientY, offsetX, offsetY) {
 
   const rect = els.fieldLayer.getBoundingClientRect();
 
+  // fora do campo
   if (clientX < rect.left || clientX > rect.right || clientY < rect.top || clientY > rect.bottom) return;
 
   let x = clientX - rect.left - offsetX;
@@ -508,38 +581,44 @@ function processDrop(assetId, clientX, clientY, offsetX, offsetY) {
   y = clamp(y, 0, rect.height - FIELD_CARD_H);
 
   const existingIndex = placedCards.findIndex(c => c.id === asset.id);
-
   if (existingIndex === -1 && placedCards.length >= MAX_PLAYERS) {
-    showError("Máximo de 6 jogadores!");
+    showToast("Máximo de 6 jogadores!", "error");
     return;
   }
 
   if (checkCollision(x, y, asset.id)) {
-    showError("Sem espaço aqui!");
+    showToast("Sem espaço aqui!", "error");
     return;
   }
 
-  const zoneHeight = rect.height / 3;
-  let zone = "defense";
-  if (y + (FIELD_CARD_H / 2) < zoneHeight) zone = "attack";
-  else if (y + (FIELD_CARD_H / 2) < zoneHeight * 2) zone = "midfield";
+  // ZONA onde o jogador soltou
+  const actualZone = zoneFromPoint(y + (FIELD_CARD_H / 2), rect.height);
 
-  const permission = isZoneAllowed(asset.suitability, zone, currentProfileKey);
-  if (permission !== true) {
-    showError(permission);
-    return;
-  }
+  // ZONA correta do ativo para o perfil
+  const expected = expectedZoneFor(asset.suitability, currentProfileKey);
+  const correct = (actualZone === expected);
+  const delta = deltaForPlacement(correct);
 
+  // aplica score (considerando reposicionamento)
   if (existingIndex !== -1) {
+    // remove contribuição anterior
+    applyScoreDelta(-placedCards[existingIndex].delta);
+
     const oldEl = document.querySelector(`.field-item[data-id="${asset.id}"]`);
     if (oldEl) oldEl.remove();
     placedCards.splice(existingIndex, 1);
   } else {
+    // some na sidebar se é novo
     const sidebarItem = document.querySelector(`.sidebar-item[data-id="${asset.id}"]`);
     if (sidebarItem) sidebarItem.classList.add("hidden");
   }
 
-  placeCardOnField(asset, x, y);
+  // adiciona nova contribuição
+  applyScoreDelta(delta);
+
+  if (!correct) showToast(`Posição errada (${delta})`, "warn");
+
+  placeCardOnField(asset, x, y, actualZone, correct, delta);
   updateStats();
 }
 
@@ -557,37 +636,48 @@ function checkCollision(newX, newY, ignoreId) {
   return false;
 }
 
-function placeCardOnField(asset, x, y) {
+function placeCardOnField(asset, x, y, zone, correct, delta) {
   const el = document.createElement("div");
-  const allowed = getAllowedZones(asset.suitability, currentProfileKey);
-  const borderClass = getRiskBorderClass(asset);
 
+  const borderClass = getRiskBorderClass(asset);
   const themeClass = getThemeClass(asset.suitability);
-  el.className = `field-card field-item ${borderClass} ${themeClass}`;
+
+  el.className = `field-card field-item ${borderClass}`;
+  el.dataset.risk = getRiskKey(asset.suitability);
   el.style.left = `${x}px`;
   el.style.top = `${y}px`;
   el.dataset.id = String(asset.id);
-  el.innerHTML = createFieldCardHTML(asset, allowed);
+  el.innerHTML = createFieldCardHTML(asset);
 
+  // drag no campo
   el.addEventListener("pointerdown", (e) => initDrag(e, asset, "field", el));
 
+  // botão remover
   const closeBtn = document.createElement("div");
   closeBtn.className = "absolute -top-2 -right-2 w-5 h-5 bg-red-500 rounded-full text-white flex items-center justify-center font-bold text-xs cursor-pointer shadow-md z-50";
   closeBtn.innerText = "×";
   closeBtn.addEventListener("pointerdown", (e) => e.stopPropagation());
   closeBtn.addEventListener("click", (e) => {
     e.stopPropagation();
+
+    // devolve pontos do card removido
+    const idx = placedCards.findIndex(c => c.id === asset.id);
+    if (idx !== -1) {
+      applyScoreDelta(-placedCards[idx].delta);
+      placedCards.splice(idx, 1);
+    }
+
     const sidebarItem = document.querySelector(`.sidebar-item[data-id="${asset.id}"]`);
     if (sidebarItem) sidebarItem.classList.remove("hidden");
+
     el.remove();
-    placedCards = placedCards.filter(c => c.id !== asset.id);
     updateStats();
   });
 
   el.appendChild(closeBtn);
 
   els.fieldLayer.appendChild(el);
-  placedCards.push({ id: asset.id, asset, x, y });
+  placedCards.push({ id: asset.id, asset, x, y, zone, correct, delta });
 }
 
 // ---------- UI / Stats ----------
@@ -606,48 +696,53 @@ function updateStats() {
 function finalizeGame() {
   if (placedCards.length === 0) return;
 
-  const totalSuit = placedCards.reduce((acc, c) => acc + c.asset.suitability, 0);
-  const avgSuit = Math.round(totalSuit / placedCards.length);
-  const inRange = avgSuit >= currentProfile.min && avgSuit <= currentProfile.max;
+  const correctCount = placedCards.filter(c => c.correct).length;
+  const wrongCount = placedCards.length - correctCount;
 
-  let points = 0;
-  if (inRange) {
-    points = 50 + (placedCards.length * 10);
-    if (typeof confetti === "function") confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
-  } else {
-    const dist = avgSuit < currentProfile.min ? (currentProfile.min - avgSuit) : (avgSuit - currentProfile.max);
-    points = Math.max(0, 50 - dist);
-  }
+  els.finalScore.innerText = String(gameScore);
 
-  els.finalScore.innerText = String(points);
-  els.finalRiskVal.innerText = String(avgSuit);
-  els.finalRiskTarget.innerText = `Meta: ${currentProfile.min} - ${currentProfile.max}`;
+  // reaproveita o card “Risco Médio” como “Acertos”
+  els.finalRiskVal.innerText = `${correctCount}/${placedCards.length}`;
+  els.finalRiskVal.className = `text-2xl font-bold font-display ${wrongCount === 0 ? "text-emerald-400" : "text-yellow-400"}`;
+  els.finalRiskTarget.innerText = `Erros: ${wrongCount}`;
 
   const who = playerName ? `, <strong class="text-white">${playerName}</strong>` : "";
 
-  if (inRange) {
-    points = 50 + (placedCards.length * 10);
-  } else {
-    els.finalRiskVal.className = "text-2xl font-bold text-red-500 font-display";
+  if (wrongCount === 0 && placedCards.length === MAX_PLAYERS) {
     els.finalMessage.innerHTML =
-      `⚠️ <strong class="text-white">Atenção${who}!</strong><br>` +
-      `Sua média (${avgSuit}) ficou fora do alvo. Tente equilibrar melhor.`;
+      `🏆 <strong class="text-white">Perfeito${who}!</strong><br>` +
+      `Você posicionou todos os ativos corretamente para o perfil <strong>${currentProfile.label}</strong>.`;
+  } else {
+    els.finalMessage.innerHTML =
+      `🎯 <strong class="text-white">Boa${who}!</strong><br>` +
+      `Você acertou <strong>${correctCount}</strong> e errou <strong>${wrongCount}</strong>. Tente melhorar o posicionamento.`;
   }
 
   els.resultModal.classList.remove("hidden");
 }
 
-function showError(msg) {
-  els.toast.innerText = msg;
-  els.toast.style.opacity = "1";
-  els.toast.style.transform = "translate(-50%, 0)";
-  els.toast.classList.add("error-anim");
+function showToast(msg, kind = "error") {
+  // popups só no DEBUG
+  if (!debugMode) return;
+
+  const t = els.toast;
+
+  // kind: error | warn | info
+  t.classList.remove("bg-red-500", "bg-amber-500", "bg-emerald-500");
+  if (kind === "warn") t.classList.add("bg-amber-500");
+  else if (kind === "info") t.classList.add("bg-emerald-500");
+  else t.classList.add("bg-red-500");
+
+  t.innerText = msg;
+  t.style.opacity = "1";
+  t.style.transform = "translate(-50%, 0)";
+  t.classList.add("error-anim");
 
   setTimeout(() => {
-    els.toast.style.opacity = "0";
-    els.toast.style.transform = "translate(-50%, -20px)";
-    els.toast.classList.remove("error-anim");
-  }, 3000);
+    t.style.opacity = "0";
+    t.style.transform = "translate(-50%, -20px)";
+    t.classList.remove("error-anim");
+  }, 1800);
 }
 
 function resetGame() {
@@ -658,15 +753,25 @@ function resetGame() {
 document.addEventListener("DOMContentLoaded", async () => {
   bindEls();
 
-  // nome no header começa como --
+  // defaults
   setPlayerName("");
+  setDebugMode(false);
 
   els.finishBtn.addEventListener("click", finalizeGame);
   els.resetBtn.addEventListener("click", resetGame);
   els.playAgainBtn.addEventListener("click", resetGame);
 
-  assetsData = await loadAssets();
+  // tecla P: debug (só quando jogo estiver ativo)
+  window.addEventListener("keydown", (e) => {
+    // se a tela de nome estiver aberta, não toggle debug
+    if (!els.nameScreen.classList.contains("hidden")) return;
 
-  // inicializa teclado virtual e fica na tela de nome
+    if (e.key === "p" || e.key === "P") {
+      e.preventDefault();
+      toggleDebug();
+    }
+  }, { passive: false });
+
+  assetsData = await loadAssets();
   initNameScreen();
 });

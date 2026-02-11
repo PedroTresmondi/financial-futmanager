@@ -263,7 +263,7 @@ h2,
 /* --- FIELD CARD & GHOST (Compacto) --- */
 .field-card {
   position: absolute;
-  width: 90px;
+  width: 100px;
   height: 126px;
   background: linear-gradient(145deg, #1e293b, #0f172a);
   border: 1px solid #334155;
@@ -564,4 +564,113 @@ h2,
 .field-card.theme-high {
   background: radial-gradient(circle at top right, #991b1b 0%, #450a0a 100%);
   border-color: #ef4444;
+
+}
+
+/* =========================
+   DEBUG MODE (P liga/desliga)
+   ========================= */
+.debug-only {
+  display: none;
+}
+
+body.debug .debug-only {
+  display: initial;
+}
+
+body.debug #debug-badge {
+  display: inline-block !important;
+}
+
+body:not(.debug) #debug-badge {
+  display: none !important;
+}
+
+/* =========================
+   CORES POR RISCO: só no DEBUG
+   (fora do debug, tudo fica igual)
+   ========================= */
+
+/* garante aparência neutra mesmo se sobrar alguma classe theme-... */
+body:not(.debug) .theme-low,
+body:not(.debug) .theme-med,
+body:not(.debug) .theme-high {
+  border-color: #475569 !important;
+  background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%) !important;
+}
+
+/* sidebar (premium-card) só colore no debug via data-risk */
+body.debug .premium-card[data-risk="low"] {
+  border-color: #4ade80;
+  background: radial-gradient(circle at top right, #065f46 0%, #022c22 100%);
+}
+
+body.debug .premium-card[data-risk="med"] {
+  border-color: #facc15;
+  background: radial-gradient(circle at top right, #854d0e 0%, #451a03 100%);
+}
+
+body.debug .premium-card[data-risk="high"] {
+  border-color: #ef4444;
+  background: radial-gradient(circle at top right, #991b1b 0%, #450a0a 100%);
+}
+
+/* campo (field-card) só colore no debug via data-risk */
+body.debug .field-card[data-risk="low"] {
+  border-color: #4ade80;
+  background: radial-gradient(circle at top right, #065f46 0%, #022c22 100%);
+}
+
+body.debug .field-card[data-risk="med"] {
+  border-color: #facc15;
+  background: radial-gradient(circle at top right, #854d0e 0%, #451a03 100%);
+}
+
+body.debug .field-card[data-risk="high"] {
+  border-color: #ef4444;
+  background: radial-gradient(circle at top right, #991b1b 0%, #450a0a 100%);
+}
+
+/* “barrinha” de risco embaixo: só no debug */
+body:not(.debug) .field-card.risk-low,
+body:not(.debug) .field-card.risk-med,
+body:not(.debug) .field-card.risk-high {
+  border-bottom: 0 !important;
+}
+
+body.debug .field-card.risk-low {
+  border-bottom: 4px solid #4ade80;
+}
+
+body.debug .field-card.risk-med {
+  border-bottom: 4px solid #facc15;
+}
+
+body.debug .field-card.risk-high {
+  border-bottom: 4px solid #ef4444;
+}
+
+/* =========================
+   Atributos no card do campo (mini)
+   ========================= */
+.field-card .star-row {
+  padding: 2px 4px;
+  border-radius: 6px;
+  margin-bottom: 3px;
+}
+
+.field-card .star-label {
+  font-size: 7px;
+  letter-spacing: 0.6px;
+}
+
+.field-card .stars {
+  font-size: 8px;
+  letter-spacing: 0.5px;
+}
+
+.field-card .field-desc {
+  font-size: 6px;
+  opacity: 0.85;
+  line-height: 1.1;
 }
