@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin • Estoque de Brindes</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="min-h-screen bg-slate-950 text-white p-6">
+    <div class="max-w-3xl mx-auto">
+        <h1 class="text-2xl font-black mb-1">Estoque de Brindes</h1>
+        <p class="text-slate-400 text-sm mb-6">Adicionar/editar brindes, estoque e threshold (pontos mínimos).</p>
+
+        <div class="bg-slate-900 border border-slate-700 rounded-xl p-4 mb-6">
+            <h2 class="font-bold mb-3">Adicionar novo brinde</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                <input id="new-name" class="bg-slate-800 border border-slate-700 rounded px-3 py-2"
+                    placeholder="Nome" />
+                <input id="new-stock" type="number" class="bg-slate-800 border border-slate-700 rounded px-3 py-2"
+                    placeholder="Estoque" />
+                <input id="new-threshold" type="number" class="bg-slate-800 border border-slate-700 rounded px-3 py-2"
+                    placeholder="Threshold" />
+                <button id="btn-add" class="bg-emerald-600 hover:bg-emerald-500 rounded px-3 py-2 font-bold">
+                    Adicionar
+                </button>
+            </div>
+            <div id="add-msg" class="text-xs text-slate-400 mt-2"></div>
+        </div>
+
+        <div class="bg-slate-900 border border-slate-700 rounded-xl overflow-hidden">
+            <div class="p-4 border-b border-slate-700 flex items-center justify-between">
+                <h2 class="font-bold">Brindes</h2>
+                <button id="btn-refresh"
+                    class="text-sm bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded px-3 py-1">
+                    Atualizar
+                </button>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead class="bg-slate-800 text-slate-300">
+                        <tr>
+                            <th class="text-left p-3">ID</th>
+                            <th class="text-left p-3">Nome</th>
+                            <th class="text-left p-3">Estoque</th>
+                            <th class="text-left p-3">Threshold</th>
+                            <th class="text-right p-3">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="rows" class="divide-y divide-slate-800"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <p class="text-xs text-slate-500 mt-4">Abra: <span class="font-mono">/admin.html</span></p>
+    </div>
+
+    <script type="module" src="/src/admin.js"></script>
+</body>
+
+</html>

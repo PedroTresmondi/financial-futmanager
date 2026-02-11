@@ -85,10 +85,10 @@
           <p class="text-[8px] text-slate-400 uppercase tracking-wider">Meta</p>
           <div id="target-range" class="text-xs font-bold text-slate-200">--</div>
         </div>
-        
-        <div class="h-6 w-px bg-slate-600"></div>
-        
-        <div class="text-center w-12">
+
+        <div class="h-6 w-px bg-slate-600 debug-only"></div>
+
+        <div class="text-center w-12 debug-only">
           <p class="text-[8px] text-slate-400 uppercase tracking-wider">Pontos</p>
           <div id="score-val" class="text-sm font-bold font-display text-emerald-300">0</div>
         </div>
@@ -175,6 +175,29 @@
     </div>
   </div>
 
+  <!-- Modal Brinde -->
+  <div id="prize-modal"
+    class="hidden fixed inset-0 bg-black/90 z-50 flex items-center justify-center backdrop-blur-md p-4">
+    <div
+      class="bg-slate-900 p-6 rounded-2xl border border-slate-700 relative overflow-hidden w-full max-w-sm text-center shadow-2xl">
+      <div class="absolute top-0 right-0 w-40 h-40 bg-amber-500/20 rounded-full blur-3xl -mr-20 -mt-20"></div>
+      <div class="absolute bottom-0 left-0 w-40 h-40 bg-emerald-500/20 rounded-full blur-3xl -ml-20 -mb-20"></div>
+  
+      <div class="text-4xl mb-2">🎁</div>
+      <h2 class="text-2xl font-bold mb-2 text-white font-display">Seu Brinde</h2>
+  
+      <p class="debug-only text-xs text-slate-400 mb-4">
+        Pontos finais: <span id="prize-points" class="text-white font-bold">0</span>
+      </p>
+  
+      <div class="bg-slate-800/80 p-4 rounded-xl border border-slate-700 mb-4">
+        <div id="prize-status" class="text-sm font-bold text-white mb-1">...</div>
+        <div id="prize-name" class="text-lg font-black text-amber-300 font-display">--</div>
+        <div id="prize-extra" class="text-[11px] text-slate-400 mt-2"> </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Modal Resultado -->
   <div id="result-modal"
     class="hidden fixed inset-0 bg-black/90 z-50 flex items-center justify-center backdrop-blur-md p-4">
@@ -200,10 +223,7 @@
 
       <p id="final-message" class="text-slate-300 mb-6 text-xs leading-relaxed">...</p>
 
-      <button id="play-again-btn" type="button"
-        class="w-full bg-gradient-to-r from-blue-600 to-blue-500 text-white font-bold py-3 rounded-xl shadow-lg uppercase text-sm">
-        Jogar Novamente
-      </button>
+  
     </div>
   </div>
 

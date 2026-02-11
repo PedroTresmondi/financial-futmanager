@@ -1,11 +1,3 @@
-/* ============================================================
-   Financial Football Manager
-   NOVA LÓGICA:
-   - Cada ativo tem 1 posição correta (DEF/MEI/ATQ) por perfil
-   - Colocar na posição errada: perde pontos (mas pode colocar)
-   - Sem indicadores visuais de zona / agressivo etc
-   - DEBUG MODE: tecla P liga/desliga e mostra tudo
-   ============================================================ */
 
 const PROFILES = {
   CONSERVADOR: { min: 15, max: 35, color: "text-blue-400", label: "Conservador" },
@@ -14,22 +6,20 @@ const PROFILES = {
 };
 
 const MAX_PLAYERS = 6;
-const FIELD_CARD_W = 90;
-const FIELD_CARD_H = 126;
-
 const PLAYER_NAME_KEY = "ffm_player_name";
 
-const SCORE_CORRECT = 10;
-const SCORE_WRONG = -5; // perde pontos, mas nunca fica < 0
+// ✅ Para passar de 90 com 6 cartas, precisa ser > 15.
+// Ex: 20 => máximo 120 (6 corretas)
+const SCORE_CORRECT = 20;
 
 const els = {};
 let assetsData = [];
 let currentProfileKey = null;
 let currentProfile = null;
 
-let placedCards = []; // { id, asset, x, y, zone, correct, delta }
+// ✅ agora guardamos rx/ry também (posição relativa)
+let placedCards = []; // { id, asset, x, y, rx, ry, zone, correct }
 let gameScore = 0;
-
 let playerName = "";
 
 // Drag state
@@ -37,6 +27,21 @@ let activeDrag = null;
 
 // Debug mode
 let debugMode = false;
+
+// Timer retorno ao início (brinde)
+let prizeResetTimer = null;
+
+// ---------- Campo responsivo (tamanho dos cards) ----------
+const BASE_CARD_W = 90;
+const BASE_CARD_H = 126;
+
+let CARD_SCALE = 1;
+let INNER_SCALE = 1;
+
+let CARD_W = BASE_CARD_W;
+let CARD_H = BASE_CARD_H;
+
+let fieldResizeObserver = null;
 
 const FALLBACK_ASSETS = [
   { id: 1, name: "Tesouro Selic", type: "Renda Fixa", suitability: 10, retorno: 20, seguranca: 100, desc: "Segurança máxima." },
@@ -68,50 +73,19 @@ function normalizeName(raw) {
   return s.toUpperCase();
 }
 
-
-function getRiskKey(assetSuit) {
-  if (assetSuit <= 40) return "low";
-  if (assetSuit <= 70) return "med";
-  return "high";
-}
-
-
-function setPlayerName(name) {
-  playerName = normalizeName(name);
-  els.playerName.innerText = playerName || "--";
-  try { localStorage.setItem(PLAYER_NAME_KEY, playerName); } catch (_) { }
-}
-
-function setDebugMode(on) {
-  debugMode = !!on;
-  document.body.classList.toggle("debug", debugMode);
-  if (els.debugBadge) {
-    els.debugBadge.classList.toggle("hidden", !debugMode);
+function shuffleArray(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
   }
-  showToast(debugMode ? "DEBUG: ON" : "DEBUG: OFF", "info");
-}
-
-function toggleDebug() {
-  setDebugMode(!debugMode);
-}
-
-function getThemeClass(suitability) {
-  if (suitability <= 40) return "theme-low";
-  if (suitability <= 70) return "theme-med";
-  return "theme-high";
-}
-
-function getRiskBorderClass(asset) {
-  if (asset.suitability > 70) return "risk-high";
-  if (asset.suitability > 40) return "risk-med";
-  return "risk-low";
+  return arr;
 }
 
 function zoneFromPoint(centerY, fieldHeight) {
   const zoneHeight = fieldHeight / 3;
-  if (centerY < zoneHeight) return "attack";      // topo
-  if (centerY < zoneHeight * 2) return "midfield"; // meio
-  return "defense";                                // baixo
+  if (centerY < zoneHeight) return "attack";
+  if (centerY < zoneHeight * 2) return "midfield";
+  return "defense";
 }
 
 /**
@@ -119,8 +93,6 @@ function zoneFromPoint(centerY, fieldHeight) {
  * (o mesmo ativo pode mudar de zona dependendo do perfil)
  */
 function expectedZoneFor(assetSuit, profileKey) {
-// thresholds escolhidos para permitir:
-// Ex: um ativo “médio” pode ser ATQ no conservador e MEI no arrojado.
   if (profileKey === "CONSERVADOR") {
     if (assetSuit <= 25) return "defense";
     if (assetSuit <= 45) return "midfield";
@@ -145,16 +117,193 @@ function zoneFlags(expectedZone) {
   };
 }
 
-function deltaForPlacement(correct) {
-  return correct ? SCORE_CORRECT : SCORE_WRONG;
+// ✅ Modo normal: tudo igual
+// ✅ Modo debug: volta a borda por risco (se você tiver CSS de risk-low/med/high)
+function getRiskBorderClass(asset) {
+  if (!debugMode) return "";
+  if (asset.suitability > 70) return "risk-high";
+  if (asset.suitability > 40) return "risk-med";
+  return "risk-low";
 }
 
-function applyScoreDelta(delta) {
-  gameScore = Math.max(0, gameScore + delta);
-  if (els.scoreVal) els.scoreVal.innerText = String(gameScore);
+// ---------- Campo responsivo: cálculo do tamanho ----------
+function getFieldRect() {
+  if (!els.fieldLayer) return null;
+  const r = els.fieldLayer.getBoundingClientRect();
+  if (!r.width || !r.height) return null;
+  return r;
 }
 
-// ---------- Stars (mantém) ----------
+function computeCardSizeFromField() {
+  const rect = getFieldRect();
+  if (!rect) return;
+
+  // base do seu layout (max-w 500, max-h 800)
+  const scale = clamp(Math.min(rect.width / 500, rect.height / 800), 0.55, 1.15);
+
+  CARD_SCALE = scale;
+
+  // conteúdo só encolhe quando o card encolhe (não cresce em telas grandes)
+  INNER_SCALE = Math.min(1, scale);
+
+  CARD_W = Math.round(BASE_CARD_W * scale);
+  CARD_H = Math.round(BASE_CARD_H * scale);
+}
+
+function storeRelativePosition(card, fieldRect) {
+  const denomX = Math.max(1, fieldRect.width - CARD_W);
+  const denomY = Math.max(1, fieldRect.height - CARD_H);
+  card.rx = clamp(card.x / denomX, 0, 1);
+  card.ry = clamp(card.y / denomY, 0, 1);
+}
+
+function fieldIsCompact() {
+  return INNER_SCALE < 0.72;
+}
+
+// Re-render quando alterna compact (evita “estourar” o layout em campos pequenos)
+function relayoutPlacedCards() {
+  const rect = getFieldRect();
+  if (!rect) return;
+
+  const compactNow = fieldIsCompact();
+
+  for (const c of placedCards) {
+    // se não tiver rx/ry (cards antigos), cria
+    if (typeof c.rx !== "number" || typeof c.ry !== "number") {
+      storeRelativePosition(c, rect);
+    }
+
+    c.x = clamp(c.rx * (rect.width - CARD_W), 0, rect.width - CARD_W);
+    c.y = clamp(c.ry * (rect.height - CARD_H), 0, rect.height - CARD_H);
+
+    const el = document.querySelector(`.field-item[data-id="${c.id}"]`);
+    if (!el) continue;
+
+    const wasCompact = el.classList.contains("compact");
+
+    el.style.width = `${CARD_W}px`;
+    el.style.height = `${CARD_H}px`;
+    el.style.left = `${c.x}px`;
+    el.style.top = `${c.y}px`;
+    el.style.setProperty("--innerScale", String(INNER_SCALE));
+    el.classList.toggle("compact", compactNow);
+
+    // Se mudou o modo (compact <-> normal), re-render do conteúdo
+    if (wasCompact !== compactNow) {
+      setFieldCardContent(el, c.asset);
+      // mantém o X
+      ensureCloseButton(el, c.asset);
+      // garante debug visuals também
+      applyDebugVisualsToElement(el, c.asset);
+    }
+  }
+}
+
+function setupFieldResizeWatcher() {
+  const target = document.getElementById("field-container") || els.fieldLayer;
+  if (!target) return;
+
+  const apply = () => {
+    computeCardSizeFromField();
+    relayoutPlacedCards();
+  };
+
+  // limpa observer antigo
+  if (fieldResizeObserver) {
+    try { fieldResizeObserver.disconnect(); } catch (_) { }
+    fieldResizeObserver = null;
+  }
+
+  apply();
+
+  if ("ResizeObserver" in window) {
+    fieldResizeObserver = new ResizeObserver(() => apply());
+    fieldResizeObserver.observe(target);
+  } else {
+    window.addEventListener("resize", apply);
+  }
+}
+
+// ---------- Player / Debug ----------
+function setPlayerName(name) {
+  playerName = normalizeName(name);
+  if (els.playerName) els.playerName.innerText = playerName || "--";
+  try { localStorage.setItem(PLAYER_NAME_KEY, playerName); } catch (_) { }
+}
+
+function applyDebugOnlyVisibility() {
+  // 👇 isso faz o debug funcionar mesmo se o CSS estiver faltando
+  const nodes = document.querySelectorAll(".debug-only");
+  nodes.forEach((n) => {
+    n.style.display = debugMode ? "" : "none";
+  });
+}
+
+function applyDebugVisualsToElement(el, asset) {
+  // remove classes de risco
+  el.classList.remove("risk-low", "risk-med", "risk-high");
+  const cls = getRiskBorderClass(asset);
+  if (cls) el.classList.add(cls);
+}
+
+function refreshCardsDebugVisuals() {
+  // sidebar + campo
+  const nodes = document.querySelectorAll(".sidebar-item, .field-item");
+  nodes.forEach((el) => {
+    const id = el.dataset.id;
+    const asset = assetsData.find(a => String(a.id) === String(id));
+    if (!asset) return;
+    applyDebugVisualsToElement(el, asset);
+  });
+}
+
+function setDebugMode(on) {
+  debugMode = !!on;
+  document.body.classList.toggle("debug", debugMode);
+
+  if (els.debugBadge) els.debugBadge.classList.toggle("hidden", !debugMode);
+
+  // score só no debug
+  if (debugMode && els.scoreVal) els.scoreVal.innerText = String(gameScore);
+  if (!debugMode && els.scoreVal) els.scoreVal.innerText = "";
+
+  applyDebugOnlyVisibility();
+  refreshCardsDebugVisuals();
+
+  showToast(debugMode ? "DEBUG: ON" : "DEBUG: OFF", "info");
+}
+
+function toggleDebug() {
+  setDebugMode(!debugMode);
+}
+
+// ---------- Score (estado atual do campo) ----------
+function recomputeScore() {
+  const correctCount = placedCards.reduce((acc, c) => acc + (c.correct ? 1 : 0), 0);
+  gameScore = correctCount * SCORE_CORRECT;
+
+  if (debugMode && els.scoreVal) {
+    els.scoreVal.innerText = String(gameScore);
+  }
+}
+
+// ---------- API: Brinde ----------
+async function tryAwardPrize(points) {
+  try {
+    const r = await fetch("/api/award", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ playerName, points })
+    });
+    if (!r.ok) return null;
+    return await r.json();
+  } catch {
+    return null;
+  }
+}
+
+// ---------- Stars ----------
 function getStars(percentage) {
   const starsCount = Math.round((percentage / 100) * 5);
   let html = "";
@@ -195,36 +344,35 @@ function createPremiumCardHTML(asset) {
         <span class="zone-box ${flags.atk ? "active-atk" : ""}">ATQ</span>
       </div>
     </div>
-
-    <!-- DEBUG: rótulo agressivo/moderado/conservador -->
-    <div class="debug-only card-footer-pill mt-2">
-      ${asset.suitability > 70 ? "AGRESSIVO" : asset.suitability > 40 ? "MODERADO" : "CONSERVADOR"}
-    </div>
   `;
 }
 
-function createFieldCardHTML(asset) {
-  return `
-    <div class="flex flex-col h-full relative z-10 pointer-events-none">
+// Conteúdo do card no campo (sem o botão X)
+function fieldCardContentHTML(asset) {
+  const compact = fieldIsCompact();
 
-      <div class="flex justify-between items-start mb-1">
-        <span class="text-[10px]">🪙</span>
-        <span class="text-[8px] font-mono bg-slate-800/80 px-1 rounded text-white border border-white/20">
-          ${asset.suitability}
-        </span>
-      </div>
+  // Quando fica MUITO pequeno, trocar estrelas por barras evita “estouro”
+  const statsBlock = compact
+    ? `
+      <div class="mt-auto space-y-1">
+        <div class="compact-bar"><div class="compact-fill" style="width:${asset.suitability}%; background:#fbbf24;"></div></div>
+        <div class="compact-bar"><div class="compact-fill" style="width:${asset.retorno}%; background:#3b82f6;"></div></div>
+        <div class="compact-bar"><div class="compact-fill" style="width:${asset.seguranca}%; background:#10b981;"></div></div>
 
-      <div class="text-center mb-1">
-        <div class="font-bold text-[8px] text-white leading-tight font-display mb-0.5 truncate px-1">
-          ${asset.name}
+        <div class="debug-only zone-indicators pt-1 mt-1 border-t border-slate-700/50">
+          ${(() => {
+      const exp = expectedZoneFor(asset.suitability, currentProfileKey);
+      const flags = zoneFlags(exp);
+      return `
+              <span class="zone-box ${flags.def ? "active-def" : ""}">D</span>
+              <span class="zone-box ${flags.mid ? "active-mid" : ""}">M</span>
+              <span class="zone-box ${flags.atk ? "active-atk" : ""}">A</span>
+            `;
+    })()}
         </div>
-        <div class="text-[6px] text-slate-300 truncate">${asset.type}</div>
       </div>
-
-      <!-- (opcional) descrição curtinha -->
-      <div class="field-desc text-slate-300 italic truncate px-1 mb-1">"${asset.desc}"</div>
-
-      <!-- AGORA IGUAL À LISTA: atributos com estrelas -->
+    `
+    : `
       <div class="mt-auto">
         <div class="star-row">
           <span class="star-label">RISCO</span>
@@ -241,7 +389,6 @@ function createFieldCardHTML(asset) {
           <div class="stars">${getStars(asset.seguranca)}</div>
         </div>
 
-        <!-- DEBUG: posição correta (se você estiver mantendo isso) -->
         <div class="debug-only zone-indicators pt-1 mt-1 border-t border-slate-700/50">
           ${(() => {
       const exp = expectedZoneFor(asset.suitability, currentProfileKey);
@@ -254,11 +401,63 @@ function createFieldCardHTML(asset) {
     })()}
         </div>
       </div>
+    `;
 
+  return `
+    <div class="field-inner flex flex-col h-full relative z-10 pointer-events-none">
+      <div class="flex justify-between items-start mb-1">
+        <span class="text-[10px]">🪙</span>
+        <span class="text-[8px] font-mono bg-slate-800/80 px-1 rounded text-white border border-white/20">
+          ${asset.suitability}
+        </span>
+      </div>
+
+      <div class="text-center mb-1">
+        <div class="font-bold text-[8px] text-white leading-tight font-display mb-0.5 truncate px-1">
+          ${asset.name}
+        </div>
+        <div class="text-[6px] text-slate-300 truncate">${asset.type}</div>
+      </div>
+
+      ${compact ? "" : `<div class="field-desc text-slate-300 italic truncate px-1 mb-1">"${asset.desc}"</div>`}
+
+      ${statsBlock}
     </div>
   `;
 }
 
+function setFieldCardContent(el, asset) {
+  el.innerHTML = fieldCardContentHTML(asset);
+  applyDebugOnlyVisibility();
+}
+
+function ensureCloseButton(el, asset) {
+  let close = el.querySelector(".field-close");
+  if (close) return;
+
+  close = document.createElement("div");
+  close.className =
+    "field-close absolute -top-2 -right-2 w-5 h-5 bg-red-500 rounded-full text-white flex items-center justify-center font-bold text-xs cursor-pointer shadow-md z-50";
+  close.innerText = "×";
+
+  close.addEventListener("pointerdown", (e) => e.stopPropagation());
+  close.addEventListener("click", (e) => {
+    e.stopPropagation();
+
+    const idx = placedCards.findIndex(c => c.id === asset.id);
+    if (idx !== -1) placedCards.splice(idx, 1);
+
+    const sidebarItem = document.querySelector(`.sidebar-item[data-id="${asset.id}"]`);
+    if (sidebarItem) sidebarItem.classList.remove("hidden");
+
+    el.remove();
+
+    recomputeScore();
+    updateStats();
+  });
+
+  el.appendChild(close);
+}
 
 // ---------- Data loading ----------
 async function loadAssets() {
@@ -274,7 +473,7 @@ async function loadAssets() {
   }
 }
 
-// ---------- Name Screen / Virtual Keyboard (mantém do seu) ----------
+// ---------- Name Screen / Virtual Keyboard ----------
 function buildVirtualKeyboard() {
   const rows = [
     ["Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P"],
@@ -373,15 +572,17 @@ function startGameFromNameScreen() {
   setPlayerName(name);
   els.nameScreen.classList.add("hidden");
 
+  // garante tamanho correto antes de começar
+  computeCardSizeFromField();
+
   initGame();
 }
 
 function initNameScreen() {
   buildVirtualKeyboard();
 
-  let saved = "";
-  try { saved = localStorage.getItem(PLAYER_NAME_KEY) || ""; } catch (_) { }
-  els.nameInput.value = saved || "";
+  // começa limpo (kiosk)
+  els.nameInput.value = "";
   updateNameUI();
 
   els.vkKeys.addEventListener("click", (e) => {
@@ -414,23 +615,24 @@ function initNameScreen() {
 
 // ---------- Game lifecycle ----------
 function bindEls() {
+  // Modal Brinde
+  els.prizeModal = document.getElementById("prize-modal");
+  els.prizePoints = document.getElementById("prize-points");
+  els.prizeStatus = document.getElementById("prize-status");
+  els.prizeName = document.getElementById("prize-name");
+  els.prizeExtra = document.getElementById("prize-extra");
+
+  // Core
   els.cardsContainer = document.getElementById("cards-container");
   els.fieldLayer = document.getElementById("field-interactive-layer");
   els.profile = document.getElementById("target-profile");
   els.targetRange = document.getElementById("target-range");
   els.playersCount = document.getElementById("players-count");
   els.finishBtn = document.getElementById("finish-btn");
-  els.resetBtn = document.getElementById("reset-btn");
-
-  els.resultModal = document.getElementById("result-modal");
-  els.finalScore = document.getElementById("final-score");
-  els.finalRiskVal = document.getElementById("final-risk-val");
-  els.finalRiskTarget = document.getElementById("final-risk-target");
-  els.finalMessage = document.getElementById("final-message");
-  els.playAgainBtn = document.getElementById("play-again-btn");
 
   els.toast = document.getElementById("error-toast");
 
+  // Header
   els.playerName = document.getElementById("player-name");
   els.scoreVal = document.getElementById("score-val");
   els.debugBadge = document.getElementById("debug-badge");
@@ -449,66 +651,84 @@ function pickProfile() {
   currentProfileKey = keys[Math.floor(Math.random() * keys.length)];
   currentProfile = PROFILES[currentProfileKey];
 
-  els.profile.innerText = currentProfile.label;
-  els.profile.className = `text-sm font-bold font-display uppercase tracking-widest ${currentProfile.color}`;
+  if (els.profile) {
+    els.profile.innerText = currentProfile.label;
+    els.profile.className = `text-sm font-bold font-display uppercase tracking-widest ${currentProfile.color}`;
+  }
 
-  // Mantemos no código (debug-only no HTML)
+  // (normalmente esse range fica debug-only no HTML)
   if (els.targetRange) els.targetRange.innerText = `${currentProfile.min} - ${currentProfile.max}`;
+  applyDebugOnlyVisibility();
 }
 
 function initGame() {
+  // limpa timer
+  if (prizeResetTimer) clearTimeout(prizeResetTimer);
+  prizeResetTimer = null;
+
   placedCards = [];
   gameScore = 0;
-  if (els.scoreVal) els.scoreVal.innerText = "0";
+  if (debugMode && els.scoreVal) els.scoreVal.innerText = "0";
+  if (!debugMode && els.scoreVal) els.scoreVal.innerText = "";
 
-  els.cardsContainer.innerHTML = "";
-  els.fieldLayer.innerHTML = "";
+  if (els.cardsContainer) els.cardsContainer.innerHTML = "";
+  if (els.fieldLayer) els.fieldLayer.innerHTML = "";
 
-  els.resultModal.classList.add("hidden");
-  els.finishBtn.classList.add("hidden");
+  if (els.finishBtn) els.finishBtn.classList.add("hidden");
+  if (els.prizeModal) els.prizeModal.classList.add("hidden");
+
+  // garante tamanho correto (caso o campo tenha mudado)
+  computeCardSizeFromField();
 
   pickProfile();
-
   updateStats();
   renderSidebar();
+
+  // garante estado debug aplicado no conteúdo recém-renderizado
+  applyDebugOnlyVisibility();
+  refreshCardsDebugVisuals();
 }
 
 function renderSidebar() {
+  if (!els.cardsContainer) return;
   els.cardsContainer.innerHTML = "";
 
-  assetsData.forEach(asset => {
-    const card = document.createElement("div");
+  const list = shuffleArray([...assetsData]);
 
-    card.className = `premium-card sidebar-item`; // sem theme-...
+  list.forEach(asset => {
+    const card = document.createElement("div");
+    const riskClass = getRiskBorderClass(asset); // só aparece no debug
+    card.className = `premium-card sidebar-item ${riskClass}`.trim();
     card.dataset.id = String(asset.id);
-    card.dataset.risk = getRiskKey(asset.suitability); // <- novo
     card.innerHTML = createPremiumCardHTML(asset);
 
-    card.addEventListener("pointerdown", (e) => initDrag(e, asset, "sidebar", card));
+    card.addEventListener("pointerdown", (e) => initDrag(e, asset, card));
     els.cardsContainer.appendChild(card);
   });
+
+  applyDebugOnlyVisibility();
 }
 
-
 // ---------- Drag system ----------
-function initDrag(e, asset, sourceType, originalEl) {
+function initDrag(e, asset, originalEl) {
   if (e.pointerType === "mouse" && e.button !== 0) return;
   e.preventDefault();
 
+  // garante tamanho atualizado no momento do drag
+  computeCardSizeFromField();
+
   const ghost = document.createElement("div");
-
   const borderClass = getRiskBorderClass(asset);
-  const themeClass = getThemeClass(asset.suitability);
 
-  ghost.className = `field-card ${borderClass} drag-ghost`;
-  ghost.dataset.risk = getRiskKey(asset.suitability);
-  ghost.style.width = `${FIELD_CARD_W}px`;
-  ghost.style.height = `${FIELD_CARD_H}px`;
+  ghost.className = `field-card ${borderClass} drag-ghost`.trim();
+  ghost.style.width = `${CARD_W}px`;
+  ghost.style.height = `${CARD_H}px`;
   ghost.style.left = `${e.clientX}px`;
   ghost.style.top = `${e.clientY}px`;
   ghost.style.transform = `translate(-50%, -50%) scale(1.2)`;
-
-  ghost.innerHTML = createFieldCardHTML(asset);
+  ghost.style.setProperty("--innerScale", String(INNER_SCALE));
+  ghost.classList.toggle("compact", fieldIsCompact());
+  ghost.innerHTML = fieldCardContentHTML(asset);
 
   document.body.appendChild(ghost);
   originalEl.classList.add("is-dragging");
@@ -559,7 +779,7 @@ function handleEnd(e) {
   ghost.remove();
   originalEl.classList.remove("is-dragging");
 
-  processDrop(asset.id, e.clientX, e.clientY, FIELD_CARD_W / 2, FIELD_CARD_H / 2);
+  processDrop(asset.id, e.clientX, e.clientY, CARD_W / 2, CARD_H / 2);
 
   activeDrag = null;
 }
@@ -569,6 +789,9 @@ function processDrop(assetId, clientX, clientY, offsetX, offsetY) {
   const asset = assetsData.find(a => a.id === assetId);
   if (!asset) return;
 
+  // garante tamanho atualizado pro cálculo
+  computeCardSizeFromField();
+
   const rect = els.fieldLayer.getBoundingClientRect();
 
   // fora do campo
@@ -577,10 +800,11 @@ function processDrop(assetId, clientX, clientY, offsetX, offsetY) {
   let x = clientX - rect.left - offsetX;
   let y = clientY - rect.top - offsetY;
 
-  x = clamp(x, 0, rect.width - FIELD_CARD_W);
-  y = clamp(y, 0, rect.height - FIELD_CARD_H);
+  x = clamp(x, 0, rect.width - CARD_W);
+  y = clamp(y, 0, rect.height - CARD_H);
 
   const existingIndex = placedCards.findIndex(c => c.id === asset.id);
+
   if (existingIndex === -1 && placedCards.length >= MAX_PLAYERS) {
     showToast("Máximo de 6 jogadores!", "error");
     return;
@@ -591,34 +815,31 @@ function processDrop(assetId, clientX, clientY, offsetX, offsetY) {
     return;
   }
 
-  // ZONA onde o jogador soltou
-  const actualZone = zoneFromPoint(y + (FIELD_CARD_H / 2), rect.height);
+  // zona onde soltou
+  const actualZone = zoneFromPoint(y + (CARD_H / 2), rect.height);
 
-  // ZONA correta do ativo para o perfil
+  // zona correta por perfil
   const expected = expectedZoneFor(asset.suitability, currentProfileKey);
   const correct = (actualZone === expected);
-  const delta = deltaForPlacement(correct);
 
-  // aplica score (considerando reposicionamento)
+  // remove antigo (se existia)
   if (existingIndex !== -1) {
-    // remove contribuição anterior
-    applyScoreDelta(-placedCards[existingIndex].delta);
-
     const oldEl = document.querySelector(`.field-item[data-id="${asset.id}"]`);
     if (oldEl) oldEl.remove();
     placedCards.splice(existingIndex, 1);
   } else {
-    // some na sidebar se é novo
+    // some da sidebar se é novo
     const sidebarItem = document.querySelector(`.sidebar-item[data-id="${asset.id}"]`);
     if (sidebarItem) sidebarItem.classList.add("hidden");
   }
 
-  // adiciona nova contribuição
-  applyScoreDelta(delta);
+  if (!correct) showToast("Posição errada (não conta)", "warn");
+  else showToast("Correto (conta pontos)", "info");
 
-  if (!correct) showToast(`Posição errada (${delta})`, "warn");
+  placeCardOnField(asset, x, y, actualZone, correct);
 
-  placeCardOnField(asset, x, y, actualZone, correct, delta);
+  // ✅ score acompanha o estado atual
+  recomputeScore();
   updateStats();
 }
 
@@ -626,108 +847,169 @@ function checkCollision(newX, newY, ignoreId) {
   const margin = 5;
   for (const card of placedCards) {
     if (card.id === ignoreId) continue;
+
     const hit =
-      newX < card.x + FIELD_CARD_W - margin &&
-      newX + FIELD_CARD_W - margin > card.x &&
-      newY < card.y + FIELD_CARD_H - margin &&
-      newY + FIELD_CARD_H - margin > card.y;
+      newX < card.x + CARD_W - margin &&
+      newX + CARD_W - margin > card.x &&
+      newY < card.y + CARD_H - margin &&
+      newY + CARD_H - margin > card.y;
+
     if (hit) return true;
   }
   return false;
 }
 
-function placeCardOnField(asset, x, y, zone, correct, delta) {
+function placeCardOnField(asset, x, y, zone, correct) {
   const el = document.createElement("div");
-
   const borderClass = getRiskBorderClass(asset);
-  const themeClass = getThemeClass(asset.suitability);
 
-  el.className = `field-card field-item ${borderClass}`;
-  el.dataset.risk = getRiskKey(asset.suitability);
+  el.className = `field-card field-item ${borderClass}`.trim();
+  el.style.width = `${CARD_W}px`;
+  el.style.height = `${CARD_H}px`;
   el.style.left = `${x}px`;
   el.style.top = `${y}px`;
   el.dataset.id = String(asset.id);
-  el.innerHTML = createFieldCardHTML(asset);
+
+  el.style.setProperty("--innerScale", String(INNER_SCALE));
+  el.classList.toggle("compact", fieldIsCompact());
+
+  setFieldCardContent(el, asset);
 
   // drag no campo
-  el.addEventListener("pointerdown", (e) => initDrag(e, asset, "field", el));
+  el.addEventListener("pointerdown", (e) => initDrag(e, asset, el));
 
   // botão remover
-  const closeBtn = document.createElement("div");
-  closeBtn.className = "absolute -top-2 -right-2 w-5 h-5 bg-red-500 rounded-full text-white flex items-center justify-center font-bold text-xs cursor-pointer shadow-md z-50";
-  closeBtn.innerText = "×";
-  closeBtn.addEventListener("pointerdown", (e) => e.stopPropagation());
-  closeBtn.addEventListener("click", (e) => {
-    e.stopPropagation();
-
-    // devolve pontos do card removido
-    const idx = placedCards.findIndex(c => c.id === asset.id);
-    if (idx !== -1) {
-      applyScoreDelta(-placedCards[idx].delta);
-      placedCards.splice(idx, 1);
-    }
-
-    const sidebarItem = document.querySelector(`.sidebar-item[data-id="${asset.id}"]`);
-    if (sidebarItem) sidebarItem.classList.remove("hidden");
-
-    el.remove();
-    updateStats();
-  });
-
-  el.appendChild(closeBtn);
+  ensureCloseButton(el, asset);
 
   els.fieldLayer.appendChild(el);
-  placedCards.push({ id: asset.id, asset, x, y, zone, correct, delta });
+
+  // ✅ guarda posição relativa pra resize
+  const fieldRect = getFieldRect() || els.fieldLayer.getBoundingClientRect();
+  const item = { id: asset.id, asset, x, y, rx: 0, ry: 0, zone, correct };
+  storeRelativePosition(item, fieldRect);
+
+  placedCards.push(item);
+
+  applyDebugOnlyVisibility();
+  applyDebugVisualsToElement(el, asset);
 }
 
 // ---------- UI / Stats ----------
 function updateStats() {
+  if (!els.playersCount) return;
+
   els.playersCount.innerText = `${placedCards.length}/6`;
 
   if (placedCards.length === MAX_PLAYERS) {
     els.playersCount.classList.add("limit-warning");
-    els.finishBtn.classList.remove("hidden");
+    if (els.finishBtn) els.finishBtn.classList.remove("hidden");
   } else {
     els.playersCount.classList.remove("limit-warning");
-    els.finishBtn.classList.add("hidden");
+    if (els.finishBtn) els.finishBtn.classList.add("hidden");
   }
 }
 
-function finalizeGame() {
+// ---------- Brinde modal + retorno ----------
+function showPrizeModal(awardData, points) {
+  if (els.prizePoints) els.prizePoints.innerText = String(points);
+
+  if (!awardData) {
+    if (els.prizeStatus) {
+      els.prizeStatus.innerText = "Servidor de brindes indisponível";
+      els.prizeStatus.className = "text-sm font-bold text-red-300 mb-1";
+    }
+    if (els.prizeName) els.prizeName.innerText = "--";
+    if (els.prizeExtra) els.prizeExtra.innerText = "Verifique se o server.js está rodando.";
+    if (els.prizeModal) els.prizeModal.classList.remove("hidden");
+    scheduleReturnToStart();
+    return;
+  }
+
+  if (awardData.awarded) {
+    if (els.prizeStatus) {
+      els.prizeStatus.innerText = "Parabéns! Você ganhou:";
+      els.prizeStatus.className = "text-sm font-bold text-white mb-1";
+    }
+    if (els.prizeName) els.prizeName.innerText = awardData.awarded.name;
+
+    const remaining = (awardData.remainingStock ?? null);
+    const thr = awardData.awarded.threshold ?? null;
+
+    const parts = [];
+    if (thr != null) parts.push(`Threshold: ${thr} pts`);
+    if (remaining != null) parts.push(`Estoque restante: ${remaining}`);
+
+    if (els.prizeExtra) els.prizeExtra.innerText = parts.join(" • ");
+  } else {
+    if (els.prizeStatus) {
+      els.prizeStatus.innerText = "Sem brinde desta vez";
+      els.prizeStatus.className = "text-sm font-bold text-slate-200 mb-1";
+    }
+    if (els.prizeName) els.prizeName.innerText = "—";
+    if (els.prizeExtra) els.prizeExtra.innerText = "Faça mais pontos para atingir um threshold com estoque disponível.";
+  }
+
+  if (els.prizeModal) els.prizeModal.classList.remove("hidden");
+  scheduleReturnToStart();
+}
+
+function scheduleReturnToStart() {
+  if (prizeResetTimer) clearTimeout(prizeResetTimer);
+  prizeResetTimer = setTimeout(() => {
+    returnToStart();
+  }, 10000);
+}
+
+function returnToStart() {
+  if (prizeResetTimer) clearTimeout(prizeResetTimer);
+  prizeResetTimer = null;
+
+  // limpa estado
+  placedCards = [];
+  gameScore = 0;
+
+  // limpa UI
+  if (els.cardsContainer) els.cardsContainer.innerHTML = "";
+  if (els.fieldLayer) els.fieldLayer.innerHTML = "";
+  if (els.finishBtn) els.finishBtn.classList.add("hidden");
+  if (els.prizeModal) els.prizeModal.classList.add("hidden");
+
+  // reseta nome e volta pra tela inicial
+  setPlayerName("");
+  if (els.nameInput) els.nameInput.value = "";
+  if (els.nameWarning) els.nameWarning.classList.add("hidden");
+  if (els.startGameBtn) els.startGameBtn.disabled = true;
+  if (els.nameScreen) els.nameScreen.classList.remove("hidden");
+
+  if (debugMode && els.scoreVal) els.scoreVal.innerText = "0";
+  if (!debugMode && els.scoreVal) els.scoreVal.innerText = "";
+
+  // garante recálculo de tamanho
+  computeCardSizeFromField();
+  relayoutPlacedCards();
+
+  applyDebugOnlyVisibility();
+  refreshCardsDebugVisuals();
+}
+
+// ---------- Finalize ----------
+async function finalizeGame() {
   if (placedCards.length === 0) return;
 
-  const correctCount = placedCards.filter(c => c.correct).length;
-  const wrongCount = placedCards.length - correctCount;
+  // garante score atualizado no momento do OK
+  recomputeScore();
 
-  els.finalScore.innerText = String(gameScore);
-
-  // reaproveita o card “Risco Médio” como “Acertos”
-  els.finalRiskVal.innerText = `${correctCount}/${placedCards.length}`;
-  els.finalRiskVal.className = `text-2xl font-bold font-display ${wrongCount === 0 ? "text-emerald-400" : "text-yellow-400"}`;
-  els.finalRiskTarget.innerText = `Erros: ${wrongCount}`;
-
-  const who = playerName ? `, <strong class="text-white">${playerName}</strong>` : "";
-
-  if (wrongCount === 0 && placedCards.length === MAX_PLAYERS) {
-    els.finalMessage.innerHTML =
-      `🏆 <strong class="text-white">Perfeito${who}!</strong><br>` +
-      `Você posicionou todos os ativos corretamente para o perfil <strong>${currentProfile.label}</strong>.`;
-  } else {
-    els.finalMessage.innerHTML =
-      `🎯 <strong class="text-white">Boa${who}!</strong><br>` +
-      `Você acertou <strong>${correctCount}</strong> e errou <strong>${wrongCount}</strong>. Tente melhorar o posicionamento.`;
-  }
-
-  els.resultModal.classList.remove("hidden");
+  const award = await tryAwardPrize(gameScore);
+  showPrizeModal(award, gameScore);
 }
 
+// ---------- Toast (DEBUG only) ----------
 function showToast(msg, kind = "error") {
-  // popups só no DEBUG
   if (!debugMode) return;
+  if (!els.toast) return;
 
   const t = els.toast;
 
-  // kind: error | warn | info
   t.classList.remove("bg-red-500", "bg-amber-500", "bg-emerald-500");
   if (kind === "warn") t.classList.add("bg-amber-500");
   else if (kind === "info") t.classList.add("bg-emerald-500");
@@ -745,25 +1027,23 @@ function showToast(msg, kind = "error") {
   }, 1800);
 }
 
-function resetGame() {
-  initGame();
-}
-
 // ---------- Boot ----------
 document.addEventListener("DOMContentLoaded", async () => {
   bindEls();
+
+  // calcula tamanho e liga watcher do campo
+  computeCardSizeFromField();
+  setupFieldResizeWatcher();
 
   // defaults
   setPlayerName("");
   setDebugMode(false);
 
-  els.finishBtn.addEventListener("click", finalizeGame);
-  els.resetBtn.addEventListener("click", resetGame);
-  els.playAgainBtn.addEventListener("click", resetGame);
+  if (els.finishBtn) els.finishBtn.addEventListener("click", finalizeGame);
 
   // tecla P: debug (só quando jogo estiver ativo)
   window.addEventListener("keydown", (e) => {
-    // se a tela de nome estiver aberta, não toggle debug
+    if (!els.nameScreen) return;
     if (!els.nameScreen.classList.contains("hidden")) return;
 
     if (e.key === "p" || e.key === "P") {
@@ -774,4 +1054,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   assetsData = await loadAssets();
   initNameScreen();
+
+  // suporte a onclick inline do HTML
+  window.finalizeGame = finalizeGame;
+  window.returnToStart = returnToStart;
 });
