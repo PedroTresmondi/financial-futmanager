@@ -1,90 +1,207 @@
 /* src/idle.css */
 
-/* Container Principal da Tela Idle */
 #idle-screen {
-    /* Garante que fique na frente de tudo */
+    /* Garante que fique na frente de tudo e ocupe a tela toda */
     z-index: 999;
     position: fixed;
     inset: 0;
 
-    /* Configuração do Fundo (Verde) */
-    /* Substitua o caminho abaixo pelo nome do seu arquivo de fundo */
-    background-image: url('/assets/fundo-idle.png');
+    /* --- Configuração do Fundo --- */
+        background-image: url('/public/assets/backgrounds/fundo-idle.png');
+        /* Confirme se o nome está correto */
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
     background-color: #022c22;
-    /* Cor de fundo de segurança (verde escuro) */
+    /* Cor de fundo de segurança */
 
-    /* Flexbox para alinhar tudo */
+    /* --- Layout Flex para distribuir Topo, Meio e Baixo --- */
     display: flex;
     flex-direction: column;
     align-items: center;
+    /* O segredo: space-between empurra o topo para cima, o baixo para baixo, e o meio fica no centro */
     justify-content: space-between;
-    /* Espalha itens (Topo, Meio, Baixo) */
-    padding-top: 15vh;
-    /* Espaço do topo */
-    padding-bottom: 10vh;
-    /* Espaço de baixo */
-
+    /* Espaçamentos internos para não grudar nas bordas */
+        padding-top: 40px;
+        /* Espaço acima do logo Rio Bravo */
+        padding-bottom: 60px;
+        /* Espaço abaixo do texto "Toque..." */
+        padding-left: 20px;
+        padding-right: 20px;
     cursor: pointer;
 }
 
-/* Área do Logo Principal */
+/* --- 1. TOPO --- */
+.idle-top-container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    height: 80px;
+}
+
+.idle-top-logo {
+    height: auto;
+    width: auto;
+    max-height: 60px;
+    object-fit: contain;
+}
+
+/* --- 2. MEIO (Logo + Textos) --- */
 .idle-logo-container {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     flex: 1;
-    /* Ocupa o espaço disponível no meio */
     width: 100%;
-    max-width: 800px;
+    gap: 20px;
+        /* Espaço entre logo e textos */
     animation: floatLogo 3s ease-in-out infinite;
 }
 
 .idle-game-logo {
-    width: 80%;
-    /* Ajuste o tamanho do logo aqui */
-    max-width: 600px;
+    width: 85%;
+        max-width: 550px;
     height: auto;
-    filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.5));
-    /* Sombra bonita no logo */
+    filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.6));
 }
+/* ===== Correção de alinhamento do texto (usando seu HTML atual) ===== */
 
-/* Área do Texto "Toque para Iniciar" */
-.idle-cta-container {
+.container-subtext {
+    width: 100%;
+    max-width: 520px;
+    /* controla a largura do texto */
     text-align: center;
-    margin-bottom: 40px;
-    animation: pulseText 1.5s infinite;
+margin: 0 auto;
+    /* garante centralização */
+    padding: 0 10px;
+    /* respiro nas laterais */
 }
 
-.idle-cta-text {
+.container-subtext h1 {
+    margin: 0 0 10px;
+    font-family: 'Exo 2', sans-serif;
+    font-weight: 900;
+    text-transform: uppercase;
+    line-height: 1.15;
+    letter-spacing: 0.3px;
+    color: #ffffff;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.55);
+
+    font-size: 1.25rem;
+    /* ajuste fino */
+}
+
+.container-subtext h2 {
+    margin: 0;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 500;
+    line-height: 1.35;
+    color: rgba(255, 255, 255, 0.92);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.45);
+
+    font-size: 0.95rem;
+}
+
+/* Desktop */
+@media (min-width: 768px) {
+    .container-subtext {
+        max-width: 720px;
+    }
+
+    .container-subtext h1 {
+        font-size: 1.6rem;
+    }
+
+    .container-subtext h2 {
+        font-size: 1.05rem;
+    }
+}
+
+/* Novos Textos */
+.idle-text-content {
+    text-align: center;
+    color: #fff;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+.idle-title-text {
     font-family: 'Exo 2', sans-serif;
     font-weight: 900;
     font-size: 2rem;
     text-transform: uppercase;
-    color: #ffffff;
-    text-shadow: 0 4px 10px rgba(0, 0, 0, 0.8);
-    letter-spacing: 4px;
+    margin: 0;
+        line-height: 1.1;
+        color: #fbbf24;
+        /* Um tom dourado/amarelo para destaque */
+    }
+    
+    .idle-subtitle-text {
+        font-family: 'Poppins', sans-serif;
+        font-weight: 600;
+        font-size: 1rem;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        color: #e2e8f0;
+        margin-top: 5px;
 }
 
-/* Área de Logos Secundários (Patrocinadores/Footer) - Opcional */
-.idle-footer-logos {
+/* --- 3. BAIXO (Botão) --- */
+.idle-cta-container {
+    text-align: center;
+    width: 100%;
     display: flex;
-    gap: 30px;
-    opacity: 0.9;
+    justify-content: center;
+    }
+    
+    /* Estilo do Botão */
+    .idle-play-btn {
+        background: linear-gradient(to bottom, #10b981, #059669);
+        border: 2px solid #34d399;
+        color: white;
+        font-family: 'Exo 2', sans-serif;
+        font-weight: 900;
+        font-size: 1.5rem;
+        text-transform: uppercase;
+        padding: 15px 60px;
+        border-radius: 50px;
+        box-shadow: 0 0 20px rgba(16, 185, 129, 0.6);
+        cursor: pointer;
+        transition: all 0.2s ease;
+        animation: pulseBtn 2s infinite;
+        cursor: pointer;
+        z-index: 10000;
+        pointer-events: auto !important;
+    
+    }
+    
+    .idle-play-btn:active {
+        transform: translateY(4px);
+        box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+    }
+    
+    /* --- Ajustes Desktop --- */
+    @media (min-width: 768px) {
+        .idle-title-text {
+            font-size: 3rem;
+        }
+    
+        .idle-subtitle-text {
+            font-size: 1.2rem;
+        }
+    
+        .idle-play-btn {
+            font-size: 2rem;
+            padding: 20px 80px;
+        }
+
+                                                                                                                                                                                                                                                                .idle-top-logo {
+                                                                                                                                                                                                                                                                    max-height: 90px;
+                                                                                                                                                                                                                                                                }
 }
 
-.idle-partner-logo {
-    height: 40px;
-    /* Tamanho dos logos pequenos */
-    width: auto;
-    filter: brightness(0) invert(1);
-    /* Deixa logos brancos (opcional) */
-}
-
-/* Animações */
+/* --- Animações --- */
 @keyframes floatLogo {
 
     0%,
@@ -93,20 +210,25 @@
     }
 
     50% {
-        transform: translateY(-15px);
+        transform: translateY(-10px);
     }
 }
 
-@keyframes pulseText {
-
-    0%,
-    100% {
-        opacity: 1;
-        transform: scale(1);
+@keyframes pulseBtn {
+    0% {
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7), 0 4px 0 #064e3b;
     }
 
-    50% {
-        opacity: 0.7;
-        transform: scale(0.95);
+                                                                                                                                                                                                                                                                70% {
+                                                                                                                                                                                                                                                                    box-shadow: 0 0 0 20px rgba(16, 185, 129, 0), 0 4px 0 #064e3b;
+    }
+
+                                                                                                                                                                                                                                                                100% {
+                                                                                                                                                                                                                                                                    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0), 0 4px 0 #064e3b;
     }
 }
+/* #idle-screen.hidden {
+    display: none !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+} */

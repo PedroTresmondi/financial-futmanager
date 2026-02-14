@@ -9,10 +9,8 @@ const PLAYER_NAME_KEY = "ffm_player_name";
 const SCORE_CORRECT = 100;
 
 const els = {};
-// Elementos das novas telas de fluxo
 const flowEls = {};
 
-// Mapa de Telas para a Máquina de Estados
 const SCREENS = {
   idle: null,
   name: null,
@@ -23,7 +21,7 @@ const SCREENS = {
   game: null,
   ranking: null,
   endSplash: null,
-  summaryOverlay: null // Novo nome para a tela de resumo transparente
+  summaryOverlay: null
 };
 
 let assetsData = [];
@@ -34,16 +32,10 @@ let placedCards = [];
 let gameScore = 0;
 let playerName = "";
 
-// Drag state
 let activeDrag = null;
-
-// Debug mode
 let debugMode = false;
+let prizeResetTimer = null;
 
-// Timers de fluxo
-let prizeResetTimer = null; 
-
-// Timer da Partida
 let matchTimerInterval = null;
 let matchTimeRemaining = 0;
 let matchTimeConfig = { active: false, seconds: 60 };
@@ -61,7 +53,6 @@ let CARD_H = BASE_CARD_H;
 
 let fieldResizeObserver = null;
 
-// FALLBACK
 const FALLBACK_ASSETS = [
   { "id": 1, "name": "Tesouro Selic", "type": "Renda Fixa", "suitability": 10, "retorno": 15, "seguranca": 100, "desc": "Segurança máxima. Ideal para reservas." },
   { "id": 2, "name": "CDB Banco", "type": "Renda Fixa", "suitability": 20, "retorno": 25, "seguranca": 90, "desc": "Garantia FGC. Retorno superior à poupança." },
@@ -80,7 +71,6 @@ const FALLBACK_ASSETS = [
   { "id": 15, "name": "Opções", "type": "Derivativos", "suitability": 100, "retorno": 100, "seguranca": 5, "desc": "Alavancagem máxima. Risco total." }
 ];
 
-// ---------- Utils ----------
 function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
 function onlySpaces(str) { return !str || !String(str).trim(); }
 
@@ -115,7 +105,6 @@ function expectedZoneFor(assetSuit, profileKey) {
     if (assetSuit <= 60) return "midfield";
     return "attack";
   }
-  // ARROJADO
   if (assetSuit <= 50) return "defense";
   if (assetSuit <= 80) return "midfield";
   return "attack";
@@ -136,22 +125,15 @@ function getRiskBorderClass(asset) {
   return "risk-low";
 }
 
-// ---------- Gestão de Telas (FLOW) ----------
 function showScreen(screenKey) {
-  // O jogo (game-root) nunca deve receber "hidden" via classe se estivermos no fluxo de resumo
-  // Pois o resumo agora É o jogo com um overlay.
-
   Object.values(SCREENS).forEach(el => {
-    // Não esconde o game-root
     if (el && el.id !== 'game-root') el.classList.add('hidden');
   });
-
   if (screenKey && SCREENS[screenKey]) {
     SCREENS[screenKey].classList.remove('hidden');
   }
 }
 
-// ---------- Campo responsivo ----------
 function getFieldRect() {
   if (!els.fieldLayer) return null;
   const r = els.fieldLayer.getBoundingClientRect();
@@ -227,7 +209,6 @@ function setupFieldResizeWatcher() {
   }
 }
 
-// ---------- Player / Debug ----------
 function setPlayerName(name) {
   playerName = normalizeName(name);
   if (els.playerName) els.playerName.innerText = playerName || "--";
@@ -275,13 +256,11 @@ function toggleDebug() {
 function recomputeScore() {
   const correctCount = placedCards.reduce((acc, c) => acc + (c.correct ? 1 : 0), 0);
   const baseScore = correctCount * SCORE_CORRECT;
-  gameScore = baseScore; 
+  gameScore = baseScore;
   if (debugMode && els.scoreVal) {
     els.scoreVal.innerText = String(gameScore);
   }
 }
-
-// ---------- API ----------
 
 async function tryAwardPrize(points) {
   try {
@@ -360,7 +339,6 @@ async function showRankingScreen() {
   }, 30000);
 }
 
-// ---------- TIMER LOGIC ----------
 function startCountdown() {
   fetch("/api/config")
     .then(r => r.json())
@@ -446,7 +424,6 @@ function updateTimerDisplay(el) {
   }
 }
 
-// ---------- CARD DETAILS MODAL ----------
 function openCardDetails(asset) {
   if (!asset) return;
   pauseMatchTimer();
@@ -469,7 +446,6 @@ function closeCardDetails() {
   resumeMatchTimer();
 }
 
-// ---------- Stars ----------
 function getStars(percentage) {
   const starsCount = Math.round((percentage / 100) * 5);
   let html = "";
@@ -477,7 +453,6 @@ function getStars(percentage) {
   return html;
 }
 
-// ---------- HTML generators ----------
 function createPremiumCardHTML(asset) {
   return `
     <div class="score-badge">${asset.suitability}</div>
@@ -572,7 +547,6 @@ function ensureCloseButton(el, asset) {
   el.appendChild(close);
 }
 
-// ---------- Data loading ----------
 async function loadAssets() {
   try {
     const res = await fetch("./cards.json", { cache: "no-store" });
@@ -584,7 +558,6 @@ async function loadAssets() {
   }
 }
 
-// ---------- Name Screen ----------
 function buildVirtualKeyboard() {
   const rows = [
     ["Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P"],
@@ -695,8 +668,6 @@ function initNameScreen() {
   }, { passive: false });
 }
 
-// ---------- Novas Funções do Fluxo ----------
-
 function prepareMatch() {
   initGame();
   updateProfileModalContent();
@@ -705,18 +676,60 @@ function prepareMatch() {
 
 function updateProfileModalContent() {
   if (!currentProfile) return;
-  const modalName = document.getElementById("modal-profile-name");
-  const modalDesc = document.getElementById("modal-profile-desc");
-  modalName.innerText = currentProfile.label;
-  modalName.className = `text-5xl font-black font-display mb-4 relative z-10 drop-shadow-lg scale-110 ${currentProfile.color}`;
-  let desc = "";
-  if (currentProfileKey === "CONSERVADOR") desc = "Priorize a segurança. Evite riscos desnecessários e proteja seu patrimônio.";
-  else if (currentProfileKey === "MODERADO") desc = "Busque o equilíbrio entre risco e retorno. Nem muito lento, nem muito afoito.";
-  else desc = "Vá com tudo! Busque os maiores retornos e aceite a volatilidade do mercado.";
-  modalDesc.innerText = desc;
+
+  const nameEl = document.getElementById("modal-profile-name");
+  const descEl = document.getElementById("modal-profile-desc");
+  const cardEl = document.getElementById("profile-card");
+  const iconEl = document.getElementById("profile-icon");
+
+  const label = (currentProfile.label || "").toUpperCase();
+  if (nameEl) nameEl.textContent = `PERFIL ${label}`;
+
+  const descMap = {
+    ARROJADO: "Você busca alta rentabilidade e aceita mais risco. Foque em investimentos de alto potencial de retorno!",
+    MODERADO: "Seu perfil busca equilíbrio entre risco e retorno. Distribua seus ativos de forma balanceada!",
+    CONSERVADOR: "Seu perfil valoriza segurança e estabilidade. Foque em ativos de baixo risco para pontuar melhor!"
+  };
+  if (descEl) descEl.textContent = descMap[currentProfileKey] || descMap.MODERADO;
+
+  if (iconEl) {
+    const iconMap = {
+      ARROJADO: "/public/assets/icons/profile-arrojado.png",
+      MODERADO: "/public/assets/icons/profile-moderado.png",
+      CONSERVADOR: "/public/assets/icons/profile-conservador.png",
+    };
+    iconEl.src = iconMap[currentProfileKey] || iconMap.MODERADO;
+  }
+
+  if (cardEl) {
+    // 1) trocar imagem
+    const bgMap = {
+      ARROJADO: "url('/public/assets/backgrounds/profile-arrojado.png')",
+      MODERADO: "url('/public/assets/backgrounds/profile-moderado.png')",
+      CONSERVADOR: "url('/public/assets/backgrounds/profile-conservador.png')",
+    };
+    const bg = bgMap[currentProfileKey] || bgMap.MODERADO;
+    cardEl.style.setProperty("--profile-bg", bg);
+    cardEl.style.backgroundImage = bg; // fallback direto
+
+    // 2) trocar classe de tema (pra não ficar preso no moderado)
+    cardEl.classList.remove("profile-theme--arrojado", "profile-theme--moderado", "profile-theme--conservador");
+    if (currentProfileKey === "ARROJADO") cardEl.classList.add("profile-theme--arrojado");
+    else if (currentProfileKey === "CONSERVADOR") cardEl.classList.add("profile-theme--conservador");
+    else cardEl.classList.add("profile-theme--moderado");
+
+    // 3) contraste
+    cardEl.classList.remove("profile-contrast--light", "profile-contrast--dark");
+    if (currentProfileKey === "CONSERVADOR") cardEl.classList.add("profile-contrast--light");
+    else cardEl.classList.add("profile-contrast--dark");
+  }
 }
 
-// ---------- Game lifecycle ----------
+
+
+
+
+
 function bindEls() {
   els.prizeModal = document.getElementById("prize-modal");
   els.prizePoints = document.getElementById("prize-points");
@@ -741,8 +754,8 @@ function bindEls() {
   els.startGameBtn = document.getElementById("start-game-btn");
   els.nameClear = document.getElementById("name-clear");
 
-  els.sidebar = document.getElementById("game-sidebar"); // Novo ID
-  els.revealScoreBtn = document.getElementById("reveal-score-btn"); // Novo Botão
+  els.sidebar = document.getElementById("game-sidebar");
+  els.revealScoreBtn = document.getElementById("reveal-score-btn");
 
   SCREENS.idle = document.getElementById('idle-screen');
   SCREENS.name = document.getElementById('name-screen');
@@ -753,7 +766,7 @@ function bindEls() {
   SCREENS.game = document.getElementById('game-root');
   SCREENS.ranking = document.getElementById('ranking-screen');
   SCREENS.endSplash = document.getElementById('end-splash-screen');
-  SCREENS.summaryOverlay = document.getElementById('summary-overlay'); // Novo Overlay
+  SCREENS.summaryOverlay = document.getElementById('summary-overlay');
 
   flowEls.termsBtn = document.getElementById('terms-btn');
   flowEls.instBtn = document.getElementById('instructions-btn');
@@ -784,7 +797,6 @@ function initGame() {
   if (els.finishBtn) els.finishBtn.classList.add("hidden");
   if (els.prizeModal) els.prizeModal.classList.add("hidden");
 
-  // Garante que a sidebar está visível no início
   if (els.sidebar) els.sidebar.classList.remove("hidden");
 
   computeCardSizeFromField();
@@ -811,10 +823,8 @@ function renderSidebar() {
   applyDebugOnlyVisibility();
 }
 
-// ---------- Drag system ----------
 function initDrag(e, asset, originalEl) {
   if (e.pointerType === "mouse" && e.button !== 0) return;
-  // Se o overlay de resumo estiver visível, bloqueia drag
   if (!SCREENS.summaryOverlay.classList.contains('hidden')) return;
 
   e.preventDefault();
@@ -849,7 +859,7 @@ function handleMove(e) {
   }
 
   if (activeDrag.hasMoved && activeDrag.ghost) {
-    const vx = e.clientX - activeDrag.startX; 
+    const vx = e.clientX - activeDrag.startX;
     activeDrag.ghost.style.left = `${e.clientX}px`;
     activeDrag.ghost.style.top = `${e.clientY}px`;
     const rotateDeg = clamp(vx * 0.5, -15, 15);
@@ -884,14 +894,12 @@ function handleEnd(e) {
   window.removeEventListener("pointerup", handleEnd);
   window.removeEventListener("pointercancel", handleEnd);
 
-  // CLIQUE (ZOOM)
   if (!activeDrag.hasMoved) {
     openCardDetails(activeDrag.asset);
     activeDrag = null;
     return;
   }
 
-  // DROP
   const { asset, originalEl, ghost } = activeDrag;
   if (ghost) ghost.remove();
   originalEl.classList.remove("is-dragging");
@@ -899,7 +907,6 @@ function handleEnd(e) {
   activeDrag = null;
 }
 
-// ---------- Drop / Placement ----------
 function processDrop(assetId, clientX, clientY, offsetX, offsetY) {
   const asset = assetsData.find(a => a.id === assetId);
   if (!asset) return;
@@ -974,7 +981,6 @@ function placeCardOnField(asset, x, y, zone, correct) {
   applyDebugVisualsToElement(el, asset);
 }
 
-// ---------- UI / Stats ----------
 function updateStats() {
   if (!els.playersCount) return;
   els.playersCount.innerText = `${placedCards.length}/6`;
@@ -987,7 +993,6 @@ function updateStats() {
   }
 }
 
-// ---------- Brinde modal + retorno ----------
 function showPrizeModal(awardData, points) {
   if (els.prizePoints) els.prizePoints.innerText = String(points);
   if (!awardData) {
@@ -1048,7 +1053,6 @@ function returnToStart() {
   if (els.finishBtn) els.finishBtn.classList.add("hidden");
   if (els.prizeModal) els.prizeModal.classList.add("hidden");
 
-  // Reseta visibilidade da Sidebar
   if (els.sidebar) els.sidebar.classList.remove("hidden");
 
   setPlayerName("");
@@ -1066,12 +1070,9 @@ function returnToStart() {
   refreshCardsDebugVisuals();
 }
 
-// ---------- Finalize Sequence ----------
 async function finalizeGame() {
-  // Para timer imediatamente
   if (matchTimerInterval) clearInterval(matchTimerInterval);
 
-  // Calcula pontuação 
   const correctCount = placedCards.reduce((acc, c) => acc + (c.correct ? 1 : 0), 0);
   const baseScore = correctCount * SCORE_CORRECT;
 
@@ -1081,21 +1082,15 @@ async function finalizeGame() {
   }
   gameScore = baseScore + timeBonus;
 
-  // 1. Mostra Splash "FIM DE JOGO"
   showScreen('endSplash');
 
-  // 2. Espera 5 segundos e vai para o Modo Resumo (Campo Fullscreen)
   setTimeout(() => {
-    // Esconde a Splash
     SCREENS.endSplash.classList.add("hidden");
 
-    // Esconde a Sidebar -> O campo vai expandir
     if (els.sidebar) els.sidebar.classList.add("hidden");
 
-    // Mostra o Overlay transparente por cima
     showScreen('summaryOverlay');
 
-    // Força recalculo do layout do campo agora que está "full"
     setTimeout(() => {
       computeCardSizeFromField();
       relayoutPlacedCards();
@@ -1109,7 +1104,6 @@ async function revealScoreAndAward() {
   showPrizeModal(award, gameScore);
 }
 
-// ---------- Toast (DEBUG only) ----------
 function showToast(msg, kind = "error") {
   if (!debugMode) return;
   if (!els.toast) return;
@@ -1129,7 +1123,6 @@ function showToast(msg, kind = "error") {
   }, 1800);
 }
 
-// ---------- Boot ----------
 document.addEventListener("DOMContentLoaded", async () => {
   bindEls();
   computeCardSizeFromField();
@@ -1145,11 +1138,35 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (e.key === "p" || e.key === "P") {
         e.preventDefault();
         toggleDebug();
-        }
+      }
     }
   }, { passive: false });
 
   SCREENS.idle.addEventListener('click', () => { showScreen('name'); });
+
+  const idleBtn = document.querySelector('.idle-play-btn');
+  if (idleBtn) {
+    // Remove qualquer listener anterior
+    const newBtn = idleBtn.cloneNode(true);
+    idleBtn.parentNode.replaceChild(newBtn, idleBtn);
+
+    // Adiciona o evento de forma limpa
+    newBtn.addEventListener('click', (e) => {
+      console.log("CLIQUE NO BOTÃO DETECTADO!"); // Veja se isso aparece no console (F12)
+      e.preventDefault();
+      e.stopPropagation();
+      showScreen('name');
+    });
+
+    // Suporte a toque (mobile/quiosque)
+    newBtn.addEventListener('touchstart', (e) => {
+      console.log("TOQUE NO BOTÃO DETECTADO!");
+      e.preventDefault();
+      e.stopPropagation();
+      showScreen('name');
+    }, { passive: false });
+  }
+
   flowEls.termsBtn.addEventListener('click', () => { showScreen('instructions'); });
   flowEls.instBtn.addEventListener('click', () => { prepareMatch(); });
   flowEls.profileConfirmBtn.addEventListener('click', () => { startCountdown(); });

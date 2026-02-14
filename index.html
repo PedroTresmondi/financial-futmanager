@@ -10,191 +10,324 @@
   <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;700;900&family=Poppins:wght@400;600&display=swap"
     rel="stylesheet">
 
-<link rel="stylesheet" href="./style.css" />
-<link rel="stylesheet" href="/styles/idle.css" />
+  <link rel="stylesheet" href="./style.css" />
+  <link rel="stylesheet" href="/styles/idle.css" />
+  <link rel="stylesheet" href="/styles/name-screen.css" />
+  <link rel="stylesheet" href="/styles/terms.css" />
+  <link rel="stylesheet" href="/styles/instructions.css" />
+  <link rel="stylesheet" href="/styles/profile-modal.css" />
+  <link rel="stylesheet" href="/styles/game.css" />
   <script defer src="/src/main.js"></script>
 </head>
 
 <body class="h-screen flex flex-col bg-slate-950 overflow-hidden select-none">
 
-  <div id="idle-screen"
-    class="fixed inset-0 z-[150] flex flex-col items-center justify-center bg-slate-950 text-white cursor-pointer">
-    <div class="animate-pulse flex flex-col items-center">
-      <h1 class="text-6xl font-black font-display italic text-emerald-500 mb-4 tracking-tighter">FINANCIAL</h1>
-      <h1 class="text-6xl font-black font-display italic text-white mb-12 tracking-tighter">FOOTBALL</h1>
-    </div>
-    <p class="text-slate-400 text-xl animate-bounce uppercase tracking-widest">Toque para iniciar</p>
-  </div>
-
-  <div id="name-screen"
-    class="hidden fixed inset-0 z-[140] flex items-center justify-center bg-slate-950/95 backdrop-blur-md p-4">
-    <div class="w-full max-w-md bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl overflow-hidden">
-      <div class="p-4 border-b border-slate-700 bg-slate-800/40">
-        <h2 class="font-display text-xl font-black tracking-wide text-white">Digite seu nome</h2>
-        <p class="text-xs text-slate-400 mt-1">Identifique-se para o ranking.</p>
+  <div id="idle-screen">
+    <div class="idle-panel">
+      <div class="idle-top-container">
+        <img src="/public/assets/logos/logo-rio-bravo.png" alt="Rio Bravo" class="idle-top-logo" />
       </div>
-
-      <div class="p-4">
-        <div class="flex items-center gap-2 mb-3">
-          <div class="text-slate-400 text-[10px] uppercase tracking-widest">Jogador</div>
-          <div class="flex-1"></div>
-          <button id="name-clear" type="button" class="vk-action text-xs text-red-400 font-bold uppercase">Limpar</button>
+      <div class="idle-hero">
+        <div class="idle-shield"></div>
+      
+        <div class="idle-logo-container">
+          <img src="/public/assets/logos/game-logo.png" alt="Financial Football" class="idle-game-logo" />
         </div>
+      </div>
+      <div class="container-subtext">
+        <h1>
+          NO FUTEBOL E NOS INVESTIMENTOS,<br />
+          ESTRATÉGIA É TUDO!
+        </h1>
+        <h2>
+          Descubra seu perfil de investidor e monte sua carteira ideal <br />
+          com os nossos ativos e concorra a um brinde exclusivo.
+        </h2>
+      </div>
+      <div class="idle-cta-container">
+        <button class="idle-play-btn">ESCALAR MEU TIME</button>
+      </div>
+      </div>
+      </div>
+      <div id="name-screen" class="hidden fixed inset-0 flex items-center justify-center p-4">
+        <div class="name-screen-card">
+      
+          <!-- TOP BAR -->
+          <div class="name-topbar">
+            <button type="button" class="name-topbar-btn" id="name-back">‹ Voltar</button>
+          
+            <div class="name-topbar-center">
+              <img src="/public/assets/logos/logo-rio-bravo-alt.png" class="name-rb-logo" alt="Rio Bravo" />
+            </div>
+            <button type="button" class="name-topbar-btn" id="name-help">Ajuda ?</button>
+          </div>
 
-        <div class="vk-display mb-4">
-          <input id="name-input" type="text" maxlength="18" autocomplete="off" autocapitalize="characters"
-            spellcheck="false" readonly
-            class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-2xl font-display text-white text-center focus:outline-none focus:border-emerald-500 transition-colors" />
+      <!-- HERO -->
+      <div class="name-hero">
+        <img src="/public/assets/logos/game-logo.png" class="name-game-logo" alt="Craques da Carteira" />
+        <p class="name-hero-text">
+          Preencha seus dados pessoais para<br />
+          personalizarmos seu perfil e continuar o jogo
+        </p>
+      </div>
+      <div class="name-screen-body">
+        <div class="input-label-row">
+          <div class="input-label">
+            <span class="input-user-ico">👤</span>
+            Nome e Sobrenome
+          </div>
+          <div style="flex:1"></div>
+          <button id="name-clear" type="button" class="vk-action-clear">LIMPAR</button>
         </div>
-
-        <div id="name-warning" class="text-[11px] text-red-400 mb-2 hidden text-center font-bold">
-          Digite um nome para continuar.
+      
+        <div class="vk-display">
+          <input id="name-input" type="text" maxlength="18" autocomplete="off" autocapitalize="characters" spellcheck="false"
+            readonly placeholder="Como deseja ser chamado?" />
         </div>
-
+        
+        <div id="name-warning" class="hidden">Digite um nome para continuar.</div>
+        
+        <!-- Teclado -->
         <div id="vk-keys" class="vk-keys"></div>
 
-        <button id="start-game-btn" type="button"
-          class="w-full mt-6 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 disabled:hover:bg-emerald-600 text-white font-bold py-4 rounded-xl shadow-lg uppercase text-sm tracking-widest transition-all active:scale-95"
-          disabled>
-          Continuar
-          </button>
+        <button id="start-game-btn" type="button" disabled>CONTINUAR</button>
+        <p class="name-screen-tip">Dica: ENTER para começar • BACKSPACE para apagar</p>
+        </div>
+        </div>
+        </div>
+
+<div id="terms-screen" class="hidden">
+  <div class="terms-panel">
+
+    <!-- Topbar -->
+    <div class="terms-topbar">
+      <button type="button" class="terms-topbar-btn" id="terms-back">‹ Voltar</button>
+
+      <div class="terms-topbar-center">
+        <img src="/public/assets/logos/game-logo.png" class="terms-game-mini" alt="Craques da Carteira" />
+      </div>
+<button type="button" class="terms-topbar-btn" id="terms-help">Ajuda ?</button>
+</div>
+
+<h1 class="terms-title">TERMOS E LEI GERAL DE<br>PROTEÇÃO DE DADOS</h1>
+
+<div class="terms-card">
+  <div id="terms-scroll" class="terms-scroll custom-scrollbar">
+
+    <p><strong>REGULAMENTO – “CRIAÇÃO DE PERFIL / EXPERIÊNCIA INTERATIVA”</strong></p>
+    <p>
+      Este documento apresenta regras gerais para participação na experiência interativa do jogo
+      <strong>Craques da Carteira</strong>, realizada durante o evento. A participação é voluntária e gratuita.
+    </p>
+
+    <p><strong>1. Objetivo</strong></p>
+    <p>
+      A experiência tem caráter educativo e de entretenimento, com o objetivo de apresentar conceitos
+      relacionados a perfis de investimento e tomada de decisão.
+    </p>
+
+    <p><strong>2. Dados coletados</strong></p>
+    <p>
+      Para viabilizar a experiência e o ranking do evento, poderão ser coletados dados como:
+      nome/apelido informado, pontuação, desempenho no jogo e data/horário da participação (quando aplicável).
+    </p>
+
+    <p><strong>3. Finalidade do uso dos dados</strong></p>
+    <p>
+      Os dados serão utilizados para identificar o participante durante a partida, exibir o ranking do evento
+      e gerar métricas internas de uso e performance (preferencialmente de forma agregada e/ou anonimizada).
+    </p>
+
+    <p><strong>4. Compartilhamento</strong></p>
+    <p>
+      Os dados não serão vendidos. Poderão ser compartilhados apenas com fornecedores/operadores
+      necessários para a execução técnica do sistema (ex.: hospedagem e suporte), quando indispensável.
+    </p>
+
+    <p><strong>5. Armazenamento</strong></p>
+    <p>
+      Os dados serão armazenados somente pelo tempo necessário para a realização do evento e análises internas,
+      podendo ser posteriormente excluídos ou anonimizados.
+    </p>
+
+    <p><strong>6. Direitos do titular (LGPD)</strong></p>
+    <p>
+      Nos termos da Lei nº 13.709/2018 (LGPD), você pode solicitar confirmação de tratamento, acesso, correção,
+      anonimização, bloqueio, eliminação e informações sobre compartilhamento, conforme aplicável.
+    </p>
+
+    <p><strong>7. Segurança</strong></p>
+    <p>
+      São adotadas medidas razoáveis de segurança para proteger os dados contra acessos não autorizados,
+      perda, alteração ou divulgação indevida.
+    </p>
+
+    <p><strong>8. Disposições gerais</strong></p>
+    <p>
+      A organização poderá suspender ou encerrar a experiência por motivos técnicos, operacionais ou de segurança.
+      Ao clicar em <strong>“Li e aceito os termos”</strong>, você declara que leu e concorda com estas condições.
+    </p>
+
+    <p style="margin-top:14px; opacity:0.8;">
+      (Texto placeholder para desenvolvimento — substituir pela versão jurídica final do evento.)
+    </p>
+
+  </div>
+</div>
+<button id="terms-btn" class="terms-btn" enabled>
+  Li e aceito os termos
+</button>
+      <div class="terms-footer">
+        <img src="/public/assets/logos/logo-rio-bravo-alt.png" class="terms-rb-logo" alt="Rio Bravo" />
+      </div>
+
+    </div>
+    </div>
+    <div id="instructions-screen" class="hidden">
+      <div class="instructions-panel">
+    
+        <!-- Topbar -->
+        <div class="instructions-topbar">
+          <button type="button" class="instructions-topbar-btn" id="instructions-back">‹ Voltar</button>
+          <div class="instructions-topbar-center">
+            <img src="/public/assets/logos/game-logo.png" class="instructions-game-mini" alt="Craques da Carteira" />
           </div>
+          <button type="button" class="instructions-topbar-btn" id="instructions-help">Ajuda ?</button>
+        </div>
+        <h1 class="instructions-title">INSTRUÇÕES</h1>
+        
+        <div class="instructions-cards">
+          <div class="instructions-card">
+            <img src="/public/assets/icons/icon-profile.png" class="instructions-icon" alt="" />
+            <h3 class="instructions-card-title">SEU PERFIL DE INVESTIDOR</h3>
+            <p class="instructions-card-text">
+              Você receberá um perfil de investidor: Arrojado, Moderado ou Conservador.
+              Seu desafio é montar um time de investimentos que combine com seu perfil
+              dentro do tempo de 1 minuto e 30 segundos.
+            </p>
           </div>
+        <div class="instructions-card">
+          <img src="/public/assets/icons/icon-team.png" class="instructions-icon" alt="" />
+          <h3 class="instructions-card-title">MONTE SEU TIME</h3>
+          <p class="instructions-card-text">
+            Você deve escolher 6 cartas de investimento e arrastá-las para a posição
+            tática correta. Lembre-se da regra de ouro: Defesa protege (baixo risco),
+            Meio equilibra (médio risco) e Ataque rentabiliza (alto risco).
+          </p>
+        </div>
+        <div class="instructions-card">
+          <img src="/public/assets/icons/icon-score.png" class="instructions-icon" alt="" />
+          <h3 class="instructions-card-title">COMO PONTUAR</h3>
+          <p class="instructions-card-text">
+            Para subir no ranking, suas escolhas precisam ser perfeitas. A pontuação máxima
+            é atingida quando você acerta tanto a adequação do ativo ao perfil do investidor
+            quanto a posição dele no campo de futebol.
+          </p>
+        </div>
+
+      </div>
+      <button id="instructions-btn" class="instructions-btn" type="button">
+        COMEÇAR A DIVERSÃO
+      </button>
+      <div class="instructions-footer">
+        <img src="/public/assets/logos/logo-rio-bravo-alt.png" class="instructions-rb-logo" alt="Rio Bravo" />
+      </div>
+
+    </div>
+    </div>
+
+  <div id="profile-modal-screen" class="hidden">
+    <div class="profile-panel">
+  
+      <div class="profile-topbar">
+        <button type="button" class="profile-topbar-btn" id="profile-cancel">✕ Cancelar Partida</button>
+  
+        <div class="profile-topbar-center">
+          <img src="/public/assets/logos/game-logo.png" class="profile-game-mini" alt="Craques da Carteira" />
+        </div>
+        <button type="button" class="profile-topbar-btn" id="profile-help">Ajuda ?</button>
+      </div>
+      <h1 class="profile-title">SEU PERFIL FOI SORTEADO!</h1>
+      <!-- CARD -->
+      <div id="profile-card" class="profile-card profile-theme--moderado profile-contrast--dark">
+        <div class="profile-card-head">
+          <div class="profile-badge">
+            <img id="profile-icon" class="profile-badge-ico" src="/public/assets/icons/profile-moderado.png" alt="" />
           </div>
-          
-          <div id="terms-screen"
-            class="hidden fixed inset-0 z-[130] flex items-center justify-center bg-slate-950/95 backdrop-blur p-4">
-            <div class="max-w-md w-full bg-slate-900 border border-slate-700 rounded-2xl p-6 shadow-2xl">
-              <h2 class="text-2xl font-bold font-display text-white mb-4">Termos de Uso</h2>
-              <div
-                class="h-64 overflow-y-auto bg-slate-800/50 p-4 rounded-lg mb-6 text-xs text-slate-300 leading-relaxed border border-slate-700 custom-scrollbar">
-                <p class="mb-3"><strong class="text-white">1. Objetivo:</strong> O Financial Football é um jogo educativo sobre
-                  perfis de investimento.</p>
-                <p class="mb-3"><strong class="text-white">2. Dados:</strong> Seu nome e pontuação serão exibidos apenas no
-                  ranking local e momentâneo do evento.</p>
-                <p class="mb-3"><strong class="text-white">3. Imagem:</strong> Ao jogar, você concorda que sua participação é
-                  voluntária e gratuita.</p>
-                <p class="mb-3"><strong class="text-white">4. Brindes:</strong> A distribuição de brindes está sujeita à
-                  disponibilidade de estoque e atingimento de metas.</p>
-                <p>Toque em "Aceitar" para concordar e prosseguir para as instruções.</p>
-              </div>
-              <button id="terms-btn"
-                class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-4 rounded-xl uppercase text-sm shadow-lg active:scale-95 transition-transform tracking-widest">
-                Aceitar e Continuar
-              </button>
-            </div>
-          </div>
-          
-          <div id="instructions-screen"
-            class="hidden fixed inset-0 z-[120] flex items-center justify-center bg-slate-950/95 backdrop-blur p-4">
-            <div class="max-w-md w-full bg-slate-900 border border-slate-700 rounded-2xl p-8 shadow-2xl text-center">
-              <h2 class="text-3xl font-black font-display text-white mb-8 italic">COMO JOGAR</h2>
-          
-              <div class="space-y-6 text-left text-sm text-slate-300 mb-10">
-                <div class="flex items-center gap-4 bg-slate-800/50 p-3 rounded-xl border border-slate-700">
-                  <div class="bg-blue-500/20 p-3 rounded-lg text-2xl">🪙</div>
-                  <div>
-                    <p class="font-bold text-white uppercase text-xs mb-1">Arraste</p>
-                    <p class="leading-tight">Mova os cards de investimento para o campo.</p>
-                  </div>
-                </div>
-                <div class="flex items-center gap-4 bg-slate-800/50 p-3 rounded-xl border border-slate-700">
-                  <div class="bg-yellow-500/20 p-3 rounded-lg text-2xl">🛡️</div>
-                  <div>
-                    <p class="font-bold text-white uppercase text-xs mb-1">Posicione</p>
-                    <p class="leading-tight">Defesa, Meio ou Ataque conforme seu <strong>Perfil</strong>.</p>
-                  </div>
-                </div>
-                <div class="flex items-center gap-4 bg-slate-800/50 p-3 rounded-xl border border-slate-700">
-                  <div class="bg-emerald-500/20 p-3 rounded-lg text-2xl">⚽</div>
-                  <div>
-                    <p class="font-bold text-white uppercase text-xs mb-1">Escale</p>
-                    <p class="leading-tight">Complete seu time de <strong>6 jogadores</strong> para vencer.</p>
-                  </div>
-                </div>
-              </div>
-          
-              <button id="instructions-btn"
-                class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-xl uppercase text-sm shadow-lg active:scale-95 transition-transform tracking-widest">
-                Entendi, Vamos Lá!
-              </button>
-            </div>
-          </div>
-          
-          <div id="profile-modal-screen"
-            class="hidden fixed inset-0 z-[110] flex items-center justify-center bg-black/90 backdrop-blur-md p-4">
-            <div
-              class="max-w-sm w-full bg-gradient-to-br from-slate-900 to-slate-800 border border-slate-600 rounded-3xl p-8 text-center shadow-2xl relative overflow-hidden">
-              <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full h-1/2 bg-white/5 blur-3xl pointer-events-none"></div>
-          
-              <p class="text-slate-400 text-xs font-bold uppercase tracking-[0.2em] mb-6 relative z-10">Seu perfil sorteado é
-              </p>
-          
-              <div id="modal-profile-name"
-                class="text-5xl font-black font-display text-white mb-4 relative z-10 drop-shadow-lg scale-110">
-                ---
-              </div>
-          
-              <div class="w-16 h-1 bg-slate-700 mx-auto mb-6 rounded-full relative z-10"></div>
-          
-              <p id="modal-profile-desc" class="text-slate-300 text-sm mb-8 relative z-10 leading-relaxed px-4 min-h-[60px]">
-                Descrição do perfil...
-              </p>
-          
-              <button id="profile-confirm-btn"
-                class="w-full bg-yellow-500 hover:bg-yellow-400 text-slate-900 font-black py-4 rounded-xl uppercase tracking-widest shadow-lg active:scale-95 transition-transform relative z-10 text-lg">
-                JOGAR
-              </button>
-            </div>
-          </div>
-          
-          <div id="countdown-screen"
-            class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/80 backdrop-blur-xl">
-            <div id="countdown-number" class="text-[180px] font-black text-white italic font-display animate-ping select-none">
-              3
-            </div>
-          </div>
-          
-          <div id="end-splash-screen"
-            class="hidden fixed inset-0 z-[160] flex items-center justify-center bg-slate-950/90 backdrop-blur-xl">
-            <div class="text-center animate-bounce">
-              <h1
-                class="text-6xl md:text-8xl font-black font-display text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-500 italic uppercase tracking-tighter drop-shadow-lg">
-                FIM DE JOGO!
-              </h1>
-            </div>
-          </div>
-          
-          <div id="summary-overlay"
-            class="hidden fixed inset-0 z-[50] flex flex-col justify-between items-center p-8 pointer-events-none">
-          
-            <div class="mt-4 text-center animate-fade-in-down">
-              <h2
-                class="text-3xl md:text-5xl font-black font-display text-white mb-2 uppercase drop-shadow-[0_4px_4px_rgba(0,0,0,0.8)] tracking-wider">
-                Sua Escalação Final
-              </h2>
-              <p class="text-emerald-400 text-lg font-bold uppercase tracking-widest drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">
-                Confira como você posicionou seu time
-              </p>
-            </div>
-          
-            <div class="mb-8 animate-fade-in-up pointer-events-auto">
-              <button id="reveal-score-btn"
-                class="bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-400 hover:to-amber-500 text-slate-900 font-black py-4 px-12 rounded-2xl text-2xl shadow-[0_0_50px_rgba(234,179,8,0.6)] transition-all transform hover:scale-105 active:scale-95 uppercase tracking-widest border-2 border-yellow-400 cursor-pointer">
-                Ver Minha Pontuação
-              </button>
-            </div>
-          </div>
-          
-          <div id="card-details-modal"
-            class="hidden fixed inset-0 z-[200] flex items-center justify-center bg-black/90 backdrop-blur-sm p-4">
-            <div
-              class="relative w-full max-w-md bg-slate-900 border-2 border-slate-600 rounded-3xl p-1 shadow-2xl transform transition-all scale-100">
-          
-              <button id="close-details-btn"
-                class="absolute -top-4 -right-4 bg-red-600 hover:bg-red-500 text-white rounded-full w-10 h-10 flex items-center justify-center font-bold shadow-lg z-50">
-                ✕
-              </button>
+          <div id="modal-profile-name" class="profile-badge-text">PERFIL MODERADO</div>
+        </div>
+        <p id="modal-profile-desc" class="profile-card-text">
+          Seu perfil busca equilíbrio entre risco e retorno. Distribua seus ativos de forma balanceada!
+        </p>
+
+        <!-- se você NÃO quer mais a bola, remove esta linha -->
+        <div class="profile-ball" aria-hidden="true"></div>
+        </div>
+      <!-- /CARD -->
+
+      <p class="profile-footnote">
+        Agora você conhece seu estilo de investimento. Monte seu time seguindo as características deste perfil!
+      </p>
+
+      <button id="profile-confirm-btn" class="profile-cta" type="button">
+        ESCALAR MEU TIME
+      </button>
+      <div class="profile-footer">
+        <img src="/public/assets/logos/logo-rio-bravo-alt.png" class="profile-rb-logo" alt="Rio Bravo" />
+      </div>
+
+    </div>
+    </div>
+
+
+
+  <div id="countdown-screen"
+    class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/80 backdrop-blur-xl">
+    <div id="countdown-number" class="text-[180px] font-black text-white italic font-display animate-ping select-none">
+      3
+    </div>
+  </div>
+  
+  <div id="end-splash-screen"
+    class="hidden fixed inset-0 z-[160] flex items-center justify-center bg-slate-950/90 backdrop-blur-xl">
+    <div class="text-center animate-bounce">
+      <h1
+        class="text-6xl md:text-8xl font-black font-display text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-500 italic uppercase tracking-tighter drop-shadow-lg">
+        FIM DE JOGO!
+      </h1>
+    </div>
+  </div>
+  
+  <div id="summary-overlay"
+    class="hidden fixed inset-0 z-[50] flex flex-col justify-between items-center p-8 pointer-events-none">
+  
+    <div class="mt-4 text-center animate-fade-in-down">
+      <h2
+        class="text-3xl md:text-5xl font-black font-display text-white mb-2 uppercase drop-shadow-[0_4px_4px_rgba(0,0,0,0.8)] tracking-wider">
+        Sua Escalação Final
+      </h2>
+      <p class="text-emerald-400 text-lg font-bold uppercase tracking-widest drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">
+        Confira como você posicionou seu time
+      </p>
+    </div>
+  
+    <div class="mb-8 animate-fade-in-up pointer-events-auto">
+      <button id="reveal-score-btn"
+        class="bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-400 hover:to-amber-500 text-slate-900 font-black py-4 px-12 rounded-2xl text-2xl shadow-[0_0_50px_rgba(234,179,8,0.6)] transition-all transform hover:scale-105 active:scale-95 uppercase tracking-widest border-2 border-yellow-400 cursor-pointer">
+        Ver Minha Pontuação
+      </button>
+    </div>
+  </div>
+  
+  <div id="card-details-modal"
+    class="hidden fixed inset-0 z-[200] flex items-center justify-center bg-black/90 backdrop-blur-sm p-4">
+    <div
+      class="relative w-full max-w-md bg-slate-900 border-2 border-slate-600 rounded-3xl p-1 shadow-2xl transform transition-all scale-100">
+  
+      <button id="close-details-btn"
+        class="absolute -top-4 -right-4 bg-red-600 hover:bg-red-500 text-white rounded-full w-10 h-10 flex items-center justify-center font-bold shadow-lg z-50">
+        ✕
+      </button>
 
       <div id="details-content"
         class="bg-gradient-to-b from-slate-800 to-slate-950 rounded-[20px] p-8 flex flex-col items-center text-center h-full relative overflow-hidden">
@@ -203,21 +336,21 @@
             class="absolute top-[-50%] left-[-50%] w-[200%] h-[200%] bg-[radial-gradient(circle,rgba(255,255,255,0.1)_0%,transparent_60%)]">
           </div>
         </div>
-      
+
         <div id="detail-suitability"
           class="absolute top-6 right-6 w-16 h-16 bg-amber-400 text-amber-900 font-black flex items-center justify-center rounded-full text-xl shadow-lg rotate-12 z-10">
           --
         </div>
-      
+
         <div class="text-6xl mb-4">🪙</div>
-      
+
         <h2 id="detail-name" class="text-3xl font-black font-display text-white mb-2 uppercase leading-none">--</h2>
         <p id="detail-type" class="text-emerald-400 font-bold uppercase tracking-widest text-sm mb-6">--</p>
-      
+
         <div class="w-full h-px bg-slate-700 mb-6"></div>
-      
+
         <p id="detail-desc" class="text-slate-300 text-lg italic mb-8 leading-relaxed">...</p>
-      
+
         <div class="w-full space-y-4 mb-4">
           <div class="flex items-center justify-between bg-slate-800/50 p-3 rounded-xl border border-slate-700">
             <span class="text-slate-400 font-bold uppercase text-xs">Risco</span>
@@ -232,22 +365,22 @@
             <div id="detail-stars-sec" class="text-amber-400 text-xl tracking-widest"></div>
           </div>
         </div>
-      
+
         <p class="text-[10px] text-slate-500 mt-auto uppercase tracking-widest">Toque fora para fechar</p>
       </div>
-      </div>
-      </div>
-      
-      <div id="ranking-screen"
-        class="hidden fixed inset-0 z-[170] flex flex-col items-center justify-center bg-slate-950/95 backdrop-blur p-4">
-        <div class="w-full max-w-2xl bg-slate-900 border border-slate-700 rounded-2xl p-6 shadow-2xl flex flex-col h-[85vh]">
-          <h2
-            class="text-4xl font-black font-display text-white mb-1 text-center text-emerald-500 italic uppercase tracking-tighter">
-            Ranking do Dia
-          </h2>
-          <p id="ranking-date-display" class="text-center text-slate-500 text-xs mb-6 uppercase tracking-widest font-bold">
-            --/--/----
-          </p>
+    </div>
+    </div>
+    
+    <div id="ranking-screen"
+      class="hidden fixed inset-0 z-[170] flex flex-col items-center justify-center bg-slate-950/95 backdrop-blur p-4">
+      <div class="w-full max-w-2xl bg-slate-900 border border-slate-700 rounded-2xl p-6 shadow-2xl flex flex-col h-[85vh]">
+        <h2
+          class="text-4xl font-black font-display text-white mb-1 text-center text-emerald-500 italic uppercase tracking-tighter">
+          Ranking do Dia
+        </h2>
+        <p id="ranking-date-display" class="text-center text-slate-500 text-xs mb-6 uppercase tracking-widest font-bold">
+          --/--/----
+        </p>
       <div class="flex-1 overflow-y-auto custom-scrollbar bg-slate-950/50 rounded-xl border border-slate-800 mb-6 p-2">
         <table class="w-full text-left text-sm text-slate-300">
           <thead class="bg-slate-800/80 text-slate-100 font-bold uppercase text-[10px] sticky top-0 backdrop-blur-sm z-10">
@@ -262,7 +395,7 @@
           <tbody id="ranking-list" class="divide-y divide-slate-800/50 font-mono text-xs">
           </tbody>
         </table>
-      
+
         <div id="ranking-loading" class="text-center p-8 text-slate-500 animate-pulse">
           Carregando ranking...
         </div>
@@ -332,62 +465,38 @@
       </div>
     </header>
 
-    <div class="flex flex-1 overflow-hidden relative">
+    <div class="game-shell">
 
-      <aside id="game-sidebar"
-        class="w-[280px] bg-slate-900 border-r border-slate-700 flex flex-col z-10 shadow-2xl relative shrink-0 transition-all duration-500">
-        <div class="p-3 bg-slate-800/50 border-b border-slate-700 text-center">
-          <h2 class="font-bold text-slate-200 font-display text-xs tracking-widest">MERCADO DE ATIVOS</h2>
+      <!-- strip horizontal de investimentos -->
+      <section id="game-market" class="game-market">
+        <div class="game-market-head">
+          <div class="market-title">Lista de Investimentos</div>
+          <div class="market-selected">Selecionados <span id="players-count">0/6</span></div>
         </div>
 
-        <div id="cards-container" class="custom-scrollbar"></div>
+        <div id="cards-container" class="game-market-list custom-scrollbar"></div>
+        </section>
 
-        <div
-          class="absolute bottom-0 left-0 w-full h-8 bg-gradient-to-t from-slate-900 to-transparent pointer-events-none">
-        </div>
-      </aside>
+      <!-- campo -->
+      <main class="game-stage">
 
-      <main class="flex-1 relative bg-slate-800 p-2 flex justify-center items-center overflow-hidden">
+        <div id="error-toast" class="error-toast">Mensagem</div>
 
-        <div id="error-toast"
-          class="absolute top-4 left-1/2 transform -translate-x-1/2 bg-red-500 text-white px-4 py-2 rounded-lg shadow-2xl opacity-0 transition-all duration-300 z-50 pointer-events-none font-bold text-xs translate-y-[-20px] text-center w-max max-w-[90%]">
-          Mensagem de erro
-        </div>
-
-        <div
-          class="absolute left-2 top-1/2 transform -translate-y-1/2 flex flex-col h-[90%] justify-between py-8 text-slate-500/30 text-3xl font-black font-display uppercase tracking-widest pointer-events-none z-0 select-none">
-          <div class="rotate-[-90deg] origin-center">ATQ</div>
-          <div class="rotate-[-90deg] origin-center">MEI</div>
-          <div class="rotate-[-90deg] origin-center">DEF</div>
-        </div>
-
-        <button id="reset-btn" type="button"
-          class="absolute bottom-4 right-4 bg-slate-700/50 hover:bg-red-600 text-white p-2 rounded-full z-10 transition">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-          </svg>
-        </button>
-
-        <div id="field-container"
-          class="football-field w-full h-full rounded-xl flex flex-col relative shadow-2xl max-w-[500px] max-h-[800px] transition-all duration-500">
+        <div id="field-container" class="game-field">
           <div id="field-interactive-layer"></div>
-
-          <div class="corner tl"></div>
-          <div class="corner tr"></div>
-          <div class="corner bl"></div>
-          <div class="corner br"></div>
-
-          <div class="penalty-box top"></div>
-          <div class="goal-box top"></div>
-          <div class="mid-line"></div>
-          <div class="center-circle"></div>
-          <div class="center-dot"></div>
-          <div class="penalty-box bottom"></div>
-          <div class="goal-box bottom"></div>
         </div>
+
+        <!-- botão finalizar flutuante -->
+        <button id="finish-btn" class="game-finish hidden" type="button">FINALIZAR</button>
+
+        <!-- footer rio bravo -->
+        <div class="game-footer">
+          <img src="/public/assets/logos/logo-rio-bravo-alt.png" alt="Rio Bravo" class="game-footer-logo" />
+        </div>
+
       </main>
     </div>
+
   </div>
 
   <div id="prize-modal"
@@ -400,8 +509,8 @@
       <div
         class="absolute bottom-0 left-0 w-40 h-40 bg-emerald-500/20 rounded-full blur-3xl -ml-20 -mb-20 pointer-events-none">
       </div>
-<div class="text-5xl mb-4 animate-bounce">🎁</div>
-<h2 class="text-2xl font-bold mb-2 text-white font-display uppercase tracking-wide">Seu Resultado</h2>
+      <div class="text-5xl mb-4 animate-bounce">🎁</div>
+      <h2 class="text-2xl font-bold mb-2 text-white font-display uppercase tracking-wide">Seu Resultado</h2>
 
       <div class="bg-slate-800/80 p-5 rounded-xl border border-slate-700 mb-6 backdrop-blur-sm relative z-10">
         <div id="prize-status" class="text-sm font-bold text-white mb-2">...</div>

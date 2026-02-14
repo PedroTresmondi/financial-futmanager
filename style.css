@@ -37,7 +37,7 @@
    ========================= */
 body {
   font-family: "Poppins", sans-serif;
-    background-color: var(--bg);
+  background-color: var(--bg);
     color: var(--text);
   overflow: hidden;
   user-select: none;
@@ -57,7 +57,7 @@ h2,
   background-color: var(--green);
   background-image:
     repeating-linear-gradient(0deg,
-        transparent,
+      transparent,
         transparent 50px,
         rgba(0, 0, 0, 0.1) 50px,
         rgba(0, 0, 0, 0.1) 100px),
@@ -185,12 +185,9 @@ h2,
    ========================= */
 #cards-container {
   padding: 20px;
-  display: flex;
-  flex-direction: column;
   align-items: center;
   overflow-y: auto;
   touch-action: pan-y;
-  /* permite scroll */
 }
 
 /* scrollbar custom */
@@ -214,7 +211,7 @@ h2,
   width: 240px;
   height: 320px;
   background: linear-gradient(180deg, var(--slate-800) 0%, var(--slate-900) 100%);
-    border: 3px solid var(--slate-600);
+  border: 3px solid var(--slate-600);
     border-radius: var(--card-radius);
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.4);
   position: relative;
@@ -322,7 +319,7 @@ h2,
   font-size: 7px;
   font-weight: 800;
   background: var(--slate-900);
-    color: var(--slate-600);
+  color: var(--slate-600);
   }
   
   .zone-box.active-def {
@@ -361,7 +358,7 @@ h2,
 .field-card {
   position: absolute;
   width: var(--field-card-w);
-    height: var(--field-card-h);
+  height: var(--field-card-h);
     background: linear-gradient(145deg, var(--slate-800), var(--slate-900));
     border: 1px solid var(--slate-700);
     border-radius: var(--field-radius);
@@ -375,7 +372,7 @@ h2,
   box-sizing: border-box;
   touch-action: none;
   animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-/* scale interno controlado pelo JS */
+  /* scale interno controlado pelo JS */
   --innerScale: 1;
 }
 
@@ -508,94 +505,7 @@ h2,
   animation: shakeError 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97);
 }
 
-/* =========================
-     10) TELA DE NOME+TECLADO
-     =========================*/
-.vk-display {
-  background: rgba(2, 6, 23, 0.6);
-  border: 1px solid rgba(148, 163, 184, 0.25);
-  border-radius: 14px;
-  padding: 12px 14px;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03);
-}
 
-#name-input {
-  width: 100%;
-  background: transparent;
-  color: #fff;
-  font-family: "Exo 2", sans-serif;
-  font-weight: 900;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  font-size: 22px;
-  outline: none;
-  border: none;
-}
-
-.vk-keys {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  user-select: none;
-}
-
-.vk-row {
-  display: flex;
-  gap: 8px;
-  justify-content: center;
-}
-
-.vk-key {
-  height: 46px;
-  min-width: 34px;
-  padding: 0 10px;
-  border-radius: 12px;
-  border: 1px solid rgba(148, 163, 184, 0.25);
-  background: rgba(15, 23, 42, 0.9);
-  color: rgba(255, 255, 255, 0.92);
-  font-weight: 800;
-  font-family: "Exo 2", sans-serif;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
-  transition: transform 0.06s ease, background 0.12s ease;
-  touch-action: manipulation;
-}
-
-.vk-key:active {
-  transform: translateY(1px) scale(0.98);
-  background: rgba(30, 41, 59, 0.95);
-}
-
-.vk-key.wide {
-  min-width: 78px;
-}
-
-.vk-key.space {
-  flex: 1;
-  min-width: 160px;
-}
-
-.vk-key.danger {
-  border-color: rgba(239, 68, 68, 0.35);
-}
-
-.vk-key.ok {
-  border-color: rgba(16, 185, 129, 0.35);
-}
-
-.vk-action {
-  font-size: 11px;
-  font-weight: 800;
-  padding: 6px 10px;
-  border-radius: 999px;
-  border: 1px solid rgba(148, 163, 184, 0.25);
-  background: rgba(15, 23, 42, 0.8);
-  color: rgba(255, 255, 255, 0.9);
-  transition: transform 0.06s ease, background 0.12s ease;
-}
-
-.vk-action:active {
-  transform: scale(0.98);
-}
 
 /* =========================
      11) DEBUG MODE
@@ -625,7 +535,7 @@ body:not(.debug) .theme-low,
 body:not(.debug) .theme-med,
 body:not(.debug) .theme-high {
   border-color: var(--slate-600) !important;
-    background: linear-gradient(180deg, var(--slate-800) 0%, var(--slate-900) 100%) !important;
+  background: linear-gradient(180deg, var(--slate-800) 0%, var(--slate-900) 100%) !important;
 }
 
 /* sidebar por data-risk (apenas no debug) */
@@ -677,4 +587,9 @@ body.debug .field-card.risk-med {
 
 body.debug .field-card.risk-high {
   border-bottom: 4px solid var(--high);
+}
+.hidden {
+  display: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
 }
