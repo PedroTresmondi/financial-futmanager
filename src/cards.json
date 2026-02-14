@@ -1,19 +1,139 @@
 {
   "assets": [
-    { "id": 1, "name": "Tesouro Selic", "type": "Renda Fixa", "suitability": 10, "retorno": 20, "seguranca": 100, "desc": "Segurança máxima." },
-    { "id": 2, "name": "CDB Banco", "type": "Renda Fixa", "suitability": 20, "retorno": 30, "seguranca": 90, "desc": "Garantia FGC." },
-    { "id": 3, "name": "Fundo DI", "type": "Fundo", "suitability": 25, "retorno": 35, "seguranca": 85, "desc": "Conservador." },
-    { "id": 4, "name": "LCI/LCA", "type": "Isento", "suitability": 30, "retorno": 40, "seguranca": 85, "desc": "Isento de IR." },
-    { "id": 5, "name": "Debênture", "type": "Crédito", "suitability": 35, "retorno": 45, "seguranca": 75, "desc": "Dívida privada." },
-    { "id": 6, "name": "Multimercado", "type": "Fundo", "suitability": 45, "retorno": 55, "seguranca": 65, "desc": "Diversificado." },
-    { "id": 7, "name": "FII Papel", "type": "Imobiliário", "suitability": 50, "retorno": 60, "seguranca": 60, "desc": "Recebíveis." },
-    { "id": 8, "name": "FII Tijolo", "type": "Imobiliário", "suitability": 55, "retorno": 65, "seguranca": 55, "desc": "Imóveis físicos." },
-    { "id": 9, "name": "ETF S&P500", "type": "Internacional", "suitability": 60, "retorno": 70, "seguranca": 50, "desc": "Bolsa EUA." },
-    { "id": 10, "name": "Blue Chips", "type": "Ações", "suitability": 65, "retorno": 75, "seguranca": 45, "desc": "Grandes empresas." },
-    { "id": 11, "name": "Small Caps", "type": "Ações", "suitability": 75, "retorno": 85, "seguranca": 30, "desc": "Alto crescimento." },
-    { "id": 12, "name": "Dólar Futuro", "type": "Derivativos", "suitability": 80, "retorno": 80, "seguranca": 35, "desc": "Câmbio." },
-    { "id": 13, "name": "Bitcoin", "type": "Cripto", "suitability": 90, "retorno": 95, "seguranca": 10, "desc": "Ouro digital." },
-    { "id": 14, "name": "Altcoins", "type": "Cripto", "suitability": 95, "retorno": 100, "seguranca": 5, "desc": "Alto risco." },
-    { "id": 15, "name": "Opções", "type": "Derivativos", "suitability": 100, "retorno": 100, "seguranca": 0, "desc": "Alavancagem." }
+    {
+      "id": 1,
+      "name": "Tesouro Selic",
+      "type": "Renda Fixa",
+      "suitability": 10,
+      "retorno": 15,
+      "seguranca": 100,
+      "desc": "O investimento mais seguro do país. Ideal para reservas de emergência e perfis conservadores."
+    },
+    {
+      "id": 2,
+      "name": "CDB Banco",
+      "type": "Renda Fixa",
+      "suitability": 20,
+      "retorno": 25,
+      "seguranca": 90,
+      "desc": "Emprestimo para o banco com garantia do FGC. Retorno superior à poupança."
+    },
+    {
+      "id": 3,
+      "name": "Fundo DI",
+      "type": "Fundo",
+      "suitability": 25,
+      "retorno": 30,
+      "seguranca": 85,
+      "desc": "Carteira diversificada em renda fixa. Liquidez diária e gestão profissional."
+    },
+    {
+      "id": 4,
+      "name": "LCI / LCA",
+      "type": "Isento",
+      "suitability": 30,
+      "retorno": 35,
+      "seguranca": 85,
+      "desc": "Investimento isento de Imposto de Renda, focado nos setores imobiliário e do agronegócio."
+    },
+    {
+      "id": 5,
+      "name": "Debênture",
+      "type": "Crédito",
+      "suitability": 40,
+      "retorno": 45,
+      "seguranca": 70,
+      "desc": "Dívida de empresas privadas. Maior risco de crédito, mas com taxas atrativas."
+    },
+    {
+      "id": 6,
+      "name": "Multimercado",
+      "type": "Fundo",
+      "suitability": 50,
+      "retorno": 55,
+      "seguranca": 60,
+      "desc": "Fundo que mistura renda fixa, ações e câmbio. Busca superar o CDI com volatilidade controlada."
+    },
+    {
+      "id": 7,
+      "name": "FII Papel",
+      "type": "Imobiliário",
+      "suitability": 55,
+      "retorno": 60,
+      "seguranca": 55,
+      "desc": "Fundo imobiliário focado em dívidas (CRIs). Paga dividendos mensais isentos de IR."
+    },
+    {
+      "id": 8,
+      "name": "FII Tijolo",
+      "type": "Imobiliário",
+      "suitability": 60,
+      "retorno": 65,
+      "seguranca": 50,
+      "desc": "Investimento em imóveis físicos como shoppings e galpões. Renda de aluguéis e valorização."
+    },
+    {
+      "id": 9,
+      "name": "ETF S&P500",
+      "type": "Internacional",
+      "suitability": 65,
+      "retorno": 70,
+      "seguranca": 50,
+      "desc": "Exposição às 500 maiores empresas dos EUA. Diversificação em dólar sem sair do Brasil."
+    },
+    {
+      "id": 10,
+      "name": "Ações Blue Chips",
+      "type": "Ações",
+      "suitability": 70,
+      "retorno": 75,
+      "seguranca": 45,
+      "desc": "Ações de empresas grandes, consolidadas e com bom histórico de lucros na Bolsa."
+    },
+    {
+      "id": 11,
+      "name": "Small Caps",
+      "type": "Ações",
+      "suitability": 80,
+      "retorno": 85,
+      "seguranca": 30,
+      "desc": "Ações de empresas menores com alto potencial de crescimento, mas maior volatilidade."
+    },
+    {
+      "id": 12,
+      "name": "Dólar Futuro",
+      "type": "Derivativos",
+      "suitability": 85,
+      "retorno": 80,
+      "seguranca": 30,
+      "desc": "Proteção ou especulação com a variação cambial. Alto risco e alavancagem."
+    },
+    {
+      "id": 13,
+      "name": "Bitcoin",
+      "type": "Cripto",
+      "suitability": 90,
+      "retorno": 95,
+      "seguranca": 20,
+      "desc": "A principal criptomoeda do mercado. Ouro digital, descentralizado e escasso."
+    },
+    {
+      "id": 14,
+      "name": "Altcoins",
+      "type": "Cripto",
+      "suitability": 95,
+      "retorno": 100,
+      "seguranca": 10,
+      "desc": "Criptomoedas alternativas com projetos inovadores, mas risco extremo de oscilação."
+    },
+    {
+      "id": 15,
+      "name": "Opções",
+      "type": "Derivativos",
+      "suitability": 100,
+      "retorno": 100,
+      "seguranca": 5,
+      "desc": "Instrumentos para alavancagem máxima. Potencial de ganhos explosivos ou perda total."
+    }
   ]
 }

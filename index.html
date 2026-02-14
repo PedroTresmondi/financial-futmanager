@@ -10,54 +10,271 @@
   <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;700;900&family=Poppins:wght@400;600&display=swap"
     rel="stylesheet">
 
-  <link rel="stylesheet" href="./style.css" />
+<link rel="stylesheet" href="./style.css" />
+<link rel="stylesheet" href="/styles/idle.css" />
   <script defer src="/src/main.js"></script>
 </head>
 
-<body class="h-screen flex flex-col bg-slate-950">
+<body class="h-screen flex flex-col bg-slate-950 overflow-hidden select-none">
+
+  <div id="idle-screen"
+    class="fixed inset-0 z-[150] flex flex-col items-center justify-center bg-slate-950 text-white cursor-pointer">
+    <div class="animate-pulse flex flex-col items-center">
+      <h1 class="text-6xl font-black font-display italic text-emerald-500 mb-4 tracking-tighter">FINANCIAL</h1>
+      <h1 class="text-6xl font-black font-display italic text-white mb-12 tracking-tighter">FOOTBALL</h1>
+    </div>
+    <p class="text-slate-400 text-xl animate-bounce uppercase tracking-widest">Toque para iniciar</p>
+  </div>
 
   <div id="name-screen"
-    class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/95 backdrop-blur-md p-4">
+    class="hidden fixed inset-0 z-[140] flex items-center justify-center bg-slate-950/95 backdrop-blur-md p-4">
     <div class="w-full max-w-md bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl overflow-hidden">
       <div class="p-4 border-b border-slate-700 bg-slate-800/40">
         <h2 class="font-display text-xl font-black tracking-wide text-white">Digite seu nome</h2>
-        <p class="text-xs text-slate-400 mt-1">Use o teclado virtual abaixo.</p>
+        <p class="text-xs text-slate-400 mt-1">Identifique-se para o ranking.</p>
       </div>
 
       <div class="p-4">
         <div class="flex items-center gap-2 mb-3">
           <div class="text-slate-400 text-[10px] uppercase tracking-widest">Jogador</div>
           <div class="flex-1"></div>
-          <button id="name-clear" type="button" class="vk-action">Limpar</button>
+          <button id="name-clear" type="button" class="vk-action text-xs text-red-400 font-bold uppercase">Limpar</button>
         </div>
 
-        <div class="vk-display">
+        <div class="vk-display mb-4">
           <input id="name-input" type="text" maxlength="18" autocomplete="off" autocapitalize="characters"
-            spellcheck="false" readonly />
+            spellcheck="false" readonly
+            class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-2xl font-display text-white text-center focus:outline-none focus:border-emerald-500 transition-colors" />
         </div>
 
-        <div id="name-warning" class="text-[11px] text-red-400 mt-2 hidden">
+        <div id="name-warning" class="text-[11px] text-red-400 mb-2 hidden text-center font-bold">
           Digite um nome para continuar.
         </div>
 
-        <div id="vk-keys" class="vk-keys mt-4"></div>
+        <div id="vk-keys" class="vk-keys"></div>
 
         <button id="start-game-btn" type="button"
-          class="w-full mt-4 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 disabled:hover:bg-emerald-600 text-white font-bold py-3 rounded-xl shadow-lg uppercase text-sm"
+          class="w-full mt-6 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 disabled:hover:bg-emerald-600 text-white font-bold py-4 rounded-xl shadow-lg uppercase text-sm tracking-widest transition-all active:scale-95"
           disabled>
-          Começar
-        </button>
+          Continuar
+          </button>
+          </div>
+          </div>
+          </div>
+          
+          <div id="terms-screen"
+            class="hidden fixed inset-0 z-[130] flex items-center justify-center bg-slate-950/95 backdrop-blur p-4">
+            <div class="max-w-md w-full bg-slate-900 border border-slate-700 rounded-2xl p-6 shadow-2xl">
+              <h2 class="text-2xl font-bold font-display text-white mb-4">Termos de Uso</h2>
+              <div
+                class="h-64 overflow-y-auto bg-slate-800/50 p-4 rounded-lg mb-6 text-xs text-slate-300 leading-relaxed border border-slate-700 custom-scrollbar">
+                <p class="mb-3"><strong class="text-white">1. Objetivo:</strong> O Financial Football é um jogo educativo sobre
+                  perfis de investimento.</p>
+                <p class="mb-3"><strong class="text-white">2. Dados:</strong> Seu nome e pontuação serão exibidos apenas no
+                  ranking local e momentâneo do evento.</p>
+                <p class="mb-3"><strong class="text-white">3. Imagem:</strong> Ao jogar, você concorda que sua participação é
+                  voluntária e gratuita.</p>
+                <p class="mb-3"><strong class="text-white">4. Brindes:</strong> A distribuição de brindes está sujeita à
+                  disponibilidade de estoque e atingimento de metas.</p>
+                <p>Toque em "Aceitar" para concordar e prosseguir para as instruções.</p>
+              </div>
+              <button id="terms-btn"
+                class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-4 rounded-xl uppercase text-sm shadow-lg active:scale-95 transition-transform tracking-widest">
+                Aceitar e Continuar
+              </button>
+            </div>
+          </div>
+          
+          <div id="instructions-screen"
+            class="hidden fixed inset-0 z-[120] flex items-center justify-center bg-slate-950/95 backdrop-blur p-4">
+            <div class="max-w-md w-full bg-slate-900 border border-slate-700 rounded-2xl p-8 shadow-2xl text-center">
+              <h2 class="text-3xl font-black font-display text-white mb-8 italic">COMO JOGAR</h2>
+          
+              <div class="space-y-6 text-left text-sm text-slate-300 mb-10">
+                <div class="flex items-center gap-4 bg-slate-800/50 p-3 rounded-xl border border-slate-700">
+                  <div class="bg-blue-500/20 p-3 rounded-lg text-2xl">🪙</div>
+                  <div>
+                    <p class="font-bold text-white uppercase text-xs mb-1">Arraste</p>
+                    <p class="leading-tight">Mova os cards de investimento para o campo.</p>
+                  </div>
+                </div>
+                <div class="flex items-center gap-4 bg-slate-800/50 p-3 rounded-xl border border-slate-700">
+                  <div class="bg-yellow-500/20 p-3 rounded-lg text-2xl">🛡️</div>
+                  <div>
+                    <p class="font-bold text-white uppercase text-xs mb-1">Posicione</p>
+                    <p class="leading-tight">Defesa, Meio ou Ataque conforme seu <strong>Perfil</strong>.</p>
+                  </div>
+                </div>
+                <div class="flex items-center gap-4 bg-slate-800/50 p-3 rounded-xl border border-slate-700">
+                  <div class="bg-emerald-500/20 p-3 rounded-lg text-2xl">⚽</div>
+                  <div>
+                    <p class="font-bold text-white uppercase text-xs mb-1">Escale</p>
+                    <p class="leading-tight">Complete seu time de <strong>6 jogadores</strong> para vencer.</p>
+                  </div>
+                </div>
+              </div>
+          
+              <button id="instructions-btn"
+                class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-xl uppercase text-sm shadow-lg active:scale-95 transition-transform tracking-widest">
+                Entendi, Vamos Lá!
+              </button>
+            </div>
+          </div>
+          
+          <div id="profile-modal-screen"
+            class="hidden fixed inset-0 z-[110] flex items-center justify-center bg-black/90 backdrop-blur-md p-4">
+            <div
+              class="max-w-sm w-full bg-gradient-to-br from-slate-900 to-slate-800 border border-slate-600 rounded-3xl p-8 text-center shadow-2xl relative overflow-hidden">
+              <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full h-1/2 bg-white/5 blur-3xl pointer-events-none"></div>
+          
+              <p class="text-slate-400 text-xs font-bold uppercase tracking-[0.2em] mb-6 relative z-10">Seu perfil sorteado é
+              </p>
+          
+              <div id="modal-profile-name"
+                class="text-5xl font-black font-display text-white mb-4 relative z-10 drop-shadow-lg scale-110">
+                ---
+              </div>
+          
+              <div class="w-16 h-1 bg-slate-700 mx-auto mb-6 rounded-full relative z-10"></div>
+          
+              <p id="modal-profile-desc" class="text-slate-300 text-sm mb-8 relative z-10 leading-relaxed px-4 min-h-[60px]">
+                Descrição do perfil...
+              </p>
+          
+              <button id="profile-confirm-btn"
+                class="w-full bg-yellow-500 hover:bg-yellow-400 text-slate-900 font-black py-4 rounded-xl uppercase tracking-widest shadow-lg active:scale-95 transition-transform relative z-10 text-lg">
+                JOGAR
+              </button>
+            </div>
+          </div>
+          
+          <div id="countdown-screen"
+            class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/80 backdrop-blur-xl">
+            <div id="countdown-number" class="text-[180px] font-black text-white italic font-display animate-ping select-none">
+              3
+            </div>
+          </div>
+          
+          <div id="end-splash-screen"
+            class="hidden fixed inset-0 z-[160] flex items-center justify-center bg-slate-950/90 backdrop-blur-xl">
+            <div class="text-center animate-bounce">
+              <h1
+                class="text-6xl md:text-8xl font-black font-display text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-500 italic uppercase tracking-tighter drop-shadow-lg">
+                FIM DE JOGO!
+              </h1>
+            </div>
+          </div>
+          
+          <div id="summary-overlay"
+            class="hidden fixed inset-0 z-[50] flex flex-col justify-between items-center p-8 pointer-events-none">
+          
+            <div class="mt-4 text-center animate-fade-in-down">
+              <h2
+                class="text-3xl md:text-5xl font-black font-display text-white mb-2 uppercase drop-shadow-[0_4px_4px_rgba(0,0,0,0.8)] tracking-wider">
+                Sua Escalação Final
+              </h2>
+              <p class="text-emerald-400 text-lg font-bold uppercase tracking-widest drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">
+                Confira como você posicionou seu time
+              </p>
+            </div>
+          
+            <div class="mb-8 animate-fade-in-up pointer-events-auto">
+              <button id="reveal-score-btn"
+                class="bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-400 hover:to-amber-500 text-slate-900 font-black py-4 px-12 rounded-2xl text-2xl shadow-[0_0_50px_rgba(234,179,8,0.6)] transition-all transform hover:scale-105 active:scale-95 uppercase tracking-widest border-2 border-yellow-400 cursor-pointer">
+                Ver Minha Pontuação
+              </button>
+            </div>
+          </div>
+          
+          <div id="card-details-modal"
+            class="hidden fixed inset-0 z-[200] flex items-center justify-center bg-black/90 backdrop-blur-sm p-4">
+            <div
+              class="relative w-full max-w-md bg-slate-900 border-2 border-slate-600 rounded-3xl p-1 shadow-2xl transform transition-all scale-100">
+          
+              <button id="close-details-btn"
+                class="absolute -top-4 -right-4 bg-red-600 hover:bg-red-500 text-white rounded-full w-10 h-10 flex items-center justify-center font-bold shadow-lg z-50">
+                ✕
+              </button>
 
-        <p class="text-[10px] text-slate-500 mt-3 text-center">
-          Dica: ENTER para começar • BACKSPACE para apagar
-        </p>
+      <div id="details-content"
+        class="bg-gradient-to-b from-slate-800 to-slate-950 rounded-[20px] p-8 flex flex-col items-center text-center h-full relative overflow-hidden">
+        <div class="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
+          <div
+            class="absolute top-[-50%] left-[-50%] w-[200%] h-[200%] bg-[radial-gradient(circle,rgba(255,255,255,0.1)_0%,transparent_60%)]">
+          </div>
+        </div>
+      
+        <div id="detail-suitability"
+          class="absolute top-6 right-6 w-16 h-16 bg-amber-400 text-amber-900 font-black flex items-center justify-center rounded-full text-xl shadow-lg rotate-12 z-10">
+          --
+        </div>
+      
+        <div class="text-6xl mb-4">🪙</div>
+      
+        <h2 id="detail-name" class="text-3xl font-black font-display text-white mb-2 uppercase leading-none">--</h2>
+        <p id="detail-type" class="text-emerald-400 font-bold uppercase tracking-widest text-sm mb-6">--</p>
+      
+        <div class="w-full h-px bg-slate-700 mb-6"></div>
+      
+        <p id="detail-desc" class="text-slate-300 text-lg italic mb-8 leading-relaxed">...</p>
+      
+        <div class="w-full space-y-4 mb-4">
+          <div class="flex items-center justify-between bg-slate-800/50 p-3 rounded-xl border border-slate-700">
+            <span class="text-slate-400 font-bold uppercase text-xs">Risco</span>
+            <div id="detail-stars-risk" class="text-amber-400 text-xl tracking-widest"></div>
+          </div>
+          <div class="flex items-center justify-between bg-slate-800/50 p-3 rounded-xl border border-slate-700">
+            <span class="text-slate-400 font-bold uppercase text-xs">Retorno</span>
+            <div id="detail-stars-ret" class="text-amber-400 text-xl tracking-widest"></div>
+          </div>
+          <div class="flex items-center justify-between bg-slate-800/50 p-3 rounded-xl border border-slate-700">
+            <span class="text-slate-400 font-bold uppercase text-xs">Segurança</span>
+            <div id="detail-stars-sec" class="text-amber-400 text-xl tracking-widest"></div>
+          </div>
+        </div>
+      
+        <p class="text-[10px] text-slate-500 mt-auto uppercase tracking-widest">Toque fora para fechar</p>
       </div>
+      </div>
+      </div>
+      
+      <div id="ranking-screen"
+        class="hidden fixed inset-0 z-[170] flex flex-col items-center justify-center bg-slate-950/95 backdrop-blur p-4">
+        <div class="w-full max-w-2xl bg-slate-900 border border-slate-700 rounded-2xl p-6 shadow-2xl flex flex-col h-[85vh]">
+          <h2
+            class="text-4xl font-black font-display text-white mb-1 text-center text-emerald-500 italic uppercase tracking-tighter">
+            Ranking do Dia
+          </h2>
+          <p id="ranking-date-display" class="text-center text-slate-500 text-xs mb-6 uppercase tracking-widest font-bold">
+            --/--/----
+          </p>
+      <div class="flex-1 overflow-y-auto custom-scrollbar bg-slate-950/50 rounded-xl border border-slate-800 mb-6 p-2">
+        <table class="w-full text-left text-sm text-slate-300">
+          <thead class="bg-slate-800/80 text-slate-100 font-bold uppercase text-[10px] sticky top-0 backdrop-blur-sm z-10">
+            <tr>
+              <th class="p-3 rounded-tl-lg">#</th>
+              <th class="p-3">Jogador</th>
+              <th class="p-3">Perfil</th>
+              <th class="p-3 text-right">Pontos</th>
+              <th class="p-3 text-center rounded-tr-lg">Prêmio</th>
+            </tr>
+          </thead>
+          <tbody id="ranking-list" class="divide-y divide-slate-800/50 font-mono text-xs">
+          </tbody>
+        </table>
+      
+        <div id="ranking-loading" class="text-center p-8 text-slate-500 animate-pulse">
+          Carregando ranking...
+        </div>
+      </div>
+      <button id="back-to-home-btn"
+        class="w-full bg-slate-700 hover:bg-slate-600 text-white font-bold py-4 rounded-xl uppercase tracking-widest shadow-lg active:scale-95 transition-transform border border-slate-600">
+        Voltar ao Início
+      </button>
     </div>
   </div>
 
-  <!-- APP DO JOGO -->
   <div id="game-root" class="h-screen flex flex-col">
-    <!-- Header -->
     <header
       class="bg-slate-900 p-2 shadow-xl border-b border-slate-700 z-10 flex justify-between items-center h-16 shrink-0">
       <div class="ml-2">
@@ -79,7 +296,6 @@
           <div id="target-profile" class="text-sm font-bold font-display text-yellow-400">--</div>
         </div>
 
-        <!-- DEBUG: Meta (fica escondido) -->
         <div class="h-6 w-px bg-slate-600 debug-only"></div>
         <div class="text-center debug-only">
           <p class="text-[8px] text-slate-400 uppercase tracking-wider">Meta</p>
@@ -99,27 +315,27 @@
           <p class="text-[8px] text-slate-400 uppercase tracking-wider">Time</p>
           <div id="players-count" class="text-sm font-bold font-display text-white limit-indicator">0/6</div>
         </div>
+        <div id="game-timer-container"
+          class="hidden flex flex-col items-center justify-center ml-2 mr-1 bg-slate-800 px-2 rounded border border-slate-700">
+          <p class="text-[6px] text-slate-400 uppercase tracking-wider leading-none mb-0.5">Tempo</p>
+          <div id="game-timer-val" class="text-lg font-black font-display text-white leading-none">--</div>
+        </div>
         <span id="debug-badge" class="hidden ml-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-pink-600 text-white">
           DEBUG
         </span>
-        <div
-          class="debug-only absolute left-2 top-1/2 transform -translate-y-1/2 flex flex-col h-[90%] justify-between py-8 text-slate-500/30 text-3xl font-black font-display uppercase tracking-widest pointer-events-none z-0 select-none">
-
-        </div>
-
 
         <button id="finish-btn"
           class="hidden bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1 rounded shadow-lg text-xs font-bold mr-2 animate-bounce transition transform active:scale-95"
           type="button">
           OK
         </button>
+      </div>
     </header>
 
-    <!-- Main Content -->
     <div class="flex flex-1 overflow-hidden relative">
 
-      <!-- Sidebar -->
-      <aside class="w-[280px] bg-slate-900 border-r border-slate-700 flex flex-col z-10 shadow-2xl relative shrink-0">
+      <aside id="game-sidebar"
+        class="w-[280px] bg-slate-900 border-r border-slate-700 flex flex-col z-10 shadow-2xl relative shrink-0 transition-all duration-500">
         <div class="p-3 bg-slate-800/50 border-b border-slate-700 text-center">
           <h2 class="font-bold text-slate-200 font-display text-xs tracking-widest">MERCADO DE ATIVOS</h2>
         </div>
@@ -131,7 +347,6 @@
         </div>
       </aside>
 
-      <!-- Campo -->
       <main class="flex-1 relative bg-slate-800 p-2 flex justify-center items-center overflow-hidden">
 
         <div id="error-toast"
@@ -155,7 +370,7 @@
         </button>
 
         <div id="field-container"
-          class="football-field w-full h-full rounded-xl flex flex-col relative shadow-2xl max-w-[500px] max-h-[800px]">
+          class="football-field w-full h-full rounded-xl flex flex-col relative shadow-2xl max-w-[500px] max-h-[800px] transition-all duration-500">
           <div id="field-interactive-layer"></div>
 
           <div class="corner tl"></div>
@@ -175,55 +390,32 @@
     </div>
   </div>
 
-  <!-- Modal Brinde -->
   <div id="prize-modal"
     class="hidden fixed inset-0 bg-black/90 z-50 flex items-center justify-center backdrop-blur-md p-4">
     <div
-      class="bg-slate-900 p-6 rounded-2xl border border-slate-700 relative overflow-hidden w-full max-w-sm text-center shadow-2xl">
-      <div class="absolute top-0 right-0 w-40 h-40 bg-amber-500/20 rounded-full blur-3xl -mr-20 -mt-20"></div>
-      <div class="absolute bottom-0 left-0 w-40 h-40 bg-emerald-500/20 rounded-full blur-3xl -ml-20 -mb-20"></div>
-  
-      <div class="text-4xl mb-2">🎁</div>
-      <h2 class="text-2xl font-bold mb-2 text-white font-display">Seu Brinde</h2>
-  
-      <p class="debug-only text-xs text-slate-400 mb-4">
-        Pontos finais: <span id="prize-points" class="text-white font-bold">0</span>
-      </p>
-  
-      <div class="bg-slate-800/80 p-4 rounded-xl border border-slate-700 mb-4">
-        <div id="prize-status" class="text-sm font-bold text-white mb-1">...</div>
-        <div id="prize-name" class="text-lg font-black text-amber-300 font-display">--</div>
-        <div id="prize-extra" class="text-[11px] text-slate-400 mt-2"> </div>
+      class="bg-slate-900 p-8 rounded-2xl border border-slate-700 relative overflow-hidden w-full max-w-sm text-center shadow-2xl">
+      <div
+        class="absolute top-0 right-0 w-40 h-40 bg-amber-500/20 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none">
       </div>
-    </div>
-  </div>
+      <div
+        class="absolute bottom-0 left-0 w-40 h-40 bg-emerald-500/20 rounded-full blur-3xl -ml-20 -mb-20 pointer-events-none">
+      </div>
+<div class="text-5xl mb-4 animate-bounce">🎁</div>
+<h2 class="text-2xl font-bold mb-2 text-white font-display uppercase tracking-wide">Seu Resultado</h2>
 
-  <!-- Modal Resultado -->
-  <div id="result-modal"
-    class="hidden fixed inset-0 bg-black/90 z-50 flex items-center justify-center backdrop-blur-md p-4">
-    <div
-      class="bg-slate-900 p-6 rounded-2xl border border-slate-700 relative overflow-hidden w-full max-w-sm text-center shadow-2xl">
-      <div class="absolute top-0 right-0 w-40 h-40 bg-green-500/20 rounded-full blur-3xl -mr-20 -mt-20"></div>
-      <div class="absolute bottom-0 left-0 w-40 h-40 bg-blue-500/20 rounded-full blur-3xl -ml-20 -mb-20"></div>
-
-      <h2 class="text-2xl font-bold mb-4 text-white font-display">Fim de Jogo</h2>
-
-      <div class="grid grid-cols-2 gap-3 my-6">
-        <div class="bg-slate-800/80 p-3 rounded-lg border border-slate-600">
-          <p class="text-[10px] text-slate-400 uppercase tracking-widest mb-1">Risco Médio</p>
-          <div id="final-risk-val" class="text-2xl font-bold text-white font-display">0</div>
-          <p id="final-risk-target" class="text-[10px] text-slate-500 mt-1 font-mono">Alvo: 0-0</p>
-        </div>
-
-        <div class="bg-slate-800/80 p-3 rounded-lg border border-slate-600">
-          <p class="text-[10px] text-slate-400 uppercase tracking-widest mb-1">Pontuação</p>
-          <div id="final-score" class="text-2xl font-bold text-green-400 font-display">0</div>
-        </div>
+      <div class="bg-slate-800/80 p-5 rounded-xl border border-slate-700 mb-6 backdrop-blur-sm relative z-10">
+        <div id="prize-status" class="text-sm font-bold text-white mb-2">...</div>
+        <div id="prize-name" class="text-2xl font-black text-amber-300 font-display mb-2 drop-shadow-md">--</div>
+        <div class="h-px bg-slate-700 my-3"></div>
+        <div class="text-xs text-slate-400 uppercase tracking-wider mb-1">Pontuação Final</div>
+        <div id="prize-points" class="text-3xl font-black text-white font-display">0</div>
+        <div id="prize-extra" class="text-[10px] text-slate-500 mt-2"></div>
       </div>
 
-      <p id="final-message" class="text-slate-300 mb-6 text-xs leading-relaxed">...</p>
-
-  
+      <button id="go-to-ranking-btn"
+        class="relative z-10 w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-4 rounded-xl uppercase text-sm shadow-lg active:scale-95 transition-transform tracking-widest">
+        Ver Ranking
+      </button>
     </div>
   </div>
 

@@ -1,115 +1,116 @@
-async function apiGet() {
-    const r = await fetch("/api/prizes");
-    return r.json();
+document.addEventListener("DOMContentLoaded", () => {
+    loadConfig();
+    loadPrizes();
+
+    // Eventos de Config
+    document.getElementById("save-config-btn").addEventListener("click", saveConfig);
+
+    // Eventos de Prêmios (Existente)
+    document.getElementById("add-prize-form").addEventListener("submit", addPrize);
+});
+
+// --- CONFIGURAÇÃO (Timer) ---
+
+async function loadConfig() {
+    try {
+        const res = await fetch("/api/config");
+        const data = await res.json();
+
+        document.getElementById("config-time-active").checked = data.timeLimitActive;
+        document.getElementById("config-time-seconds").value = data.timeLimitSeconds;
+    } catch (err) {
+        console.error("Erro ao carregar config", err);
+    }
 }
-async function apiAdd({ name, stock, threshold }) {
-    const r = await fetch("/api/prizes", {
+
+async function saveConfig() {
+    const active = document.getElementById("config-time-active").checked;
+    const seconds = document.getElementById("config-time-seconds").value;
+    const feedback = document.getElementById("config-feedback");
+
+    try {
+        const res = await fetch("/api/config", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ timeLimitActive: active, timeLimitSeconds: seconds })
+        });
+
+        if (res.ok) {
+            feedback.innerText = "Configuração salva com sucesso!";
+            feedback.className = "text-xs font-bold mt-2 h-4 text-emerald-400";
+        } else {
+            throw new Error();
+        }
+    } catch (err) {
+        feedback.innerText = "Erro ao salvar.";
+        feedback.className = "text-xs font-bold mt-2 h-4 text-red-400";
+    }
+
+    setTimeout(() => { feedback.innerText = ""; }, 3000);
+}
+
+
+// --- PRÊMIOS (Código existente mantido abaixo...) ---
+
+async function loadPrizes() {
+    const res = await fetch("/api/prizes");
+    const data = await res.json();
+    renderPrizes(data.prizes || []);
+}
+
+function renderPrizes(list) {
+    const tbody = document.getElementById("prizes-list");
+    tbody.innerHTML = "";
+
+    list.forEach(p => {
+        const tr = document.createElement("tr");
+        tr.className = "hover:bg-slate-700/50 transition";
+        tr.innerHTML = `
+      <td class="p-3 font-bold text-white">${p.name}</td>
+      <td class="p-3 font-mono text-blue-300">${p.threshold} pts</td>
+      <td class="p-3 font-mono ${p.stock < 5 ? 'text-red-400' : 'text-emerald-400'}">${p.stock}</td>
+      <td class="p-3 text-right gap-2 flex justify-end">
+        <button onclick="updateStock('${p.id}', ${p.stock + 1})" class="bg-slate-700 hover:bg-slate-600 p-1 rounded text-xs px-2">+</button>
+        <button onclick="updateStock('${p.id}', ${p.stock - 1})" class="bg-slate-700 hover:bg-slate-600 p-1 rounded text-xs px-2">-</button>
+        <button onclick="deletePrize('${p.id}')" class="bg-red-900/50 hover:bg-red-800 text-red-200 p-1 rounded text-xs px-2 ml-2">Del</button>
+      </td>
+    `;
+        tbody.appendChild(tr);
+    });
+}
+
+async function addPrize(e) {
+    e.preventDefault();
+    const name = document.getElementById("new-name").value;
+    const thr = document.getElementById("new-threshold").value;
+    const stock = document.getElementById("new-stock").value;
+
+    await fetch("/api/prizes", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, stock, threshold })
+        body: JSON.stringify({ name, threshold: thr, stock })
     });
-    return r.json();
+
+    e.target.reset();
+    loadPrizes();
 }
-async function apiPatch(id, patch) {
-    const r = await fetch(`/api/prizes/${id}`, {
+
+async function updateStock(id, newStock) {
+    if (newStock < 0) return;
+    await fetch(`/api/prizes/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(patch)
+        body: JSON.stringify({ stock: newStock })
     });
-    return r.json();
-}
-async function apiDel(id) {
-    const r = await fetch(`/api/prizes/${id}`, { method: "DELETE" });
-    return r.json();
+    loadPrizes();
 }
 
-const els = {
-    rows: document.getElementById("rows"),
-    btnRefresh: document.getElementById("btn-refresh"),
-    btnAdd: document.getElementById("btn-add"),
-    newName: document.getElementById("new-name"),
-    newStock: document.getElementById("new-stock"),
-    newThreshold: document.getElementById("new-threshold"),
-    addMsg: document.getElementById("add-msg"),
-};
-
-function rowHTML(p) {
-    return `
-    <tr data-id="${p.id}">
-      <td class="p-3 font-mono text-xs text-slate-400">${p.id}</td>
-      <td class="p-3">
-        <input class="name bg-slate-800 border border-slate-700 rounded px-2 py-1 w-full" value="${escapeHtml(p.name)}" />
-      </td>
-      <td class="p-3">
-        <input class="stock bg-slate-800 border border-slate-700 rounded px-2 py-1 w-24" type="number" value="${p.stock}" />
-      </td>
-      <td class="p-3">
-        <input class="threshold bg-slate-800 border border-slate-700 rounded px-2 py-1 w-24" type="number" value="${p.threshold}" />
-      </td>
-      <td class="p-3 text-right whitespace-nowrap">
-        <button class="save bg-emerald-600 hover:bg-emerald-500 rounded px-3 py-1 font-bold">Salvar</button>
-        <button class="del bg-red-600 hover:bg-red-500 rounded px-3 py-1 font-bold ml-2">Excluir</button>
-      </td>
-    </tr>
-  `;
+async function deletePrize(id) {
+    if (!confirm("Tem certeza?")) return;
+    await fetch(`/api/prizes/${id}`, { method: "DELETE" });
+    loadPrizes();
 }
 
-function escapeHtml(s) {
-    return String(s ?? "")
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
-}
-
-async function render() {
-    const data = await apiGet();
-    els.rows.innerHTML = (data.prizes || []).map(rowHTML).join("");
-}
-
-els.btnRefresh.addEventListener("click", render);
-
-els.btnAdd.addEventListener("click", async () => {
-    const name = els.newName.value.trim();
-    const stock = Number.parseInt(els.newStock.value, 10);
-    const threshold = Number.parseInt(els.newThreshold.value, 10);
-
-    if (!name) { els.addMsg.textContent = "Nome obrigatório."; return; }
-    if (!Number.isFinite(stock) || stock < 0) { els.addMsg.textContent = "Estoque inválido."; return; }
-    if (!Number.isFinite(threshold) || threshold < 0) { els.addMsg.textContent = "Threshold inválido."; return; }
-
-    const res = await apiAdd({ name, stock, threshold });
-    els.addMsg.textContent = res.ok ? "Adicionado!" : (res.error || "Erro ao adicionar.");
-    if (res.ok) {
-        els.newName.value = "";
-        els.newStock.value = "";
-        els.newThreshold.value = "";
-        await render();
-    }
-});
-
-els.rows.addEventListener("click", async (e) => {
-    const tr = e.target.closest("tr[data-id]");
-    if (!tr) return;
-    const id = tr.dataset.id;
-
-    if (e.target.classList.contains("save")) {
-        const name = tr.querySelector(".name").value.trim();
-        const stock = Number.parseInt(tr.querySelector(".stock").value, 10);
-        const threshold = Number.parseInt(tr.querySelector(".threshold").value, 10);
-
-        const res = await apiPatch(id, { name, stock, threshold });
-        if (!res.ok) alert(res.error || "Erro ao salvar");
-        else await render();
-    }
-
-    if (e.target.classList.contains("del")) {
-        if (!confirm("Excluir este brinde?")) return;
-        const res = await apiDel(id);
-        if (!res.ok) alert(res.error || "Erro ao excluir");
-        else await render();
-    }
-});
-
-render();
+// Tornar funções acessíveis globalmente para o onclick do HTML
+window.updateStock = updateStock;
+window.deletePrize = deletePrize;

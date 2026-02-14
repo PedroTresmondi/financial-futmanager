@@ -15,9 +15,9 @@
     {
       "id": "ouro",
       "name": "Brinde Ouro",
-      "stock": 10,
+      "stock": 0,
       "threshold": 90
     }
   ],
-  "updatedAt": "2026-02-11T23:19:44.421Z"
+  "updatedAt": "2026-02-14T21:18:01.335Z"
 }

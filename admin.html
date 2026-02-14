@@ -1,63 +1,89 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Admin • Estoque de Brindes</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin - Financial Football</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;700&display=swap" rel="stylesheet">
+<script defer src="/src/admin.js"></script>
 </head>
+<body class="bg-slate-900 text-slate-100 min-h-screen p-8 font-sans">
 
-<body class="min-h-screen bg-slate-950 text-white p-6">
-    <div class="max-w-3xl mx-auto">
-        <h1 class="text-2xl font-black mb-1">Estoque de Brindes</h1>
-        <p class="text-slate-400 text-sm mb-6">Adicionar/editar brindes, estoque e threshold (pontos mínimos).</p>
+<header class="max-w-4xl mx-auto mb-8 flex justify-between items-center">
+    <h1 class="text-3xl font-bold text-emerald-500 italic">ADMIN DASHBOARD</h1>
+</header>
 
-        <div class="bg-slate-900 border border-slate-700 rounded-xl p-4 mb-6">
-            <h2 class="font-bold mb-3">Adicionar novo brinde</h2>
-            <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
-                <input id="new-name" class="bg-slate-800 border border-slate-700 rounded px-3 py-2"
-                    placeholder="Nome" />
-                <input id="new-stock" type="number" class="bg-slate-800 border border-slate-700 rounded px-3 py-2"
-                    placeholder="Estoque" />
-                <input id="new-threshold" type="number" class="bg-slate-800 border border-slate-700 rounded px-3 py-2"
-                    placeholder="Threshold" />
-                <button id="btn-add" class="bg-emerald-600 hover:bg-emerald-500 rounded px-3 py-2 font-bold">
-                    Adicionar
-                </button>
+<main class="max-w-4xl mx-auto space-y-8">
+
+    <section class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-lg">
+        <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+            ⏱️ Configuração da Partida
+        </h2>
+        <div class="flex flex-col md:flex-row gap-6 items-end">
+            <div class="flex items-center gap-3">
+                <input type="checkbox" id="config-time-active"
+                    class="w-6 h-6 text-emerald-600 rounded bg-slate-700 border-slate-600 focus:ring-emerald-500">
+                <label for="config-time-active" class="text-sm font-bold uppercase tracking-wide">Ativar Tempo
+                    Limite?</label>
             </div>
-            <div id="add-msg" class="text-xs text-slate-400 mt-2"></div>
+            <div>
+                <label for="config-time-seconds" class="block text-xs text-slate-400 uppercase tracking-widest mb-1">Segundos por
+                    Partida</label>
+                <input type="number" id="config-time-seconds" min="10" max="300"
+                    class="bg-slate-900 border border-slate-600 rounded-lg p-2 w-32 text-center font-mono font-bold text-white focus:border-emerald-500 focus:outline-none">
+            </div>
+
+            <button id="save-config-btn"
+                class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-6 rounded-lg uppercase text-sm shadow transition-colors ml-auto">
+                Salvar Configuração
+            </button>
+            </div>
+        <div id="config-feedback" class="text-xs font-bold mt-2 h-4"></div>
+        </section>
+        
+        <section class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-lg">
+            <h2 class="text-xl font-bold mb-4">Gerenciar Prêmios (Estoque)</h2>
+        
+            <form id="add-prize-form"
+                class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 bg-slate-900/50 p-4 rounded-lg border border-slate-700">
+                <div class="md:col-span-2">
+                    <label class="block text-xs text-slate-400 mb-1">Nome do Brinde</label>
+                    <input type="text" id="new-name" required
+                        class="w-full bg-slate-800 border border-slate-600 rounded p-2 text-sm focus:border-emerald-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">Pontos Mínimos</label>
+                    <input type="number" id="new-threshold" required
+                        class="w-full bg-slate-800 border border-slate-600 rounded p-2 text-sm focus:border-emerald-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">Estoque</label>
+                    <div class="flex gap-2">
+                        <input type="number" id="new-stock" required
+                            class="w-full bg-slate-800 border border-slate-600 rounded p-2 text-sm focus:border-emerald-500 outline-none">
+                        <button type="submit"
+                            class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 rounded font-bold">+</button>
+                    </div>
+                </div>
+            </form>
+
+    <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm">
+            <thead class="bg-slate-900 text-slate-400 uppercase text-xs">
+                <tr>
+            <th class="p-3">Nome</th>
+            <th class="p-3">Threshold</th>
+            <th class="p-3">Estoque</th>
+            <th class="p-3 text-right">Ações</th>
+            </tr>
+            </thead>
+        <tbody id="prizes-list" class="divide-y divide-slate-700">
+        </tbody>
+        </table>
         </div>
+    </section>
 
-        <div class="bg-slate-900 border border-slate-700 rounded-xl overflow-hidden">
-            <div class="p-4 border-b border-slate-700 flex items-center justify-between">
-                <h2 class="font-bold">Brindes</h2>
-                <button id="btn-refresh"
-                    class="text-sm bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded px-3 py-1">
-                    Atualizar
-                </button>
-            </div>
-
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm">
-                    <thead class="bg-slate-800 text-slate-300">
-                        <tr>
-                            <th class="text-left p-3">ID</th>
-                            <th class="text-left p-3">Nome</th>
-                            <th class="text-left p-3">Estoque</th>
-                            <th class="text-left p-3">Threshold</th>
-                            <th class="text-right p-3">Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody id="rows" class="divide-y divide-slate-800"></tbody>
-                </table>
-            </div>
-        </div>
-
-        <p class="text-xs text-slate-500 mt-4">Abra: <span class="font-mono">/admin.html</span></p>
-    </div>
-
-    <script type="module" src="/src/admin.js"></script>
+</main>
 </body>
-
 </html>

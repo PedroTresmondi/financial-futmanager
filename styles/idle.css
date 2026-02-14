@@ -1,0 +1,112 @@
+/* src/idle.css */
+
+/* Container Principal da Tela Idle */
+#idle-screen {
+    /* Garante que fique na frente de tudo */
+    z-index: 999;
+    position: fixed;
+    inset: 0;
+
+    /* Configuração do Fundo (Verde) */
+    /* Substitua o caminho abaixo pelo nome do seu arquivo de fundo */
+    background-image: url('/assets/fundo-idle.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-color: #022c22;
+    /* Cor de fundo de segurança (verde escuro) */
+
+    /* Flexbox para alinhar tudo */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    /* Espalha itens (Topo, Meio, Baixo) */
+    padding-top: 15vh;
+    /* Espaço do topo */
+    padding-bottom: 10vh;
+    /* Espaço de baixo */
+
+    cursor: pointer;
+}
+
+/* Área do Logo Principal */
+.idle-logo-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    /* Ocupa o espaço disponível no meio */
+    width: 100%;
+    max-width: 800px;
+    animation: floatLogo 3s ease-in-out infinite;
+}
+
+.idle-game-logo {
+    width: 80%;
+    /* Ajuste o tamanho do logo aqui */
+    max-width: 600px;
+    height: auto;
+    filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.5));
+    /* Sombra bonita no logo */
+}
+
+/* Área do Texto "Toque para Iniciar" */
+.idle-cta-container {
+    text-align: center;
+    margin-bottom: 40px;
+    animation: pulseText 1.5s infinite;
+}
+
+.idle-cta-text {
+    font-family: 'Exo 2', sans-serif;
+    font-weight: 900;
+    font-size: 2rem;
+    text-transform: uppercase;
+    color: #ffffff;
+    text-shadow: 0 4px 10px rgba(0, 0, 0, 0.8);
+    letter-spacing: 4px;
+}
+
+/* Área de Logos Secundários (Patrocinadores/Footer) - Opcional */
+.idle-footer-logos {
+    display: flex;
+    gap: 30px;
+    opacity: 0.9;
+}
+
+.idle-partner-logo {
+    height: 40px;
+    /* Tamanho dos logos pequenos */
+    width: auto;
+    filter: brightness(0) invert(1);
+    /* Deixa logos brancos (opcional) */
+}
+
+/* Animações */
+@keyframes floatLogo {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-15px);
+    }
+}
+
+@keyframes pulseText {
+
+    0%,
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.7;
+        transform: scale(0.95);
+    }
+}
