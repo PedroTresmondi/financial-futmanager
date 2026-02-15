@@ -9,7 +9,7 @@
     {
       "id": "prata",
       "name": "Brinde Prata",
-      "stock": 17,
+      "stock": 11,
       "threshold": 60
     },
     {
@@ -19,5 +19,5 @@
       "threshold": 90
     }
   ],
-  "updatedAt": "2026-02-15T18:34:50.433Z"
+  "updatedAt": "2026-02-15T18:55:34.635Z"
 }

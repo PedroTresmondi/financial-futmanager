@@ -418,46 +418,77 @@ async function tryAwardPrize(points) {
 }
 
 async function showRankingScreen() {
+  // Fecha o modal de prêmio para não atrapalhar
+  if (els.prizeModal) els.prizeModal.classList.add("hidden");
+
   showScreen('ranking');
+
+  // Garante a data de hoje
   const dateEl = document.getElementById("ranking-date-display");
   if (dateEl) dateEl.innerText = new Date().toLocaleDateString("pt-BR");
+
   const listEl = document.getElementById("ranking-list");
   const loadingEl = document.getElementById("ranking-loading");
   if (!listEl) return;
+
   listEl.innerHTML = "";
   if (loadingEl) loadingEl.classList.remove("hidden");
 
   try {
     const res = await fetch("/api/ranking");
     const data = await res.json();
-    if (loadingEl) loadingEl.classList.add("hidden");
-    const top10 = data.slice(0, 10);
 
-    if (top10.length === 0) {
-      listEl.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-500">Nenhum jogo registrado hoje.</td></tr>`;
+    if (loadingEl) loadingEl.classList.add("hidden");
+
+    // --- ALTERAÇÃO AQUI: PEGAR SÓ OS 3 PRIMEIROS ---
+    const top3 = data.slice(0, 3);
+
+    if (top3.length === 0) {
+      listEl.innerHTML = `<tr><td colspan="5" class="empty-rank-msg">O dia está começando! Seja o primeiro.</td></tr>`;
       return;
     }
 
-    listEl.innerHTML = top10.map((game, index) => {
+    listEl.innerHTML = top3.map((game, index) => {
       const isMe = (game.playerName === playerName && game.points === gameScore);
-      const rowClass = isMe ? "bg-emerald-900/30 text-emerald-200 font-bold border-l-2 border-emerald-500" : "hover:bg-slate-800/30";
+      const rank = index + 1;
+
+      // Classes especiais para cada posição
+      let rowClass = "ranking-row";
+      if (isMe) rowClass += " ranking-row--me";
+      if (rank === 1) rowClass += " rank-1";
+      if (rank === 2) rowClass += " rank-2";
+      if (rank === 3) rowClass += " rank-3";
+
+      // Ícones de medalha
+      let medalIcon = "";
+      if (rank === 1) medalIcon = "🥇";
+      if (rank === 2) medalIcon = "🥈";
+      if (rank === 3) medalIcon = "🥉";
+
       return `
-        <tr class="${rowClass} transition-colors">
-          <td class="p-3 text-slate-500 w-12 text-center">${index + 1}º</td>
-          <td class="p-3 truncate max-w-[120px]" title="${game.playerName}">${game.playerName}</td>
-          <td class="p-3 text-[10px] uppercase text-slate-400">${game.profile || '-'}</td>
-          <td class="p-3 text-right font-display text-emerald-400">${game.points}</td>
-          <td class="p-3 text-center text-[10px]">
-            ${game.prize ? `<span class="bg-amber-500/20 text-amber-300 px-2 py-1 rounded border border-amber-500/30">${game.prize}</span>` : '<span class="text-slate-600">-</span>'}
+        <tr class="${rowClass}">
+          <td class="td-rank">
+            <div class="rank-badge">${medalIcon || rank}</div>
+          </td>
+          <td class="td-name">
+            <div class="player-info">
+              <span class="player-name">${game.playerName}</span>
+              <span class="player-profile">${game.profile || '-'}</span>
+            </div>
+          </td>
+          <td class="td-points">${game.points}</td>
+          <td class="td-prize">
+            ${game.prize ? `<div class="prize-pill">🎁</div>` : ''}
           </td>
         </tr>
       `;
     }).join("");
   } catch (err) {
     console.error("Erro ao carregar ranking", err);
-    if (loadingEl) loadingEl.classList.remove("hidden");
+    if (loadingEl) loadingEl.classList.add("hidden");
   }
 
+  // Reinicia em 30s
   if (prizeResetTimer) clearTimeout(prizeResetTimer);
   prizeResetTimer = setTimeout(() => {
     returnToStart();
