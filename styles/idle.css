@@ -7,7 +7,7 @@
     inset: 0;
 
     /* --- Configuração do Fundo --- */
-        background-image: url('/public/assets/backgrounds/fundo-idle.png');
+        background-image: url('/assets/backgrounds/fundo-idle.png');
         /* Confirme se o nome está correto */
     background-size: cover;
     background-position: center;

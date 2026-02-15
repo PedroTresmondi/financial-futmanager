@@ -57,7 +57,7 @@
     padding: 18px;
 
     /* a imagem entra aqui via JS */
-    --profile-bg: url("/public/assets/backgrounds/profile-moderado.png");
+    --profile-bg: url("/assets/backgrounds/profile-moderado.png");
 
     background-image: var(--profile-bg);
     background-size: cover;

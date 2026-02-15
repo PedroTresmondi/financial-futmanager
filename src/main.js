@@ -42,8 +42,8 @@ let matchTimeConfig = { active: false, seconds: 60 };
 let isTimerPaused = false;
 
 // ---------- Campo responsivo ----------
-const BASE_CARD_W = 90;
-const BASE_CARD_H = 126;
+const BASE_CARD_W = 140;
+const BASE_CARD_H = 194;
 
 let CARD_SCALE = 1;
 let INNER_SCALE = 1;
@@ -54,21 +54,141 @@ let CARD_H = BASE_CARD_H;
 let fieldResizeObserver = null;
 
 const FALLBACK_ASSETS = [
-  { "id": 1, "name": "Tesouro Selic", "type": "Renda Fixa", "suitability": 10, "retorno": 15, "seguranca": 100, "desc": "Segurança máxima. Ideal para reservas." },
-  { "id": 2, "name": "CDB Banco", "type": "Renda Fixa", "suitability": 20, "retorno": 25, "seguranca": 90, "desc": "Garantia FGC. Retorno superior à poupança." },
-  { "id": 3, "name": "Fundo DI", "type": "Fundo", "suitability": 25, "retorno": 30, "seguranca": 85, "desc": "Carteira diversificada em renda fixa." },
-  { "id": 4, "name": "LCI / LCA", "type": "Isento", "suitability": 30, "retorno": 35, "seguranca": 85, "desc": "Isento de IR. Setor imobiliário/agro." },
-  { "id": 5, "name": "Debênture", "type": "Crédito", "suitability": 40, "retorno": 45, "seguranca": 70, "desc": "Dívida de empresas privadas." },
-  { "id": 6, "name": "Multimercado", "type": "Fundo", "suitability": 50, "retorno": 55, "seguranca": 60, "desc": "Mistura renda fixa, ações e câmbio." },
-  { "id": 7, "name": "FII Papel", "type": "Imobiliário", "suitability": 55, "retorno": 60, "seguranca": 55, "desc": "Fundo de recebíveis (CRIs). Isento de IR." },
-  { "id": 8, "name": "FII Tijolo", "type": "Imobiliário", "suitability": 60, "retorno": 65, "seguranca": 50, "desc": "Imóveis físicos: shoppings e galpões." },
-  { "id": 9, "name": "ETF S&P500", "type": "Internacional", "suitability": 65, "retorno": 70, "seguranca": 50, "desc": "As 500 maiores empresas dos EUA." },
-  { "id": 10, "name": "Ações Blue Chips", "type": "Ações", "suitability": 70, "retorno": 75, "seguranca": 45, "desc": "Grandes empresas consolidadas na Bolsa." },
-  { "id": 11, "name": "Small Caps", "type": "Ações", "suitability": 80, "retorno": 85, "seguranca": 30, "desc": "Empresas menores com alto potencial." },
-  { "id": 12, "name": "Dólar Futuro", "type": "Derivativos", "suitability": 85, "retorno": 80, "seguranca": 30, "desc": "Especulação com variação cambial." },
-  { "id": 13, "name": "Bitcoin", "type": "Cripto", "suitability": 90, "retorno": 95, "seguranca": 20, "desc": "Ouro digital, descentralizado e escasso." },
-  { "id": 14, "name": "Altcoins", "type": "Cripto", "suitability": 95, "retorno": 100, "seguranca": 10, "desc": "Criptos alternativas. Risco extremo." },
-  { "id": 15, "name": "Opções", "type": "Derivativos", "suitability": 100, "retorno": 100, "seguranca": 5, "desc": "Alavancagem máxima. Risco total." }
+  {
+    "id": 1,
+    "name": "Tesouro Selic",
+    "type": "Renda Fixa",
+    "suitability": 10,
+    "retorno": 15,
+    "seguranca": 100,
+    "desc": "O investimento mais seguro do país. Ideal para reservas de emergência e perfis conservadores."
+  },
+  {
+    "id": 2,
+    "name": "CDB Banco",
+    "type": "Renda Fixa",
+    "suitability": 20,
+    "retorno": 25,
+    "seguranca": 90,
+    "desc": "Emprestimo para o banco com garantia do FGC. Retorno superior à poupança."
+  },
+  {
+    "id": 3,
+    "name": "Fundo DI",
+    "type": "Fundo",
+    "suitability": 25,
+    "retorno": 30,
+    "seguranca": 85,
+    "desc": "Carteira diversificada em renda fixa. Liquidez diária e gestão profissional."
+  },
+  {
+    "id": 4,
+    "name": "LCI / LCA",
+    "type": "Isento",
+    "suitability": 30,
+    "retorno": 35,
+    "seguranca": 85,
+    "desc": "Investimento isento de Imposto de Renda, focado nos setores imobiliário e do agronegócio."
+  },
+  {
+    "id": 5,
+    "name": "Debênture",
+    "type": "Crédito",
+    "suitability": 40,
+    "retorno": 45,
+    "seguranca": 70,
+    "desc": "Dívida de empresas privadas. Maior risco de crédito, mas com taxas atrativas."
+  },
+  {
+    "id": 6,
+    "name": "Multimercado",
+    "type": "Fundo",
+    "suitability": 50,
+    "retorno": 55,
+    "seguranca": 60,
+    "desc": "Fundo que mistura renda fixa, ações e câmbio. Busca superar o CDI com volatilidade controlada."
+  },
+  {
+    "id": 7,
+    "name": "FII Papel",
+    "type": "Imobiliário",
+    "suitability": 55,
+    "retorno": 60,
+    "seguranca": 55,
+    "desc": "Fundo imobiliário focado em dívidas (CRIs). Paga dividendos mensais isentos de IR."
+  },
+  {
+    "id": 8,
+    "name": "FII Tijolo",
+    "type": "Imobiliário",
+    "suitability": 60,
+    "retorno": 65,
+    "seguranca": 50,
+    "desc": "Investimento em imóveis físicos como shoppings e galpões. Renda de aluguéis e valorização."
+  },
+  {
+    "id": 9,
+    "name": "ETF S&P500",
+    "type": "Internacional",
+    "suitability": 65,
+    "retorno": 70,
+    "seguranca": 50,
+    "desc": "Exposição às 500 maiores empresas dos EUA. Diversificação em dólar sem sair do Brasil."
+  },
+  {
+    "id": 10,
+    "name": "Ações Blue Chips",
+    "type": "Ações",
+    "suitability": 70,
+    "retorno": 75,
+    "seguranca": 45,
+    "desc": "Ações de empresas grandes, consolidadas e com bom histórico de lucros na Bolsa."
+  },
+  {
+    "id": 11,
+    "name": "Small Caps",
+    "type": "Ações",
+    "suitability": 80,
+    "retorno": 85,
+    "seguranca": 30,
+    "desc": "Ações de empresas menores com alto potencial de crescimento, mas maior volatilidade."
+  },
+  {
+    "id": 12,
+    "name": "Dólar Futuro",
+    "type": "Derivativos",
+    "suitability": 85,
+    "retorno": 80,
+    "seguranca": 30,
+    "desc": "Proteção ou especulação com a variação cambial. Alto risco e alavancagem."
+  },
+  {
+    "id": 13,
+    "name": "Bitcoin",
+    "type": "Cripto",
+    "suitability": 90,
+    "retorno": 95,
+    "seguranca": 20,
+    "desc": "A principal criptomoeda do mercado. Ouro digital, descentralizado e escasso."
+  },
+  {
+    "id": 14,
+    "name": "Altcoins",
+    "type": "Cripto",
+    "suitability": 95,
+    "retorno": 100,
+    "seguranca": 10,
+    "desc": "Criptomoedas alternativas com projetos inovadores, mas risco extremo de oscilação."
+  },
+  {
+    "id": 15,
+    "name": "Opções",
+    "type": "Derivativos",
+    "suitability": 100,
+    "retorno": 100,
+    "seguranca": 5,
+    "desc": "Instrumentos para alavancagem máxima. Potencial de ganhos explosivos ou perda total."
+  }
 ];
 
 function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
@@ -132,7 +252,12 @@ function showScreen(screenKey) {
   if (screenKey && SCREENS[screenKey]) {
     SCREENS[screenKey].classList.remove('hidden');
   }
+
+  // ✅ modos de UI
+  document.body.classList.toggle("game-mode", screenKey === "game" || screenKey === "summaryOverlay");
+  document.body.classList.toggle("summary-mode", screenKey === "summaryOverlay");
 }
+
 
 function getFieldRect() {
   if (!els.fieldLayer) return null;
@@ -211,7 +336,7 @@ function setupFieldResizeWatcher() {
 
 function setPlayerName(name) {
   playerName = normalizeName(name);
-  if (els.playerName) els.playerName.innerText = playerName || "--";
+  if (els.playerNameHud) els.playerNameHud.innerText = playerName || "Nome do Jogador";
   try { localStorage.setItem(PLAYER_NAME_KEY, playerName); } catch (_) { }
 }
 
@@ -416,29 +541,53 @@ function resumeMatchTimer() {
 
 function updateTimerDisplay(el) {
   if (!el) return;
-  el.innerText = matchTimeRemaining;
-  if (matchTimeRemaining <= 10) {
-    el.className = "text-lg font-black font-display text-red-500 leading-none animate-pulse";
-  } else {
-    el.className = "text-lg font-black font-display text-white leading-none";
-  }
+
+  const s = Math.max(0, matchTimeRemaining);
+  const mm = String(Math.floor(s / 60)).padStart(2, "0");
+  const ss = String(s % 60).padStart(2, "0");
+  el.innerText = `${mm}:${ss}`;
+
+  el.classList.toggle("timer-danger", s <= 10);
 }
+
 
 function openCardDetails(asset) {
   if (!asset) return;
   pauseMatchTimer();
-  document.getElementById("detail-name").innerText = asset.name;
-  document.getElementById("detail-type").innerText = asset.type;
-  document.getElementById("detail-desc").innerText = asset.desc || "Sem descrição disponível.";
-  document.getElementById("detail-suitability").innerText = asset.suitability;
-
-  document.getElementById("detail-stars-risk").innerHTML = getStars(asset.suitability);
-  document.getElementById("detail-stars-ret").innerHTML = getStars(asset.retorno);
-  document.getElementById("detail-stars-sec").innerHTML = getStars(asset.seguranca);
 
   const modal = document.getElementById("card-details-modal");
-  modal.classList.remove("hidden");
+  const nameEl = document.getElementById("detail-name");
+  const typeEl = document.getElementById("detail-type");
+  const descEl = document.getElementById("detail-desc");
+  const iconEl = document.getElementById("detail-icon");
+
+  // 1) texto
+  if (nameEl) nameEl.innerText = String(asset.name || "--").toUpperCase();
+  if (descEl) descEl.innerText = asset.desc || "Sem descrição disponível.";
+
+  // 2) pill = risco (baixo/médio/alto)
+  let risco = "Risco Médio";
+  if (asset.suitability <= 35) risco = "Risco Baixo";
+  else if (asset.suitability <= 60) risco = "Risco Médio";
+  else risco = "Risco Alto";
+  if (typeEl) typeEl.innerText = risco;
+
+  // 3) ícone = 3 tipos (perfil atual do jogador)
+  if (iconEl) {
+    const iconMap = {
+      CONSERVADOR: "/assets/icons/profile-conservador.png",
+      MODERADO: "/assets/icons/profile-moderado.png",
+      ARROJADO: "/assets/icons/profile-arrojado.png",
+    };
+    iconEl.src = iconMap[currentProfileKey] || iconMap.MODERADO;
+    iconEl.alt = "";
+  }
+
+  // 4) abre
+  if (modal) modal.classList.remove("hidden");
 }
+
+
 
 function closeCardDetails() {
   const modal = document.getElementById("card-details-modal");
@@ -453,73 +602,31 @@ function getStars(percentage) {
   return html;
 }
 
+function getRiskLevel(suitability) {
+  if (suitability <= 35) return "low";
+  if (suitability <= 60) return "med";
+  return "high";
+}
+
 function createPremiumCardHTML(asset) {
   return `
-    <div class="score-badge">${asset.suitability}</div>
-    <div class="flex items-center gap-2 mb-2">
-      <div class="text-2xl">🪙</div>
-      <div>
-        <div class="card-header-title leading-none text-base">${asset.name}</div>
-        <div class="text-[10px] text-gray-300 uppercase tracking-widest">${asset.type}</div>
-      </div>
+    <div class="game-card-base" data-risk="${getRiskLevel(asset.suitability)}">
+      <div class="card-name">${asset.name}</div>
+      <div class="card-type-pill">${asset.type}</div>
     </div>
-    <p class="text-[10px] text-gray-300 italic mb-3 border-b border-white/10 pb-2">"${asset.desc}"</p>
-    <div class="flex-1 space-y-1">
-      <div class="star-row"><span class="star-label">Risco</span><div class="stars">${getStars(asset.suitability)}</div></div>
-      <div class="star-row"><span class="star-label">Retorno</span><div class="stars">${getStars(asset.retorno)}</div></div>
-      <div class="star-row"><span class="star-label">Segurança</span><div class="stars">${getStars(asset.seguranca)}</div></div>
-    </div>
-    
-    <div class="absolute inset-0 z-20 pointer-events-auto" title="Clique para detalhes"></div>
+    <div class="card-hit-area" title="Arraste / Clique"></div>
   `;
 }
 
 function fieldCardContentHTML(asset) {
-  const compact = fieldIsCompact();
-  const statsBlock = compact
-    ? `
-      <div class="mt-auto space-y-1">
-        <div class="compact-bar"><div class="compact-fill" style="width:${asset.suitability}%; background:#fbbf24;"></div></div>
-        <div class="compact-bar"><div class="compact-fill" style="width:${asset.retorno}%; background:#3b82f6;"></div></div>
-        <div class="compact-bar"><div class="compact-fill" style="width:${asset.seguranca}%; background:#10b981;"></div></div>
-      </div>
-    `
-    : `
-      <div class="mt-auto">
-        <div class="star-row">
-          <span class="star-label">RISCO</span>
-          <div class="stars">${getStars(asset.suitability)}</div>
-        </div>
-        <div class="star-row">
-          <span class="star-label">RETORNO</span>
-          <div class="stars">${getStars(asset.retorno)}</div>
-        </div>
-        <div class="star-row">
-          <span class="star-label">SEGURANÇA</span>
-          <div class="stars">${getStars(asset.seguranca)}</div>
-        </div>
-      </div>
-    `;
-
   return `
-    <div class="field-inner flex flex-col h-full relative z-10 pointer-events-none">
-      <div class="flex justify-between items-start mb-1">
-        <span class="text-[10px]">🪙</span>
-        <span class="text-[8px] font-mono bg-slate-800/80 px-1 rounded text-white border border-white/20">
-          ${asset.suitability}
-        </span>
-      </div>
-      <div class="text-center mb-1">
-        <div class="font-bold text-[8px] text-white leading-tight font-display mb-0.5 truncate px-1">
-          ${asset.name}
-        </div>
-        <div class="text-[6px] text-slate-300 truncate">${asset.type}</div>
-      </div>
-      ${compact ? "" : `<div class="field-desc text-slate-300 italic truncate px-1 mb-1">"${asset.desc}"</div>`}
-      ${statsBlock}
+    <div class="game-card-base" data-risk="${getRiskLevel(asset.suitability)}">
+      <div class="card-name">${asset.name}</div>
+      <div class="card-type-pill">${asset.type}</div>
     </div>
   `;
 }
+
 
 function setFieldCardContent(el, asset) {
   el.innerHTML = fieldCardContentHTML(asset);
@@ -527,15 +634,19 @@ function setFieldCardContent(el, asset) {
 }
 
 function ensureCloseButton(el, asset) {
-  let close = el.querySelector(".field-close");
+  let close = el.querySelector(".field-close-btn");
   if (close) return;
+
   close = document.createElement("div");
-  close.className =
-    "field-close absolute -top-2 -right-2 w-5 h-5 bg-red-500 rounded-full text-white flex items-center justify-center font-bold text-xs cursor-pointer shadow-md z-50";
+  close.className = "field-close-btn";
   close.innerText = "×";
+
+  // Previne drag ao clicar no fechar
   close.addEventListener("pointerdown", (e) => e.stopPropagation());
+
   close.addEventListener("click", (e) => {
     e.stopPropagation();
+    // Lógica de remoção existente...
     const idx = placedCards.findIndex(c => c.id === asset.id);
     if (idx !== -1) placedCards.splice(idx, 1);
     const sidebarItem = document.querySelector(`.sidebar-item[data-id="${asset.id}"]`);
@@ -544,6 +655,7 @@ function ensureCloseButton(el, asset) {
     recomputeScore();
     updateStats();
   });
+
   el.appendChild(close);
 }
 
@@ -694,9 +806,9 @@ function updateProfileModalContent() {
 
   if (iconEl) {
     const iconMap = {
-      ARROJADO: "/public/assets/icons/profile-arrojado.png",
-      MODERADO: "/public/assets/icons/profile-moderado.png",
-      CONSERVADOR: "/public/assets/icons/profile-conservador.png",
+      ARROJADO: "/assets/icons/profile-arrojado.png",
+      MODERADO: "/assets/icons/profile-moderado.png",
+      CONSERVADOR: "/assets/icons/profile-conservador.png",
     };
     iconEl.src = iconMap[currentProfileKey] || iconMap.MODERADO;
   }
@@ -704,9 +816,9 @@ function updateProfileModalContent() {
   if (cardEl) {
     // 1) trocar imagem
     const bgMap = {
-      ARROJADO: "url('/public/assets/backgrounds/profile-arrojado.png')",
-      MODERADO: "url('/public/assets/backgrounds/profile-moderado.png')",
-      CONSERVADOR: "url('/public/assets/backgrounds/profile-conservador.png')",
+      ARROJADO: "url('/assets/backgrounds/profile-arrojado.png')",
+      MODERADO: "url('/assets/backgrounds/profile-moderado.png')",
+      CONSERVADOR: "url('/assets/backgrounds/profile-conservador.png')",
     };
     const bg = bgMap[currentProfileKey] || bgMap.MODERADO;
     cardEl.style.setProperty("--profile-bg", bg);
@@ -734,6 +846,10 @@ function bindEls() {
   els.prizeModal = document.getElementById("prize-modal");
   els.prizePoints = document.getElementById("prize-points");
   els.prizeStatus = document.getElementById("prize-status");
+  els.playerNameHud = document.getElementById("player-name-hud");
+  els.profilePill = document.getElementById("profile-pill");
+  els.profileIconHud = document.getElementById("profile-icon-hud");
+
   els.prizeName = document.getElementById("prize-name");
   els.prizeExtra = document.getElementById("prize-extra");
   els.cardsContainer = document.getElementById("cards-container");
@@ -783,6 +899,17 @@ function pickProfile() {
   }
   if (els.targetRange) els.targetRange.innerText = `${currentProfile.min} - ${currentProfile.max}`;
   applyDebugOnlyVisibility();
+
+  if (els.profilePill) els.profilePill.dataset.profile = currentProfileKey;
+
+  if (els.profileIconHud) {
+    const iconMap = {
+      ARROJADO: "/assets/icons/profile-arrojado.png",
+      MODERADO: "/assets/icons/profile-moderado.png",
+      CONSERVADOR: "/assets/icons/profile-conservador.png",
+    };
+    els.profileIconHud.src = iconMap[currentProfileKey] || iconMap.MODERADO;
+  }
 }
 
 function initGame() {
@@ -895,10 +1022,17 @@ function handleEnd(e) {
   window.removeEventListener("pointercancel", handleEnd);
 
   if (!activeDrag.hasMoved) {
-    openCardDetails(activeDrag.asset);
+    const asset = activeDrag.asset;
+    const originalEl = activeDrag.originalEl;
+
+    try { originalEl.releasePointerCapture?.(e.pointerId); } catch (_) { }
+
     activeDrag = null;
+
+    setTimeout(() => openCardDetails(asset), 0);
     return;
   }
+
 
   const { asset, originalEl, ghost } = activeDrag;
   if (ghost) ghost.remove();
@@ -983,8 +1117,8 @@ function placeCardOnField(asset, x, y, zone, correct) {
 
 function updateStats() {
   if (!els.playersCount) return;
-  els.playersCount.innerText = `${placedCards.length}/6`;
-  if (placedCards.length === MAX_PLAYERS) {
+  const n = String(placedCards.length).padStart(2, "0");
+  els.playersCount.innerText = `${n}/06`; if (placedCards.length === MAX_PLAYERS) {
     els.playersCount.classList.add("limit-warning");
     if (els.finishBtn) els.finishBtn.classList.remove("hidden");
   } else {
@@ -1071,8 +1205,10 @@ function returnToStart() {
 }
 
 async function finalizeGame() {
+  // 1. Para o timer imediatamente
   if (matchTimerInterval) clearInterval(matchTimerInterval);
 
+  // 2. Calcula a pontuação
   const correctCount = placedCards.reduce((acc, c) => acc + (c.correct ? 1 : 0), 0);
   const baseScore = correctCount * SCORE_CORRECT;
 
@@ -1082,21 +1218,31 @@ async function finalizeGame() {
   }
   gameScore = baseScore + timeBonus;
 
+  // 3. Mostra o splash de "FIM DE JOGO"
   showScreen('endSplash');
 
+  // 4. Aguarda 3 segundos (ajuste se quiser mais/menos tempo) e vai para o resumo
   setTimeout(() => {
+    // Esconde o splash
     SCREENS.endSplash.classList.add("hidden");
 
+    // IMPORTANTE: Esconde a lista de cartas lateral (sidebar)
+    // Isso limpa a tela para ficar só o campo e o resultado
     if (els.sidebar) els.sidebar.classList.add("hidden");
 
+    // Ativa a tela de resumo.
+    // Ao chamar showScreen('summaryOverlay'), o body ganha a classe .summary-mode
+    // que ativa todo aquele CSS novo que criamos.
     showScreen('summaryOverlay');
 
+    // Pequeno delay para garantir que o navegador renderizou o layout novo
+    // antes de recalcular a posição das cartas no campo
     setTimeout(() => {
       computeCardSizeFromField();
       relayoutPlacedCards();
     }, 100);
 
-  }, 5000);
+  }, 3000);
 }
 
 async function revealScoreAndAward() {
@@ -1180,9 +1326,16 @@ document.addEventListener("DOMContentLoaded", async () => {
   const btnCloseDetails = document.getElementById("close-details-btn");
   if (btnCloseDetails) btnCloseDetails.addEventListener("click", closeCardDetails);
 
-  document.getElementById("card-details-modal")?.addEventListener("click", (e) => {
-    if (e.target.id === "card-details-modal") closeCardDetails();
-  });
+  const modalEl = document.getElementById("card-details-modal");
+
+  modalEl?.addEventListener("pointerdown", (e) => {
+    if (e.target === modalEl) closeCardDetails();
+  }, { passive: false });
+
+  document.getElementById("detail-card-container")?.addEventListener("pointerdown", (e) => {
+    e.stopPropagation();
+  }, { passive: false });
+
 
   showScreen('idle');
 
