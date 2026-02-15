@@ -50,20 +50,20 @@
         <button class="idle-play-btn">ESCALAR MEU TIME</button>
       </div>
     </div>
-    </div>
-<!-- NAME -->
-<div id="name-screen" class="hidden screen-overlay">
-  <div class="name-screen-card">
+  </div>
+  <!-- NAME -->
+  <div id="name-screen" class="hidden screen-overlay">
+    <div class="name-screen-card">
 
       <div class="name-topbar">
         <button type="button" class="name-topbar-btn" id="name-back">‹ Voltar</button>
-      
+
         <div class="name-topbar-center">
           <img src="/assets/logos/logo-rio-bravo-alt.png" class="name-rb-logo" alt="Rio Bravo" />
-          </div>
+        </div>
 
         <button type="button" class="name-topbar-btn" id="name-help">Ajuda ?</button>
-        </div>
+      </div>
 
       <div class="name-hero">
         <img src="/assets/logos/game-logo.png" class="name-game-logo" alt="Craques da Carteira" />
@@ -95,8 +95,8 @@
         <button id="start-game-btn" type="button" disabled>CONTINUAR</button>
         <p class="name-screen-tip">Dica: ENTER para começar • BACKSPACE para apagar</p>
       </div>
-      </div>
-      </div>
+    </div>
+    </div>
 
   <!-- TERMS -->
   <div id="terms-screen" class="hidden">
@@ -107,10 +107,10 @@
 
         <div class="terms-topbar-center">
           <img src="/assets/logos/game-logo.png" class="terms-game-mini" alt="Craques da Carteira" />
-          </div>
+        </div>
 
         <button type="button" class="terms-topbar-btn" id="terms-help">Ajuda ?</button>
-        </div>
+      </div>
 
       <h1 class="terms-title">TERMOS E LEI GERAL DE<br>PROTEÇÃO DE DADOS</h1>
 
@@ -176,8 +176,8 @@
           </p>
 
         </div>
-        </div>
-<button id="terms-btn" class="terms-btn" enabled>Li e aceito os termos</button>
+      </div>
+      <button id="terms-btn" class="terms-btn" enabled>Li e aceito os termos</button>
 
       <div class="terms-footer">
         <img src="/assets/logos/logo-rio-bravo-alt.png" class="terms-rb-logo" alt="Rio Bravo" />
@@ -185,7 +185,7 @@
 
     </div>
   </div>
-<!-- INSTRUCTIONS -->
+  <!-- INSTRUCTIONS -->
   <div id="instructions-screen" class="hidden">
     <div class="instructions-panel">
 
@@ -194,13 +194,13 @@
 
         <div class="instructions-topbar-center">
           <img src="/assets/logos/game-logo.png" class="instructions-game-mini" alt="Craques da Carteira" />
-          </div>
-
-        <button type="button" class="instructions-topbar-btn" id="instructions-help">Ajuda ?</button>
         </div>
 
+        <button type="button" class="instructions-topbar-btn" id="instructions-help">Ajuda ?</button>
+      </div>
+
       <h1 class="instructions-title">INSTRUÇÕES</h1>
-      
+
       <div class="instructions-cards">
         <div class="instructions-card">
           <img src="/assets/icons/icon-profile.png" class="instructions-icon" alt="" />
@@ -210,7 +210,7 @@
             Seu desafio é montar um time de investimentos que combine com seu perfil
             dentro do tempo de 1 minuto e 30 segundos.
           </p>
-          </div>
+        </div>
 
         <div class="instructions-card">
           <img src="/assets/icons/icon-team.png" class="instructions-icon" alt="" />
@@ -232,7 +232,7 @@
           </p>
         </div>
       </div>
-<button id="instructions-btn" class="instructions-btn" type="button">COMEÇAR A DIVERSÃO</button>
+      <button id="instructions-btn" class="instructions-btn" type="button">COMEÇAR A DIVERSÃO</button>
 
       <div class="instructions-footer">
         <img src="/assets/logos/logo-rio-bravo-alt.png" class="instructions-rb-logo" alt="Rio Bravo" />
@@ -284,22 +284,49 @@
   </div>
 
   <!-- COUNTDOWN -->
-  <div id="countdown-screen" class="hidden screen-overlay screen-overlay--dark" data-z="100">
-    <div id="countdown-number" class="countdown-number">3</div>
+  <div id="countdown-screen" class="hidden screen-overlay" data-z="100">
+    <div class="countdown-wrapper">
+  
+      <div class="countdown-icon-box">
+        <svg class="countdown-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M10.5 13.5L10.5 8.5C10.5 7.67157 11.1716 7 12 7C12.8284 7 13.5 7.67157 13.5 8.5V13.5"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+          <path d="M13.5 13.5L13.5 5.5C13.5 4.67157 14.1716 4 15 4C15.8284 4 16.5 4.67157 16.5 5.5V13.5"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+          <path
+            d="M16.5 13.5V2.5C16.5 1.67157 17.1716 1 18 1C18.8284 1 19.5 1.67157 19.5 2.5V12.5L19.5 15.5C19.5 19.366 16.366 22.5 12.5 22.5H11.5C7.63401 22.5 4.5 19.366 4.5 15.5V12.5C4.5 11.6716 5.17157 11 6 11C6.82843 11 7.5 11.6716 7.5 12.5V13.5"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+          <path d="M7.5 13.5V9.5C7.5 8.67157 8.17157 8 9 8C9.82843 8 10.5 8.67157 10.5 9.5V13.5" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round" />
+        </svg>
+      </div>
+  
+      <p class="countdown-instr">
+        Clique e arraste uma carta<br>
+        para a posição que deseja!
+      </p>
+  
+      <h2 class="countdown-title">
+        O jogo vai começar,<br>
+        preparado?
+      </h2>
+  
+      <div id="countdown-number" class="countdown-val">3</div>
+  
+    </div>
   </div>
 
   <!-- END SPLASH -->
   <div id="end-splash-screen" class="hidden screen-overlay screen-overlay--dark" data-z="160">
     <div class="end-splash-wrap">
-      <h1 class="end-splash-title">FIM DE JOGO!</h1>
+      <h1 class="end-splash-title">Partida Encerrada!</h1>
     </div>
   </div>
 
   <!-- SUMMARY OVERLAY -->
   <div id="summary-overlay" class="hidden summary-overlay" data-z="50">
     <div class="summary-top">
-      <h2 class="summary-title">Sua Escalação Final</h2>
-      <p class="summary-subtitle">Confira como você posicionou seu time</p>
+      <h2 class="summary-title">veja a escalação final do seu time!</h2>
     </div>
 
     <div class="summary-bottom">
@@ -324,15 +351,15 @@
           <h2 id="detail-name" class="detail-title">--</h2>
           <span id="detail-type" class="detail-pill">--</span>
         </div>
-        </div>
+      </div>
 
       <p id="detail-desc" class="detail-desc">--</p>
 
       <button id="detail-action-btn" type="button" class="detail-action">ESCALAR JOGADOR</button>
 
       <div class="detail-ball" aria-hidden="true"></div>
-      </div>
-      </div>
+    </div>
+    </div>
 
   <!-- RANKING -->
   <div id="ranking-screen" class="hidden screen-overlay screen-overlay--dark" data-z="170">
@@ -355,10 +382,10 @@
         </table>
 
         <div id="ranking-loading" class="ranking-loading">Carregando ranking...</div>
-        </div>
+      </div>
 
       <button id="back-to-home-btn" class="ranking-back" type="button">Voltar ao Início</button>
-      </div>
+    </div>
   </div>
 
   <!-- GAME ROOT -->
@@ -389,7 +416,7 @@
           <div id="game-timer-val" class="timer-value">01:18</div>
         </div>
       </div>
-      
+
       <div class="hud-bottom">
         <div class="hud-bottom-left">
           <span class="hud-list-ico">☰</span>
@@ -412,9 +439,9 @@
 
       <div id="field-container" class="football-field">
         <div id="field-interactive-layer"></div>
-<div class="field-zone zone-attack">ATQ</div>
-<div class="field-zone zone-mid">MEIO</div>
-<div class="field-zone zone-def">DEF</div>
+        <div class="field-zone zone-attack">ATQ</div>
+        <div class="field-zone zone-mid">MEIO</div>
+        <div class="field-zone zone-def">DEF</div>
       </div>
 
       <!-- (se você já está escondendo no modo jogo via CSS, pode manter aqui) -->
@@ -429,27 +456,27 @@
       <div class="corner tr"></div>
       <div class="corner bl"></div>
       <div class="corner br"></div>
-      </main>
+    </main>
 
     <!-- FOOTER DO JOGO -->
     <div class="game-footer">
       <button id="finish-btn" class="finish-fab hidden" type="button">
         FINALIZAR <span class="finish-ico" aria-hidden="true">➜</span>
       </button>
-      
+
       <div class="footer-bar">
         <button id="cancel-match-btn" class="footer-action" type="button">
           <span class="footer-ico" aria-hidden="true">✋</span>
           <span>Cancelar Partida</span>
         </button>
-      
+
         <img src="/assets/logos/logo-rio-bravo.png" class="footer-logo" alt="Rio Bravo" />
-      
+
         <button id="help-btn" class="footer-action" type="button">
           <span>Ajuda ?</span>
         </button>
       </div>
-      </div>
+    </div>
 
     <!-- HIDDEN HOOKS -->
     <div class="hidden">

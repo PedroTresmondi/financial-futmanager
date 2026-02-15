@@ -1,3 +1,10 @@
+/* ===========================
+   Financial Football Manager • main.js (completo)
+   - Drop -> campo com animação (sem transparente)
+   - Fila anda com FLIP (sem teleporte)
+   - Volta -> fila com animação
+   =========================== */
+
 const PROFILES = {
   CONSERVADOR: { min: 15, max: 35, color: "text-blue-400", label: "Conservador" },
   MODERADO: { min: 36, max: 60, color: "text-yellow-400", label: "Moderado" },
@@ -23,6 +30,8 @@ const SCREENS = {
   endSplash: null,
   summaryOverlay: null
 };
+
+const sidebarHideTimers = new Map();
 
 let assetsData = [];
 let currentProfileKey = null;
@@ -54,141 +63,21 @@ let CARD_H = BASE_CARD_H;
 let fieldResizeObserver = null;
 
 const FALLBACK_ASSETS = [
-  {
-    "id": 1,
-    "name": "Tesouro Selic",
-    "type": "Renda Fixa",
-    "suitability": 10,
-    "retorno": 15,
-    "seguranca": 100,
-    "desc": "O investimento mais seguro do país. Ideal para reservas de emergência e perfis conservadores."
-  },
-  {
-    "id": 2,
-    "name": "CDB Banco",
-    "type": "Renda Fixa",
-    "suitability": 20,
-    "retorno": 25,
-    "seguranca": 90,
-    "desc": "Emprestimo para o banco com garantia do FGC. Retorno superior à poupança."
-  },
-  {
-    "id": 3,
-    "name": "Fundo DI",
-    "type": "Fundo",
-    "suitability": 25,
-    "retorno": 30,
-    "seguranca": 85,
-    "desc": "Carteira diversificada em renda fixa. Liquidez diária e gestão profissional."
-  },
-  {
-    "id": 4,
-    "name": "LCI / LCA",
-    "type": "Isento",
-    "suitability": 30,
-    "retorno": 35,
-    "seguranca": 85,
-    "desc": "Investimento isento de Imposto de Renda, focado nos setores imobiliário e do agronegócio."
-  },
-  {
-    "id": 5,
-    "name": "Debênture",
-    "type": "Crédito",
-    "suitability": 40,
-    "retorno": 45,
-    "seguranca": 70,
-    "desc": "Dívida de empresas privadas. Maior risco de crédito, mas com taxas atrativas."
-  },
-  {
-    "id": 6,
-    "name": "Multimercado",
-    "type": "Fundo",
-    "suitability": 50,
-    "retorno": 55,
-    "seguranca": 60,
-    "desc": "Fundo que mistura renda fixa, ações e câmbio. Busca superar o CDI com volatilidade controlada."
-  },
-  {
-    "id": 7,
-    "name": "FII Papel",
-    "type": "Imobiliário",
-    "suitability": 55,
-    "retorno": 60,
-    "seguranca": 55,
-    "desc": "Fundo imobiliário focado em dívidas (CRIs). Paga dividendos mensais isentos de IR."
-  },
-  {
-    "id": 8,
-    "name": "FII Tijolo",
-    "type": "Imobiliário",
-    "suitability": 60,
-    "retorno": 65,
-    "seguranca": 50,
-    "desc": "Investimento em imóveis físicos como shoppings e galpões. Renda de aluguéis e valorização."
-  },
-  {
-    "id": 9,
-    "name": "ETF S&P500",
-    "type": "Internacional",
-    "suitability": 65,
-    "retorno": 70,
-    "seguranca": 50,
-    "desc": "Exposição às 500 maiores empresas dos EUA. Diversificação em dólar sem sair do Brasil."
-  },
-  {
-    "id": 10,
-    "name": "Ações Blue Chips",
-    "type": "Ações",
-    "suitability": 70,
-    "retorno": 75,
-    "seguranca": 45,
-    "desc": "Ações de empresas grandes, consolidadas e com bom histórico de lucros na Bolsa."
-  },
-  {
-    "id": 11,
-    "name": "Small Caps",
-    "type": "Ações",
-    "suitability": 80,
-    "retorno": 85,
-    "seguranca": 30,
-    "desc": "Ações de empresas menores com alto potencial de crescimento, mas maior volatilidade."
-  },
-  {
-    "id": 12,
-    "name": "Dólar Futuro",
-    "type": "Derivativos",
-    "suitability": 85,
-    "retorno": 80,
-    "seguranca": 30,
-    "desc": "Proteção ou especulação com a variação cambial. Alto risco e alavancagem."
-  },
-  {
-    "id": 13,
-    "name": "Bitcoin",
-    "type": "Cripto",
-    "suitability": 90,
-    "retorno": 95,
-    "seguranca": 20,
-    "desc": "A principal criptomoeda do mercado. Ouro digital, descentralizado e escasso."
-  },
-  {
-    "id": 14,
-    "name": "Altcoins",
-    "type": "Cripto",
-    "suitability": 95,
-    "retorno": 100,
-    "seguranca": 10,
-    "desc": "Criptomoedas alternativas com projetos inovadores, mas risco extremo de oscilação."
-  },
-  {
-    "id": 15,
-    "name": "Opções",
-    "type": "Derivativos",
-    "suitability": 100,
-    "retorno": 100,
-    "seguranca": 5,
-    "desc": "Instrumentos para alavancagem máxima. Potencial de ganhos explosivos ou perda total."
-  }
+  { "id": 1, "name": "Tesouro Selic", "type": "Renda Fixa", "suitability": 10, "retorno": 15, "seguranca": 100, "desc": "O investimento mais seguro do país. Ideal para reservas de emergência e perfis conservadores." },
+  { "id": 2, "name": "CDB Banco", "type": "Renda Fixa", "suitability": 20, "retorno": 25, "seguranca": 90, "desc": "Emprestimo para o banco com garantia do FGC. Retorno superior à poupança." },
+  { "id": 3, "name": "Fundo DI", "type": "Fundo", "suitability": 25, "retorno": 30, "seguranca": 85, "desc": "Carteira diversificada em renda fixa. Liquidez diária e gestão profissional." },
+  { "id": 4, "name": "LCI / LCA", "type": "Isento", "suitability": 30, "retorno": 35, "seguranca": 85, "desc": "Investimento isento de Imposto de Renda, focado nos setores imobiliário e do agronegócio." },
+  { "id": 5, "name": "Debênture", "type": "Crédito", "suitability": 40, "retorno": 45, "seguranca": 70, "desc": "Dívida de empresas privadas. Maior risco de crédito, mas com taxas atrativas." },
+  { "id": 6, "name": "Multimercado", "type": "Fundo", "suitability": 50, "retorno": 55, "seguranca": 60, "desc": "Fundo que mistura renda fixa, ações e câmbio. Busca superar o CDI com volatilidade controlada." },
+  { "id": 7, "name": "FII Papel", "type": "Imobiliário", "suitability": 55, "retorno": 60, "seguranca": 55, "desc": "Fundo imobiliário focado em dívidas (CRIs). Paga dividendos mensais isentos de IR." },
+  { "id": 8, "name": "FII Tijolo", "type": "Imobiliário", "suitability": 60, "retorno": 65, "seguranca": 50, "desc": "Investimento em imóveis físicos como shoppings e galpões. Renda de aluguéis e valorização." },
+  { "id": 9, "name": "ETF S&P500", "type": "Internacional", "suitability": 65, "retorno": 70, "seguranca": 50, "desc": "Exposição às 500 maiores empresas dos EUA. Diversificação em dólar sem sair do Brasil." },
+  { "id": 10, "name": "Ações Blue Chips", "type": "Ações", "suitability": 70, "retorno": 75, "seguranca": 45, "desc": "Ações de empresas grandes, consolidadas e com bom histórico de lucros na Bolsa." },
+  { "id": 11, "name": "Small Caps", "type": "Ações", "suitability": 80, "retorno": 85, "seguranca": 30, "desc": "Ações de empresas menores com alto potencial de crescimento, mas maior volatilidade." },
+  { "id": 12, "name": "Dólar Futuro", "type": "Derivativos", "suitability": 85, "retorno": 80, "seguranca": 30, "desc": "Proteção ou especulação com a variação cambial. Alto risco e alavancagem." },
+  { "id": 13, "name": "Bitcoin", "type": "Cripto", "suitability": 90, "retorno": 95, "seguranca": 20, "desc": "A principal criptomoeda do mercado. Ouro digital, descentralizado e escasso." },
+  { "id": 14, "name": "Altcoins", "type": "Cripto", "suitability": 95, "retorno": 100, "seguranca": 10, "desc": "Criptomoedas alternativas com projetos inovadores, mas risco extremo de oscilação." },
+  { "id": 15, "name": "Opções", "type": "Derivativos", "suitability": 100, "retorno": 100, "seguranca": 5, "desc": "Instrumentos para alavancagem máxima. Potencial de ganhos explosivos ou perda total." }
 ];
 
 function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
@@ -253,11 +142,9 @@ function showScreen(screenKey) {
     SCREENS[screenKey].classList.remove('hidden');
   }
 
-  // ✅ modos de UI
   document.body.classList.toggle("game-mode", screenKey === "game" || screenKey === "summaryOverlay");
   document.body.classList.toggle("summary-mode", screenKey === "summaryOverlay");
 }
-
 
 function getFieldRect() {
   if (!els.fieldLayer) return null;
@@ -418,12 +305,10 @@ async function tryAwardPrize(points) {
 }
 
 async function showRankingScreen() {
-  // Fecha o modal de prêmio para não atrapalhar
   if (els.prizeModal) els.prizeModal.classList.add("hidden");
 
   showScreen('ranking');
 
-  // Garante a data de hoje
   const dateEl = document.getElementById("ranking-date-display");
   if (dateEl) dateEl.innerText = new Date().toLocaleDateString("pt-BR");
 
@@ -440,7 +325,6 @@ async function showRankingScreen() {
 
     if (loadingEl) loadingEl.classList.add("hidden");
 
-    // --- ALTERAÇÃO AQUI: PEGAR SÓ OS 3 PRIMEIROS ---
     const top3 = data.slice(0, 3);
 
     if (top3.length === 0) {
@@ -452,14 +336,12 @@ async function showRankingScreen() {
       const isMe = (game.playerName === playerName && game.points === gameScore);
       const rank = index + 1;
 
-      // Classes especiais para cada posição
       let rowClass = "ranking-row";
       if (isMe) rowClass += " ranking-row--me";
       if (rank === 1) rowClass += " rank-1";
       if (rank === 2) rowClass += " rank-2";
       if (rank === 3) rowClass += " rank-3";
 
-      // Ícones de medalha
       let medalIcon = "";
       if (rank === 1) medalIcon = "🥇";
       if (rank === 2) medalIcon = "🥈";
@@ -488,7 +370,6 @@ async function showRankingScreen() {
     if (loadingEl) loadingEl.classList.add("hidden");
   }
 
-  // Reinicia em 30s
   if (prizeResetTimer) clearTimeout(prizeResetTimer);
   prizeResetTimer = setTimeout(() => {
     returnToStart();
@@ -504,17 +385,22 @@ function startCountdown() {
     })
     .catch(() => { console.log("Usando config default de tempo"); })
     .finally(() => {
+      const gameRoot = document.getElementById('game-root');
+      if (gameRoot) gameRoot.classList.remove('hidden');
+
       showScreen('countdown');
+
       const cdNum = document.getElementById("countdown-number");
       let count = 3;
       cdNum.innerText = count;
+
       const interval = setInterval(() => {
         count--;
         if (count > 0) {
           cdNum.innerText = count;
         } else {
           clearInterval(interval);
-          showScreen('game');
+          document.getElementById('countdown-screen').classList.add('hidden');
           startMatchTimer();
         }
       }, 1000);
@@ -581,7 +467,6 @@ function updateTimerDisplay(el) {
   el.classList.toggle("timer-danger", s <= 10);
 }
 
-
 function openCardDetails(asset) {
   if (!asset) return;
   pauseMatchTimer();
@@ -592,18 +477,15 @@ function openCardDetails(asset) {
   const descEl = document.getElementById("detail-desc");
   const iconEl = document.getElementById("detail-icon");
 
-  // 1) texto
   if (nameEl) nameEl.innerText = String(asset.name || "--").toUpperCase();
   if (descEl) descEl.innerText = asset.desc || "Sem descrição disponível.";
 
-  // 2) pill = risco (baixo/médio/alto)
   let risco = "Risco Médio";
   if (asset.suitability <= 35) risco = "Risco Baixo";
   else if (asset.suitability <= 60) risco = "Risco Médio";
   else risco = "Risco Alto";
   if (typeEl) typeEl.innerText = risco;
 
-  // 3) ícone = 3 tipos (perfil atual do jogador)
   if (iconEl) {
     const iconMap = {
       CONSERVADOR: "/assets/icons/profile-conservador.png",
@@ -614,11 +496,8 @@ function openCardDetails(asset) {
     iconEl.alt = "";
   }
 
-  // 4) abre
   if (modal) modal.classList.remove("hidden");
 }
-
-
 
 function closeCardDetails() {
   const modal = document.getElementById("card-details-modal");
@@ -640,8 +519,19 @@ function getRiskLevel(suitability) {
 }
 
 function createPremiumCardHTML(asset) {
+  const zone = currentProfileKey ? expectedZoneFor(asset.suitability, currentProfileKey) : "?";
+  const zoneMap = { attack: "ATQ", midfield: "MEIO", defense: "DEF" };
+  const zoneLabel = zoneMap[zone] || zone;
+
   return `
     <div class="game-card-base" data-risk="${getRiskLevel(asset.suitability)}">
+      <div class="card-debug-info debug-only">
+        ID: ${asset.id}<br>
+        Suit: ${asset.suitability}<br>
+        Ret: ${asset.retorno}%<br>
+        <strong>ZONA: ${zoneLabel}</strong>
+      </div>
+
       <div class="card-name">${asset.name}</div>
       <div class="card-type-pill">${asset.type}</div>
     </div>
@@ -650,14 +540,24 @@ function createPremiumCardHTML(asset) {
 }
 
 function fieldCardContentHTML(asset) {
+  const zone = currentProfileKey ? expectedZoneFor(asset.suitability, currentProfileKey) : "?";
+  const zoneMap = { attack: "ATQ", midfield: "MEIO", defense: "DEF" };
+  const zoneLabel = zoneMap[zone] || zone;
+
   return `
     <div class="game-card-base" data-risk="${getRiskLevel(asset.suitability)}">
+      <div class="card-debug-info debug-only">
+        ID: ${asset.id}<br>
+        Suit: ${asset.suitability}<br>
+        Ret: ${asset.retorno}%<br>
+        <strong>Target: ${zoneLabel}</strong>
+      </div>
+
       <div class="card-name">${asset.name}</div>
       <div class="card-type-pill">${asset.type}</div>
     </div>
   `;
 }
-
 
 function setFieldCardContent(el, asset) {
   el.innerHTML = fieldCardContentHTML(asset);
@@ -672,17 +572,25 @@ function ensureCloseButton(el, asset) {
   close.className = "field-close-btn";
   close.innerText = "×";
 
-  // Previne drag ao clicar no fechar
   close.addEventListener("pointerdown", (e) => e.stopPropagation());
 
-  close.addEventListener("click", (e) => {
+  close.addEventListener("click", async (e) => {
     e.stopPropagation();
-    // Lógica de remoção existente...
+
+    // anima campo -> fila (voo)
+    const fieldEl = document.querySelector(`.field-item[data-id="${asset.id}"]`);
+    const fromRect = fieldEl ? fieldEl.getBoundingClientRect() : null;
+
+    // remove do estado
     const idx = placedCards.findIndex(c => c.id === asset.id);
     if (idx !== -1) placedCards.splice(idx, 1);
-    const sidebarItem = document.querySelector(`.sidebar-item[data-id="${asset.id}"]`);
-    if (sidebarItem) sidebarItem.classList.remove("hidden");
-    el.remove();
+
+    // remove elemento do campo
+    if (fieldEl) fieldEl.remove();
+
+    // volta pra fila com animação
+    await restoreSidebarCardAnimated(asset, fromRect);
+
     recomputeScore();
     updateStats();
   });
@@ -747,11 +655,19 @@ function buildVirtualKeyboard() {
 }
 
 function updateNameUI() {
-  const value = normalizeName(els.nameInput.value);
+  const value = normalizeNameLive(els.nameInput.value);
   els.nameInput.value = value;
+
   const disabled = onlySpaces(value);
   els.startGameBtn.disabled = disabled;
   if (!disabled) els.nameWarning.classList.add("hidden");
+}
+
+function normalizeNameLive(raw) {
+  let s = String(raw || "").replace(/\s+/g, " ");
+  s = s.replace(/^\s+/, "");
+  s = s.slice(0, 18);
+  return s.toUpperCase();
 }
 
 function applyNameKey(key) {
@@ -845,7 +761,6 @@ function updateProfileModalContent() {
   }
 
   if (cardEl) {
-    // 1) trocar imagem
     const bgMap = {
       ARROJADO: "url('/assets/backgrounds/profile-arrojado.png')",
       MODERADO: "url('/assets/backgrounds/profile-moderado.png')",
@@ -853,25 +768,18 @@ function updateProfileModalContent() {
     };
     const bg = bgMap[currentProfileKey] || bgMap.MODERADO;
     cardEl.style.setProperty("--profile-bg", bg);
-    cardEl.style.backgroundImage = bg; // fallback direto
+    cardEl.style.backgroundImage = bg;
 
-    // 2) trocar classe de tema (pra não ficar preso no moderado)
     cardEl.classList.remove("profile-theme--arrojado", "profile-theme--moderado", "profile-theme--conservador");
     if (currentProfileKey === "ARROJADO") cardEl.classList.add("profile-theme--arrojado");
     else if (currentProfileKey === "CONSERVADOR") cardEl.classList.add("profile-theme--conservador");
     else cardEl.classList.add("profile-theme--moderado");
 
-    // 3) contraste
     cardEl.classList.remove("profile-contrast--light", "profile-contrast--dark");
     if (currentProfileKey === "CONSERVADOR") cardEl.classList.add("profile-contrast--light");
     else cardEl.classList.add("profile-contrast--dark");
   }
 }
-
-
-
-
-
 
 function bindEls() {
   els.prizeModal = document.getElementById("prize-modal");
@@ -981,6 +889,202 @@ function renderSidebar() {
   applyDebugOnlyVisibility();
 }
 
+/* ============================================================
+   ANIMAÇÕES: FLIP (fila andando sem teleporte)
+   ============================================================ */
+function getSidebarItemsRects() {
+  const items = Array.from(document.querySelectorAll("#cards-container .sidebar-item"));
+  const map = new Map();
+  items.forEach((el) => map.set(el, el.getBoundingClientRect()));
+  return map;
+}
+
+function playSidebarFlip(prevRects) {
+  const items = Array.from(document.querySelectorAll("#cards-container .sidebar-item"));
+  items.forEach((el) => {
+    const prev = prevRects.get(el);
+    if (!prev) return;
+    const next = el.getBoundingClientRect();
+    const dx = prev.left - next.left;
+    const dy = prev.top - next.top;
+
+    if (dx === 0 && dy === 0) return;
+
+    el.style.transition = "none";
+    el.style.transform = `translate(${dx}px, ${dy}px)`;
+
+    requestAnimationFrame(() => {
+      el.style.transition = "transform 380ms cubic-bezier(0.2, 1, 0.3, 1)";
+      el.style.transform = "";
+    });
+  });
+}
+
+/* ============================================================
+   ANIMAÇÕES: CARD VOADOR (SEM TRANSPARENTE)
+   - usa wrapper .drag-ghost e dentro um .field-card
+   - assim o SEU CSS atual aplica o background certinho
+   ============================================================ */
+function buildFlyElement(asset) {
+  const wrap = document.createElement("div");
+  wrap.className = "drag-ghost fly-wrap";
+  wrap.style.position = "fixed";
+  wrap.style.left = "0";
+  wrap.style.top = "0";
+  wrap.style.pointerEvents = "none";
+  wrap.style.zIndex = "9999";
+
+  const inner = document.createElement("div");
+  inner.className = "field-card fly-inner";
+  inner.style.position = "relative"; // dentro do wrapper fixed
+  inner.style.left = "0";
+  inner.style.top = "0";
+  inner.style.width = `${CARD_W}px`;
+  inner.style.height = `${CARD_H}px`;
+  inner.style.setProperty("--innerScale", String(INNER_SCALE));
+  inner.classList.toggle("compact", fieldIsCompact());
+  inner.innerHTML = fieldCardContentHTML(asset);
+
+  wrap.appendChild(inner);
+  document.body.appendChild(wrap);
+  return wrap;
+}
+
+function animateFly(fromX, fromY, toX, toY, asset) {
+  const fly = buildFlyElement(asset);
+
+  const anim = fly.animate(
+    [
+      { transform: `translate(${fromX}px, ${fromY}px) translate(-50%, -50%) scale(1.05)`, opacity: 1 },
+      { transform: `translate(${toX}px, ${toY}px) translate(-50%, -50%) scale(0.95)`, opacity: 1 }
+    ],
+    { duration: 420, easing: "cubic-bezier(0.2, 1, 0.3, 1)", fill: "forwards" }
+  );
+
+  return new Promise((resolve) => {
+    anim.onfinish = () => { fly.remove(); resolve(); };
+    anim.oncancel = () => { fly.remove(); resolve(); };
+  });
+}
+
+/* ============================================================
+   VOLTA PRA FILA COM ANIMAÇÃO + EXPANSÃO + FLIP
+   ============================================================ */
+async function restoreSidebarCardAnimated(asset, fromRect) {
+  const id = String(asset.id);
+
+  const old = sidebarHideTimers.get(id);
+  if (old) { clearTimeout(old); sidebarHideTimers.delete(id); }
+
+  if (!els.cardsContainer) return;
+
+  const prevRects = getSidebarItemsRects();
+
+  let cardEl = document.querySelector(`.sidebar-item[data-id="${id}"]`);
+
+  // se não existe, cria e entra "fechado"
+  if (!cardEl) {
+    cardEl = document.createElement("div");
+    const riskClass = getRiskBorderClass(asset);
+    cardEl.className = `premium-card sidebar-item ${riskClass}`.trim();
+    cardEl.dataset.id = id;
+    cardEl.innerHTML = createPremiumCardHTML(asset);
+    cardEl.addEventListener("pointerdown", (e) => initDrag(e, asset, cardEl));
+    els.cardsContainer.appendChild(cardEl);
+  }
+
+  // garante que está visível
+  cardEl.classList.remove("hidden", "removing-to-field", "is-dragging");
+  cardEl.style.pointerEvents = "none";
+
+  // fecha pra expandir bonito
+  const fullW = cardEl.offsetWidth || 150;
+  cardEl.style.width = "0px";
+  cardEl.style.maxWidth = "0px";
+  cardEl.style.opacity = "0";
+  cardEl.style.transform = "scale(0.98)";
+
+  // desliga snap por um instante pra não dar jump
+  if (els.sidebar) {
+    els.sidebar.style.scrollSnapType = "none";
+    setTimeout(() => { els.sidebar.style.scrollSnapType = ""; }, 500);
+  }
+
+  // próxima frame: expande
+  requestAnimationFrame(() => {
+    cardEl.style.transition =
+      "width 380ms cubic-bezier(0.2,1,0.3,1), max-width 380ms cubic-bezier(0.2,1,0.3,1), opacity 220ms ease, transform 380ms cubic-bezier(0.2,1,0.3,1)";
+    cardEl.style.width = `${fullW}px`;
+    cardEl.style.maxWidth = `${fullW}px`;
+    cardEl.style.opacity = "1";
+    cardEl.style.transform = "";
+  });
+
+  // FLIP nos irmãos
+  requestAnimationFrame(() => {
+    playSidebarFlip(prevRects);
+  });
+
+  // anima voo do campo para o lugar final na fila
+  // (precisa esperar 1 frame pra ter rect válido)
+  await new Promise(r => requestAnimationFrame(r));
+  const toRect = cardEl.getBoundingClientRect();
+
+  if (fromRect) {
+    const fromX = fromRect.left + fromRect.width / 2;
+    const fromY = fromRect.top + fromRect.height / 2;
+    const toX = toRect.left + toRect.width / 2;
+    const toY = toRect.top + toRect.height / 2;
+    await animateFly(fromX, fromY, toX, toY, asset);
+  }
+
+  // limpeza final
+  setTimeout(() => {
+    cardEl.style.transition = "";
+    cardEl.style.width = "";
+    cardEl.style.maxWidth = "";
+    cardEl.style.opacity = "";
+    cardEl.style.pointerEvents = "";
+  }, 450);
+}
+
+/* ============================================================
+   RESTORE SIMPLES (mantido para compatibilidade)
+   ============================================================ */
+function restoreSidebarCard(asset) {
+  const id = String(asset.id);
+
+  const t = sidebarHideTimers.get(id);
+  if (t) {
+    clearTimeout(t);
+    sidebarHideTimers.delete(id);
+  }
+
+  const existing = document.querySelector(`.sidebar-item[data-id="${id}"]`);
+  if (existing) {
+    existing.classList.remove("hidden", "removing-to-field", "is-dragging");
+    existing.style.width = "";
+    existing.style.maxWidth = "";
+    existing.style.opacity = "";
+    existing.style.transform = "";
+    return;
+  }
+
+  if (!els.cardsContainer) return;
+
+  const card = document.createElement("div");
+  const riskClass = getRiskBorderClass(asset);
+  card.className = `premium-card sidebar-item ${riskClass}`.trim();
+  card.dataset.id = id;
+  card.innerHTML = createPremiumCardHTML(asset);
+  card.addEventListener("pointerdown", (e) => initDrag(e, asset, card));
+
+  els.cardsContainer.appendChild(card);
+}
+
+/* ============================================================
+   DRAG & DROP
+   ============================================================ */
 function initDrag(e, asset, originalEl) {
   if (e.pointerType === "mouse" && e.button !== 0) return;
   if (!SCREENS.summaryOverlay.classList.contains('hidden')) return;
@@ -1064,49 +1168,14 @@ function handleEnd(e) {
     return;
   }
 
-
   const { asset, originalEl, ghost } = activeDrag;
   if (ghost) ghost.remove();
   originalEl.classList.remove("is-dragging");
-  processDrop(asset.id, e.clientX, e.clientY, CARD_W / 2, CARD_H / 2);
-  activeDrag = null;
-}
 
-function processDrop(assetId, clientX, clientY, offsetX, offsetY) {
-  const asset = assetsData.find(a => a.id === assetId);
-  if (!asset) return;
-  computeCardSizeFromField();
-  const rect = els.fieldLayer.getBoundingClientRect();
-  if (clientX < rect.left || clientX > rect.right || clientY < rect.top || clientY > rect.bottom) return;
-  let x = clientX - rect.left - offsetX;
-  let y = clientY - rect.top - offsetY;
-  x = clamp(x, 0, rect.width - CARD_W);
-  y = clamp(y, 0, rect.height - CARD_H);
-  const existingIndex = placedCards.findIndex(c => c.id === asset.id);
-  if (existingIndex === -1 && placedCards.length >= MAX_PLAYERS) {
-    showToast("Máximo de 6 jogadores!", "error");
-    return;
-  }
-  if (checkCollision(x, y, asset.id)) {
-    showToast("Sem espaço aqui!", "error");
-    return;
-  }
-  const actualZone = zoneFromPoint(y + (CARD_H / 2), rect.height);
-  const expected = expectedZoneFor(asset.suitability, currentProfileKey);
-  const correct = (actualZone === expected);
-  if (existingIndex !== -1) {
-    const oldEl = document.querySelector(`.field-item[data-id="${asset.id}"]`);
-    if (oldEl) oldEl.remove();
-    placedCards.splice(existingIndex, 1);
-  } else {
-    const sidebarItem = document.querySelector(`.sidebar-item[data-id="${asset.id}"]`);
-    if (sidebarItem) sidebarItem.classList.add("hidden");
-  }
-  if (!correct) showToast("Posição errada (não conta)", "warn");
-  else showToast("Correto (conta pontos)", "info");
-  placeCardOnField(asset, x, y, actualZone, correct);
-  recomputeScore();
-  updateStats();
+  // processa drop com animação (do ponto do drop)
+  processDrop(asset.id, e.clientX, e.clientY, CARD_W / 2, CARD_H / 2, { dropClientX: e.clientX, dropClientY: e.clientY });
+
+  activeDrag = null;
 }
 
 function checkCollision(newX, newY, ignoreId) {
@@ -1121,6 +1190,118 @@ function checkCollision(newX, newY, ignoreId) {
     if (hit) return true;
   }
   return false;
+}
+
+/* ============================================================
+   PROCESS DROP (com animações: voo + fila FLIP)
+   ============================================================ */
+function processDrop(assetId, clientX, clientY, offsetX, offsetY, opts = {}) {
+  const asset = assetsData.find(a => a.id === assetId);
+  if (!asset) return;
+
+  computeCardSizeFromField();
+  const rect = els.fieldLayer.getBoundingClientRect();
+
+  if (clientX < rect.left || clientX > rect.right || clientY < rect.top || clientY > rect.bottom) return;
+
+  let x = clientX - rect.left - offsetX;
+  let y = clientY - rect.top - offsetY;
+
+  x = clamp(x, 0, rect.width - CARD_W);
+  y = clamp(y, 0, rect.height - CARD_H);
+
+  const existingIndex = placedCards.findIndex(c => c.id === asset.id);
+
+  if (existingIndex === -1 && placedCards.length >= MAX_PLAYERS) {
+    showToast("Máximo de 6 jogadores!", "error");
+    return;
+  }
+
+  if (checkCollision(x, y, asset.id)) {
+    showToast("Sem espaço aqui!", "error");
+    return;
+  }
+
+  const actualZone = zoneFromPoint(y + (CARD_H / 2), rect.height);
+  const expected = expectedZoneFor(asset.suitability, currentProfileKey);
+  const correct = (actualZone === expected);
+
+  // reposicionando no campo (já existia)
+  if (existingIndex !== -1) {
+    const oldEl = document.querySelector(`.field-item[data-id="${asset.id}"]`);
+    if (oldEl) oldEl.remove();
+    placedCards.splice(existingIndex, 1);
+
+    if (!correct) showToast("Posição errada (não conta)", "warn");
+    else showToast("Correto (conta pontos)", "info");
+
+    placeCardOnField(asset, x, y, actualZone, correct);
+    recomputeScore();
+    updateStats();
+    return;
+  }
+
+  // NOVO: pegando da fila -> animações
+  const sidebarItem = document.querySelector(`.sidebar-item[data-id="${String(asset.id)}"]`);
+
+  const prevRects = getSidebarItemsRects();
+
+  // destino final no campo (centro, viewport coords)
+  const toX = rect.left + x + (CARD_W / 2);
+  const toY = rect.top + y + (CARD_H / 2);
+
+  // origem: ponto do drop (preferível) — fica MUITO natural
+  const fromX = (opts.dropClientX ?? clientX);
+  const fromY = (opts.dropClientY ?? clientY);
+
+  // 1) inicia voo imediatamente (sem depender do sidebar existir)
+  const flyPromise = animateFly(fromX, fromY, toX, toY, asset);
+
+  // 2) colapsa item na fila (sua animação) + cancela timers
+  if (sidebarItem) {
+    const id = String(asset.id);
+
+    const old = sidebarHideTimers.get(id);
+    if (old) {
+      clearTimeout(old);
+      sidebarHideTimers.delete(id);
+    }
+
+    const currentWidth = sidebarItem.offsetWidth;
+    sidebarItem.style.width = currentWidth + "px";
+    sidebarItem.style.maxWidth = currentWidth + "px";
+
+    requestAnimationFrame(() => {
+      sidebarItem.classList.add("removing-to-field");
+    });
+
+    const tid = setTimeout(() => {
+      sidebarItem.classList.add("hidden");
+      sidebarHideTimers.delete(id);
+    }, 400);
+
+    sidebarHideTimers.set(id, tid);
+  }
+
+  // 3) fila andando sem teleporte (FLIP)
+  requestAnimationFrame(() => {
+    // desliga snap momentâneo pra não “corrigir” scroll no meio
+    if (els.sidebar) {
+      els.sidebar.style.scrollSnapType = "none";
+      setTimeout(() => { els.sidebar.style.scrollSnapType = ""; }, 500);
+    }
+    playSidebarFlip(prevRects);
+  });
+
+  // 4) só coloca no campo quando o voo terminar
+  flyPromise.then(() => {
+    if (!correct) showToast("Posição errada (não conta)", "warn");
+    else showToast("Correto (conta pontos)", "info");
+
+    placeCardOnField(asset, x, y, actualZone, correct);
+    recomputeScore();
+    updateStats();
+  });
 }
 
 function placeCardOnField(asset, x, y, zone, correct) {
@@ -1236,10 +1417,8 @@ function returnToStart() {
 }
 
 async function finalizeGame() {
-  // 1. Para o timer imediatamente
   if (matchTimerInterval) clearInterval(matchTimerInterval);
 
-  // 2. Calcula a pontuação
   const correctCount = placedCards.reduce((acc, c) => acc + (c.correct ? 1 : 0), 0);
   const baseScore = correctCount * SCORE_CORRECT;
 
@@ -1249,25 +1428,15 @@ async function finalizeGame() {
   }
   gameScore = baseScore + timeBonus;
 
-  // 3. Mostra o splash de "FIM DE JOGO"
   showScreen('endSplash');
 
-  // 4. Aguarda 3 segundos (ajuste se quiser mais/menos tempo) e vai para o resumo
   setTimeout(() => {
-    // Esconde o splash
     SCREENS.endSplash.classList.add("hidden");
 
-    // IMPORTANTE: Esconde a lista de cartas lateral (sidebar)
-    // Isso limpa a tela para ficar só o campo e o resultado
     if (els.sidebar) els.sidebar.classList.add("hidden");
 
-    // Ativa a tela de resumo.
-    // Ao chamar showScreen('summaryOverlay'), o body ganha a classe .summary-mode
-    // que ativa todo aquele CSS novo que criamos.
     showScreen('summaryOverlay');
 
-    // Pequeno delay para garantir que o navegador renderizou o layout novo
-    // antes de recalcular a posição das cartas no campo
     setTimeout(() => {
       computeCardSizeFromField();
       relayoutPlacedCards();
@@ -1300,6 +1469,41 @@ function showToast(msg, kind = "error") {
   }, 1800);
 }
 
+/* ============================================================
+   SCRIPT DE ARRASTAR (DRAG-TO-SCROLL) PARA MOUSE
+   ============================================================ */
+document.addEventListener("DOMContentLoaded", () => {
+  const slider = document.getElementById('game-sidebar');
+  let isDown = false;
+  let startX;
+  let scrollLeft;
+
+  slider.addEventListener('mousedown', (e) => {
+    isDown = true;
+    slider.classList.add('active');
+    startX = e.pageX - slider.offsetLeft;
+    scrollLeft = slider.scrollLeft;
+  });
+
+  slider.addEventListener('mouseleave', () => {
+    isDown = false;
+    slider.classList.remove('active');
+  });
+
+  slider.addEventListener('mouseup', () => {
+    isDown = false;
+    slider.classList.remove('active');
+  });
+
+  slider.addEventListener('mousemove', (e) => {
+    if (!isDown) return;
+    e.preventDefault();
+    const x = e.pageX - slider.offsetLeft;
+    const walk = (x - startX) * 2;
+    slider.scrollLeft = scrollLeft - walk;
+  });
+});
+
 document.addEventListener("DOMContentLoaded", async () => {
   bindEls();
   computeCardSizeFromField();
@@ -1323,19 +1527,16 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   const idleBtn = document.querySelector('.idle-play-btn');
   if (idleBtn) {
-    // Remove qualquer listener anterior
     const newBtn = idleBtn.cloneNode(true);
     idleBtn.parentNode.replaceChild(newBtn, idleBtn);
 
-    // Adiciona o evento de forma limpa
     newBtn.addEventListener('click', (e) => {
-      console.log("CLIQUE NO BOTÃO DETECTADO!"); // Veja se isso aparece no console (F12)
+      console.log("CLIQUE NO BOTÃO DETECTADO!");
       e.preventDefault();
       e.stopPropagation();
       showScreen('name');
     });
 
-    // Suporte a toque (mobile/quiosque)
     newBtn.addEventListener('touchstart', (e) => {
       console.log("TOQUE NO BOTÃO DETECTADO!");
       e.preventDefault();
@@ -1366,7 +1567,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("detail-card-container")?.addEventListener("pointerdown", (e) => {
     e.stopPropagation();
   }, { passive: false });
-
 
   showScreen('idle');
 
