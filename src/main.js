@@ -52,6 +52,8 @@ let playerName = "";
 let activeDrag = null;
 let debugMode = false;
 let prizeResetTimer = null;
+/** Quando true, ranking/prêmio abertos pelo menu não disparam retorno automático à idle */
+let navigatedViaMenu = false;
 
 let matchTimerInterval = null;
 let matchTimeRemaining = 0;
@@ -313,19 +315,43 @@ async function tryAwardPrize(points) {
   }
 }
 
-async function showRankingScreen() {
+async function showRankingScreen(opts = {}) {
+  const fromMenu = opts.fromMenu === true;
+  const awardData = opts.award;
+  if (fromMenu) navigatedViaMenu = true;
+
   // Fecha o modal de prêmio para não atrapalhar
   if (els.prizeModal) els.prizeModal.classList.add("hidden");
 
+  // Garante que a tela de ranking seja exibida (antes de qualquer async)
   showScreen("ranking");
+  const rankingEl = document.getElementById("ranking-screen");
+  if (rankingEl) rankingEl.classList.remove("hidden");
 
   // --- refs do novo layout ---
   const scoreEl = document.getElementById("ranking-score");
   const placeEl = document.getElementById("ranking-place");
+  const prizeEl = document.getElementById("ranking-prize");
   const listHostEl = document.getElementById("ranking-list");      // onde entra o HTML dos itens
-  const loadingEl = document.getElementById("ranking-loading");    // "Carregando..."
   const listWrapEl = document.querySelector(".ranking-list");      // container que deve ficar branco
   const timerEl = document.getElementById("ranking-timer");        // opcional (se existir)
+
+  // Prêmio recebido (quando vindo do resumo após "Ver Minha Pontuação")
+  if (prizeEl) {
+    if (awardData) {
+      prizeEl.classList.remove("hidden");
+      prizeEl.removeAttribute("aria-hidden");
+      if (awardData.awarded) {
+        prizeEl.innerHTML = `<span class="ranking-prize-label">🎁 Prêmio recebido:</span> <strong class="ranking-prize-name">${escapeHtml(awardData.awarded.name || "")}</strong>`;
+      } else {
+        prizeEl.innerHTML = `<span class="ranking-prize-label">🎁</span> <span class="ranking-prize-name">Sem brinde desta vez. Tente fazer mais pontos!</span>`;
+      }
+    } else {
+      prizeEl.classList.add("hidden");
+      prizeEl.setAttribute("aria-hidden", "true");
+      prizeEl.innerHTML = "";
+    }
+  }
 
   // Pontuação do jogador na tela
   if (scoreEl) {
@@ -336,20 +362,17 @@ async function showRankingScreen() {
     }
   }
 
-  // Reset visual
+  // Reset visual: mostra "Carregando..." dentro da lista (sem remover o loading do DOM antes)
   if (placeEl) placeEl.textContent = "Carregando sua posição...";
-  if (listHostEl) listHostEl.innerHTML = "";
-  if (loadingEl) loadingEl.classList.remove("hidden");
-  if (listWrapEl) listWrapEl.classList.remove("has-me"); // <- remove fundo branco por padrão
-
-  // Timer (se você for usar 60s visualmente na tela)
+  if (listWrapEl) listWrapEl.classList.remove("has-me");
+  if (listHostEl) {
+    listHostEl.innerHTML = '<div class="ranking-loading">Carregando ranking...</div>';
+  }
   if (timerEl) timerEl.textContent = "60";
 
   try {
     const res = await fetch("/api/ranking", { cache: "no-store" });
     const data = await res.json();
-
-    if (loadingEl) loadingEl.classList.add("hidden");
 
     // Top 5
     const top5 = Array.isArray(data) ? data.slice(0, 5) : [];
@@ -406,13 +429,17 @@ async function showRankingScreen() {
         const isMe = sameName && sameScore;
 
         const showName = isMe ? "VOCÊ" : (g.playerName || "PLAYER");
-        const profile = (g.profile || "-").toUpperCase();
 
-        let icon = "";
-        if (rank === 1) icon = "🏆";
-        else if (rank === 2) icon = "🥈";
-        else if (rank === 3) icon = "🥉";
-        else icon = "★";
+        // 1º–3º: troféus (ouro, prata, bronze); 4º–5º: medalhas (assets/icons)
+        const iconPaths = {
+          1: "/assets/icons/trophy-gold.png",
+          2: "/assets/icons/trophy-silver.png",
+          3: "/assets/icons/trophy-bronze.png",
+          4: "/assets/icons/medal.png",
+          5: "/assets/icons/medal.png"
+        };
+        const iconSrc = iconPaths[rank] || "/assets/icons/medal.png";
+        const iconClass = rank <= 3 ? "rank-icon-trophy rank-icon-img" : "rank-icon-medal rank-icon-img";
 
         const pts = (() => {
           try { return Number(g.points).toLocaleString("pt-BR"); }
@@ -423,17 +450,12 @@ async function showRankingScreen() {
           <div class="rank-item ${isMe ? "is-me" : ""} ${rank === 1 ? "is-first" : ""}">
             <div class="rank-left">
               <div class="rank-pos">${rank}º</div>
-              <div class="rank-icon">${icon}</div>
+              <div class="rank-icon ${iconClass}"><img src="${iconSrc}" alt="" class="rank-icon-img" /></div>
             </div>
-
-            <div class="rank-mid">
-              <div class="rank-name">${showName}</div>
-              <div class="rank-profile">${profile}</div>
-            </div>
-
             <div class="rank-right">
               <div class="rank-points">${pts}</div>
               <div class="rank-points-label">Pontos</div>
+              <div class="rank-name">${showName}</div>
             </div>
           </div>
         `;
@@ -441,18 +463,19 @@ async function showRankingScreen() {
       .join("");
   } catch (err) {
     console.error("Erro ao carregar ranking", err);
-    if (loadingEl) loadingEl.classList.add("hidden");
     if (placeEl) placeEl.textContent = "Não foi possível carregar o ranking.";
     if (listHostEl) listHostEl.innerHTML = `
       <div class="rank-empty">Erro ao carregar</div>
     `;
   }
 
-  // Reinicia em 30s (mantive sua lógica)
+  // Retorno automático à idle só quando NÃO veio do menu de navegação
   if (prizeResetTimer) clearTimeout(prizeResetTimer);
-  prizeResetTimer = setTimeout(() => {
-    returnToStart();
-  }, 30000);
+  if (!navigatedViaMenu) {
+    prizeResetTimer = setTimeout(() => {
+      returnToStart();
+    }, 30000);
+  }
 }
 
 
@@ -681,19 +704,19 @@ function getSidebarItems() {
     .filter(el => !el.classList.contains("hidden"));
 }
 
-// FLIP para reflow da fila
+// FLIP para reflow da fila: cartas "andam" até o lugar vago (esquerda ou direita)
 function animateSidebarReflow(mutator, duration = 420) {
   const itemsBefore = getSidebarItems();
   const first = new Map();
   itemsBefore.forEach(el => first.set(el, el.getBoundingClientRect()));
 
-  // aplica alteração (remover/insert)
+  // aplica alteração (remover/insert) — layout muda
   mutator?.();
 
-  // força layout e calcula "last"
+  // força layout e anima cada carta da posição antiga → nova
   requestAnimationFrame(() => {
     const itemsAfter = getSidebarItems();
-    itemsAfter.forEach(el => {
+    itemsAfter.forEach((el, i) => {
       const r1 = first.get(el);
       const r2 = el.getBoundingClientRect();
       if (!r1 || !r2) return;
@@ -701,16 +724,20 @@ function animateSidebarReflow(mutator, duration = 420) {
       const dy = r1.top - r2.top;
       if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) return;
 
+      // stagger leve para efeito cascata (esquerda → direita)
+      const stagger = Math.min(i * 25, 80);
+
       el.style.transition = "none";
       el.style.transform = `translate(${dx}px, ${dy}px)`;
       el.style.willChange = "transform";
 
-      // play
       requestAnimationFrame(() => {
         el.style.transition = `transform ${duration}ms cubic-bezier(0.25, 1, 0.5, 1)`;
+        el.style.transitionDelay = `${stagger}ms`;
         el.style.transform = "translate(0px, 0px)";
         const clear = () => {
           el.style.transition = "";
+          el.style.transitionDelay = "";
           el.style.transform = "";
           el.style.willChange = "";
           el.removeEventListener("transitionend", clear);
@@ -724,8 +751,9 @@ function animateSidebarReflow(mutator, duration = 420) {
 // cria um clone visual para “voar”
 function createFlyCloneFromElement(el, fromRect) {
   const clone = el.cloneNode(true);
-  clone.classList.remove("is-dragging");
+  clone.classList.remove("is-dragging", "hidden", "removing-to-field");
   clone.classList.add("fly-clone");
+  clone.style.display = "block";
   clone.style.position = "fixed";
   clone.style.left = `${fromRect.left}px`;
   clone.style.top = `${fromRect.top}px`;
@@ -1347,7 +1375,7 @@ function processDrop(assetId, clientX, clientY, offsetX, offsetY, sourceEl) {
 
         // ✅ FLIP reflow da fila + “colapso” do item
         animateSidebarReflow(() => {
-          sidebarItem.classList.add("removing-to-field");
+          sidebarItem.classList.add("hidden", "removing-to-field");
         }, 420);
 
         // cria clone e voa pro campo
@@ -1431,15 +1459,16 @@ function updateStats() {
   }
 }
 
-function showPrizeModal(awardData, points) {
+function showPrizeModal(awardData, points, opts = {}) {
+  const fromMenu = opts.fromMenu === true;
   if (els.prizePoints) els.prizePoints.innerText = String(points);
   if (!awardData) {
     if (els.prizeStatus) {
-      els.prizeStatus.innerText = "Servidor indisponível";
-      els.prizeStatus.className = "text-sm font-bold text-red-300 mb-1";
+      els.prizeStatus.innerText = fromMenu ? "Concorra ao brinde!" : "Servidor indisponível";
+      els.prizeStatus.className = fromMenu ? "text-sm font-bold text-white mb-1" : "text-sm font-bold text-red-300 mb-1";
     }
-    if (els.prizeName) els.prizeName.innerText = "--";
-    if (els.prizeExtra) els.prizeExtra.innerText = "Tente novamente.";
+    if (els.prizeName) els.prizeName.innerText = fromMenu ? "Jogue e pontue para concorrer" : "--";
+    if (els.prizeExtra) els.prizeExtra.innerText = fromMenu ? "Finalize uma partida e veja seu resultado aqui." : "Tente novamente.";
     if (els.prizeModal) els.prizeModal.classList.remove("hidden");
     scheduleGoToRanking();
     return;
@@ -1466,7 +1495,7 @@ function showPrizeModal(awardData, points) {
   }
 
   if (els.prizeModal) els.prizeModal.classList.remove("hidden");
-  scheduleGoToRanking();
+  if (!fromMenu) scheduleGoToRanking();
 }
 
 function scheduleGoToRanking() {
@@ -1477,6 +1506,7 @@ function scheduleGoToRanking() {
 }
 
 function returnToStart() {
+  navigatedViaMenu = false;
   if (prizeResetTimer) clearTimeout(prizeResetTimer);
   prizeResetTimer = null;
   if (matchTimerInterval) clearInterval(matchTimerInterval);
@@ -1546,7 +1576,8 @@ async function finalizeGame() {
 
 async function revealScoreAndAward() {
   const award = await tryAwardPrize(gameScore);
-  showPrizeModal(award, gameScore);
+  // Ir direto para o ranking e mostrar o prêmio lá
+  showRankingScreen({ award });
 }
 
 function showToast(msg, kind = "error") {
@@ -1620,10 +1651,60 @@ document.addEventListener("DOMContentLoaded", async () => {
         e.preventDefault();
         toggleDebug();
       }
+      return;
+    }
+    if (e.key === "m" || e.key === "M") {
+      const idleVisible = SCREENS.idle && !SCREENS.idle.classList.contains("hidden");
+      const menuEl = document.getElementById("idle-nav-menu");
+      if (idleVisible && menuEl) {
+        e.preventDefault();
+        const isOpen = !menuEl.classList.contains("hidden");
+        menuEl.classList.toggle("hidden", isOpen);
+        menuEl.setAttribute("aria-hidden", isOpen ? "true" : "false");
+      }
     }
   }, { passive: false });
 
-  SCREENS.idle.addEventListener('click', () => { showScreen('name'); });
+  SCREENS.idle.addEventListener('click', (e) => {
+    const menuEl = document.getElementById("idle-nav-menu");
+    if (menuEl && !menuEl.classList.contains("hidden")) return;
+    showScreen('name');
+  });
+
+  const idleNavMenu = document.getElementById("idle-nav-menu");
+  const idleNavBackdrop = document.getElementById("idle-nav-backdrop");
+  if (idleNavMenu) idleNavMenu.addEventListener("click", (e) => e.stopPropagation());
+  if (idleNavBackdrop) idleNavBackdrop.addEventListener("click", () => {
+    idleNavMenu.classList.add("hidden");
+    idleNavMenu.setAttribute("aria-hidden", "true");
+  });
+  const idleNavLinks = document.querySelectorAll(".idle-nav-link[data-nav]");
+  idleNavLinks.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const nav = btn.getAttribute("data-nav");
+      idleNavMenu.classList.add("hidden");
+      idleNavMenu.setAttribute("aria-hidden", "true");
+      if (nav === "idle") return;
+      if (nav === "name") {
+        showScreen("name");
+        return;
+      }
+      if (nav === "ranking") {
+        navigatedViaMenu = true;
+        showRankingScreen({ fromMenu: true });
+        return;
+      }
+      if (nav === "prize") {
+        navigatedViaMenu = true;
+        showPrizeModal(null, 0, { fromMenu: true });
+        return;
+      }
+      if (nav === "admin") {
+        window.location.href = "/admin.html";
+        return;
+      }
+    });
+  });
 
   const idleBtn = document.querySelector('.idle-play-btn');
   if (idleBtn) {
@@ -1648,7 +1729,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   flowEls.profileConfirmBtn.addEventListener('click', () => { startCountdown(); });
 
   const btnGoRanking = document.getElementById("go-to-ranking-btn");
-  if (btnGoRanking) btnGoRanking.addEventListener("click", () => { showRankingScreen(); });
+  if (btnGoRanking) btnGoRanking.addEventListener("click", () => {
+    showRankingScreen(navigatedViaMenu ? { fromMenu: true } : {});
+  });
 
   const btnBackHome = document.getElementById("back-to-home-btn");
   if (btnBackHome) btnBackHome.addEventListener("click", () => { returnToStart(); });

@@ -404,6 +404,11 @@ body.summary-mode #game-root #game-timer-container {
   display: none !important;
 }
 
+/* Oculta o botão de fechar dos cards no campo (summary overlay) */
+body.summary-mode #game-root .field-close-btn {
+  display: none !important;
+}
+
 /* Oculta a barra inferior do HUD (Contador e Lista de Investimentos) */
 body.summary-mode #game-root .hud-bottom {
   display: none !important;

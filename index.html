@@ -50,6 +50,23 @@
       <div class="idle-cta-container">
         <button class="idle-play-btn">ESCALAR MEU TIME</button>
       </div>
+
+    </div>
+
+    <!-- Menu de navegação (tecla M na idle) -->
+    <div id="idle-nav-menu" class="idle-nav-menu hidden" aria-hidden="true">
+      <div class="idle-nav-backdrop" id="idle-nav-backdrop"></div>
+      <div class="idle-nav-panel">
+        <h2 class="idle-nav-title">Menu</h2>
+        <nav class="idle-nav-links">
+          <button type="button" class="idle-nav-link" data-nav="idle">Início</button>
+          <button type="button" class="idle-nav-link" data-nav="name">Jogo</button>
+          <button type="button" class="idle-nav-link" data-nav="ranking">Ranking</button>
+          <button type="button" class="idle-nav-link" data-nav="prize">Prêmio</button>
+          <button type="button" class="idle-nav-link" data-nav="admin">Admin</button>
+        </nav>
+        <p class="idle-nav-footer">Navegação pelo menu não retorna automaticamente à tela inicial.</p>
+      </div>
     </div>
   </div>
   <!-- NAME -->
@@ -388,6 +405,8 @@
   
         <div id="ranking-place" class="ranking-place">Você conquistou o 1º lugar!</div>
 
+        <div id="ranking-prize" class="ranking-prize hidden" aria-hidden="true"></div>
+
         <div class="ranking-top5-title">VEJA O TOP 5 DO DIA:</div>
 
         <!-- lista (JS vai preencher AQUI com os .rank-item) -->
@@ -401,7 +420,7 @@
       
       <!-- rodapé -->
       <div class="ranking-footer">
-        <div class="ranking-footer-logo">RIO BRAVO</div>
+        <img src="/assets/logos/logo-rio-bravo-alt.png" class="ranking-footer-icon" alt="" aria-hidden="true" />
       </div>
     </div>
   </div>

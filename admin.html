@@ -1,50 +1,54 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin - Financial Football</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;700&display=swap" rel="stylesheet">
-<script defer src="/src/admin.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Financial Football</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;700&display=swap" rel="stylesheet">
+    <script defer src="/src/admin.js"></script>
 </head>
+
 <body class="bg-slate-900 text-slate-100 min-h-screen p-8 font-sans">
 
-<header class="max-w-4xl mx-auto mb-8 flex justify-between items-center">
-    <h1 class="text-3xl font-bold text-emerald-500 italic">ADMIN DASHBOARD</h1>
-</header>
+    <header class="max-w-4xl mx-auto mb-8 flex justify-between items-center">
+        <h1 class="text-3xl font-bold text-emerald-500 italic">ADMIN DASHBOARD</h1>
+    </header>
 
-<main class="max-w-4xl mx-auto space-y-8">
+    <main class="max-w-4xl mx-auto space-y-8">
+        <p class="idle-nav-hint">Pressione <kbd>M</kbd> para abrir o menu</p>
 
-    <section class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-lg">
-        <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
-            ⏱️ Configuração da Partida
-        </h2>
-        <div class="flex flex-col md:flex-row gap-6 items-end">
-            <div class="flex items-center gap-3">
-                <input type="checkbox" id="config-time-active"
-                    class="w-6 h-6 text-emerald-600 rounded bg-slate-700 border-slate-600 focus:ring-emerald-500">
-                <label for="config-time-active" class="text-sm font-bold uppercase tracking-wide">Ativar Tempo
-                    Limite?</label>
-            </div>
-            <div>
-                <label for="config-time-seconds" class="block text-xs text-slate-400 uppercase tracking-widest mb-1">Segundos por
-                    Partida</label>
-                <input type="number" id="config-time-seconds" min="10" max="300"
-                    class="bg-slate-900 border border-slate-600 rounded-lg p-2 w-32 text-center font-mono font-bold text-white focus:border-emerald-500 focus:outline-none">
-            </div>
+        <section class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-lg">
+            <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+                ⏱️ Configuração da Partida
+            </h2>
+            <div class="flex flex-col md:flex-row gap-6 items-end">
+                <div class="flex items-center gap-3">
+                    <input type="checkbox" id="config-time-active"
+                        class="w-6 h-6 text-emerald-600 rounded bg-slate-700 border-slate-600 focus:ring-emerald-500">
+                    <label for="config-time-active" class="text-sm font-bold uppercase tracking-wide">Ativar Tempo
+                        Limite?</label>
+                </div>
+                <div>
+                    <label for="config-time-seconds"
+                        class="block text-xs text-slate-400 uppercase tracking-widest mb-1">Segundos por
+                        Partida</label>
+                    <input type="number" id="config-time-seconds" min="10" max="300"
+                        class="bg-slate-900 border border-slate-600 rounded-lg p-2 w-32 text-center font-mono font-bold text-white focus:border-emerald-500 focus:outline-none">
+                </div>
 
-            <button id="save-config-btn"
-                class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-6 rounded-lg uppercase text-sm shadow transition-colors ml-auto">
-                Salvar Configuração
-            </button>
+                <button id="save-config-btn"
+                    class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-6 rounded-lg uppercase text-sm shadow transition-colors ml-auto">
+                    Salvar Configuração
+                </button>
             </div>
-        <div id="config-feedback" class="text-xs font-bold mt-2 h-4"></div>
+            <div id="config-feedback" class="text-xs font-bold mt-2 h-4"></div>
         </section>
-        
+
         <section class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-lg">
             <h2 class="text-xl font-bold mb-4">Gerenciar Prêmios (Estoque)</h2>
-        
+
             <form id="add-prize-form"
                 class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 bg-slate-900/50 p-4 rounded-lg border border-slate-700">
                 <div class="md:col-span-2">
@@ -68,22 +72,41 @@
                 </div>
             </form>
 
-    <div class="overflow-x-auto">
-        <table class="w-full text-left text-sm">
-            <thead class="bg-slate-900 text-slate-400 uppercase text-xs">
-                <tr>
-            <th class="p-3">Nome</th>
-            <th class="p-3">Threshold</th>
-            <th class="p-3">Estoque</th>
-            <th class="p-3 text-right">Ações</th>
-            </tr>
-            </thead>
-        <tbody id="prizes-list" class="divide-y divide-slate-700">
-        </tbody>
-        </table>
-        </div>
-    </section>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm">
+                    <thead class="bg-slate-900 text-slate-400 uppercase text-xs">
+                        <tr>
+                            <th class="p-3">Nome</th>
+                            <th class="p-3">Threshold</th>
+                            <th class="p-3">Estoque</th>
+                            <th class="p-3 text-right">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="prizes-list" class="divide-y divide-slate-700">
+                    </tbody>
+                </table>
+            </div>
+        </section>
 
-</main>
+
+        <!-- Menu de navegação (tecla M na idle) -->
+        <div id="idle-nav-menu" class="idle-nav-menu hidden" aria-hidden="true">
+            <div class="idle-nav-backdrop" id="idle-nav-backdrop"></div>
+            <div class="idle-nav-panel">
+                <h2 class="idle-nav-title">Menu</h2>
+                <nav class="idle-nav-links">
+                    <button type="button" class="idle-nav-link" data-nav="idle">Início</button>
+                    <button type="button" class="idle-nav-link" data-nav="name">Jogo</button>
+                    <button type="button" class="idle-nav-link" data-nav="ranking">Ranking</button>
+                    <button type="button" class="idle-nav-link" data-nav="prize">Prêmio</button>
+                    <button type="button" class="idle-nav-link" data-nav="admin">Admin</button>
+                </nav>
+                <p class="idle-nav-footer">Navegação pelo menu não retorna automaticamente à tela inicial.</p>
+            </div>
+        </div>
+        </div>
+
+    </main>
 </body>
+
 </html>
