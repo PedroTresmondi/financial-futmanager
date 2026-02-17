@@ -1,9 +1,12 @@
-/* ===========================
-   Financial Football Manager • main.js (completo)
-   - Drop -> campo com animação (sem transparente)
-   - Fila anda com FLIP (sem teleporte)
-   - Volta -> fila com animação
-   =========================== */
+/* ============================================================
+   Financial Football Manager • main.js (COMPLETO)
+   - Corrige “volta dupla” (lock + apenas pointerdown no X)
+   - Remove “quadrado transparente” no drop (voo com clone visual do card)
+   - Anima:
+     (1) card indo pro campo
+     (2) fila (reflow) andando (FLIP)
+     (3) card voltando pra fila (voo + reflow)
+   ============================================================ */
 
 const PROFILES = {
   CONSERVADOR: { min: 15, max: 35, color: "text-blue-400", label: "Conservador" },
@@ -32,6 +35,11 @@ const SCREENS = {
 };
 
 const sidebarHideTimers = new Map();
+
+// ✅ trava pra impedir “volta duas vezes”
+const restoringIds = new Set();
+// ✅ trava pra impedir “ida duas vezes” em race conditions
+const movingToFieldIds = new Set();
 
 let assetsData = [];
 let currentProfileKey = null;
@@ -142,6 +150,7 @@ function showScreen(screenKey) {
     SCREENS[screenKey].classList.remove('hidden');
   }
 
+  // ✅ modos de UI
   document.body.classList.toggle("game-mode", screenKey === "game" || screenKey === "summaryOverlay");
   document.body.classList.toggle("summary-mode", screenKey === "summaryOverlay");
 }
@@ -305,76 +314,164 @@ async function tryAwardPrize(points) {
 }
 
 async function showRankingScreen() {
+  // Fecha o modal de prêmio para não atrapalhar
   if (els.prizeModal) els.prizeModal.classList.add("hidden");
 
-  showScreen('ranking');
+  showScreen("ranking");
 
-  const dateEl = document.getElementById("ranking-date-display");
-  if (dateEl) dateEl.innerText = new Date().toLocaleDateString("pt-BR");
+  // --- refs do novo layout ---
+  const scoreEl = document.getElementById("ranking-score");
+  const placeEl = document.getElementById("ranking-place");
+  const listHostEl = document.getElementById("ranking-list");      // onde entra o HTML dos itens
+  const loadingEl = document.getElementById("ranking-loading");    // "Carregando..."
+  const listWrapEl = document.querySelector(".ranking-list");      // container que deve ficar branco
+  const timerEl = document.getElementById("ranking-timer");        // opcional (se existir)
 
-  const listEl = document.getElementById("ranking-list");
-  const loadingEl = document.getElementById("ranking-loading");
-  if (!listEl) return;
+  // Pontuação do jogador na tela
+  if (scoreEl) {
+    try {
+      scoreEl.textContent = Number(gameScore).toLocaleString("pt-BR");
+    } catch (_) {
+      scoreEl.textContent = String(gameScore);
+    }
+  }
 
-  listEl.innerHTML = "";
+  // Reset visual
+  if (placeEl) placeEl.textContent = "Carregando sua posição...";
+  if (listHostEl) listHostEl.innerHTML = "";
   if (loadingEl) loadingEl.classList.remove("hidden");
+  if (listWrapEl) listWrapEl.classList.remove("has-me"); // <- remove fundo branco por padrão
+
+  // Timer (se você for usar 60s visualmente na tela)
+  if (timerEl) timerEl.textContent = "60";
 
   try {
-    const res = await fetch("/api/ranking");
+    const res = await fetch("/api/ranking", { cache: "no-store" });
     const data = await res.json();
 
     if (loadingEl) loadingEl.classList.add("hidden");
 
-    const top3 = data.slice(0, 3);
+    // Top 5
+    const top5 = Array.isArray(data) ? data.slice(0, 5) : [];
 
-    if (top3.length === 0) {
-      listEl.innerHTML = `<tr><td colspan="5" class="empty-rank-msg">O dia está começando! Seja o primeiro.</td></tr>`;
+    if (!listHostEl) return;
+
+    if (top5.length === 0) {
+      if (placeEl) placeEl.textContent = "O dia está começando! Seja o primeiro.";
+      listHostEl.innerHTML = `
+        <div class="rank-empty">Sem resultados ainda</div>
+      `;
       return;
     }
 
-    listEl.innerHTML = top3.map((game, index) => {
-      const isMe = (game.playerName === playerName && game.points === gameScore);
-      const rank = index + 1;
+    // detectar "VOCÊ"
+    let myIndex = -1;
+    for (let i = 0; i < top5.length; i++) {
+      const g = top5[i];
+      if (!g) continue;
 
-      let rowClass = "ranking-row";
-      if (isMe) rowClass += " ranking-row--me";
-      if (rank === 1) rowClass += " rank-1";
-      if (rank === 2) rowClass += " rank-2";
-      if (rank === 3) rowClass += " rank-3";
+      const sameName = String(g.playerName || "").trim().toUpperCase() === String(playerName || "").trim().toUpperCase();
+      const sameScore = Number(g.points) === Number(gameScore);
 
-      let medalIcon = "";
-      if (rank === 1) medalIcon = "🥇";
-      if (rank === 2) medalIcon = "🥈";
-      if (rank === 3) medalIcon = "🥉";
+      if (sameName && sameScore) {
+        myIndex = i;
+        break;
+      }
+    }
 
-      return `
-        <tr class="${rowClass}">
-          <td class="td-rank">
-            <div class="rank-badge">${medalIcon || rank}</div>
-          </td>
-          <td class="td-name">
-            <div class="player-info">
-              <span class="player-name">${game.playerName}</span>
-              <span class="player-profile">${game.profile || '-'}</span>
+    const hasMe = myIndex !== -1;
+    if (hasMe && listWrapEl) {
+      // ✅ aqui: quando você aparece, o container da lista vira branco
+      listWrapEl.classList.add("has-me");
+    }
+
+    // frase "Você conquistou..."
+    if (placeEl) {
+      if (hasMe) {
+        const place = myIndex + 1;
+        const suffix = place === 1 ? "º" : "º";
+        placeEl.textContent = `Você conquistou o ${place}${suffix} lugar!`;
+      } else {
+        placeEl.textContent = `Você ficou fora do Top 5 hoje. Tente de novo!`;
+      }
+    }
+
+    // Render dos itens (estilo igual ao mock)
+    listHostEl.innerHTML = top5
+      .map((g, i) => {
+        const rank = i + 1;
+
+        const sameName = String(g.playerName || "").trim().toUpperCase() === String(playerName || "").trim().toUpperCase();
+        const sameScore = Number(g.points) === Number(gameScore);
+        const isMe = sameName && sameScore;
+
+        const showName = isMe ? "VOCÊ" : (g.playerName || "PLAYER");
+        const profile = (g.profile || "-").toUpperCase();
+
+        let icon = "";
+        if (rank === 1) icon = "🏆";
+        else if (rank === 2) icon = "🥈";
+        else if (rank === 3) icon = "🥉";
+        else icon = "★";
+
+        const pts = (() => {
+          try { return Number(g.points).toLocaleString("pt-BR"); }
+          catch (_) { return String(g.points); }
+        })();
+
+        return `
+          <div class="rank-item ${isMe ? "is-me" : ""} ${rank === 1 ? "is-first" : ""}">
+            <div class="rank-left">
+              <div class="rank-pos">${rank}º</div>
+              <div class="rank-icon">${icon}</div>
             </div>
-          </td>
-          <td class="td-points">${game.points}</td>
-          <td class="td-prize">
-            ${game.prize ? `<div class="prize-pill">🎁</div>` : ''}
-          </td>
-        </tr>
-      `;
-    }).join("");
+
+            <div class="rank-mid">
+              <div class="rank-name">${showName}</div>
+              <div class="rank-profile">${profile}</div>
+            </div>
+
+            <div class="rank-right">
+              <div class="rank-points">${pts}</div>
+              <div class="rank-points-label">Pontos</div>
+            </div>
+          </div>
+        `;
+      })
+      .join("");
   } catch (err) {
     console.error("Erro ao carregar ranking", err);
     if (loadingEl) loadingEl.classList.add("hidden");
+    if (placeEl) placeEl.textContent = "Não foi possível carregar o ranking.";
+    if (listHostEl) listHostEl.innerHTML = `
+      <div class="rank-empty">Erro ao carregar</div>
+    `;
   }
 
+  // Reinicia em 30s (mantive sua lógica)
   if (prizeResetTimer) clearTimeout(prizeResetTimer);
   prizeResetTimer = setTimeout(() => {
     returnToStart();
   }, 30000);
 }
+
+
+
+/* Helpers do ranking */
+function formatPtsBR(v) {
+  const n = Number(v) || 0;
+  return n.toLocaleString("pt-BR");
+}
+
+function escapeHtml(str) {
+  return String(str)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
 
 function startCountdown() {
   fetch("/api/config")
@@ -385,9 +482,11 @@ function startCountdown() {
     })
     .catch(() => { console.log("Usando config default de tempo"); })
     .finally(() => {
+      // 1. Tira o 'hidden' do jogo AGORA, para ele aparecer no fundo
       const gameRoot = document.getElementById('game-root');
       if (gameRoot) gameRoot.classList.remove('hidden');
 
+      // 2. Chama a tela de Countdown (que vai ficar por cima com blur)
       showScreen('countdown');
 
       const cdNum = document.getElementById("countdown-number");
@@ -400,7 +499,11 @@ function startCountdown() {
           cdNum.innerText = count;
         } else {
           clearInterval(interval);
+
+          // Quando terminar, apenas esconde o countdown, o jogo já está lá
           document.getElementById('countdown-screen').classList.add('hidden');
+
+          // Inicia o tempo da partida
           startMatchTimer();
         }
       }, 1000);
@@ -477,15 +580,18 @@ function openCardDetails(asset) {
   const descEl = document.getElementById("detail-desc");
   const iconEl = document.getElementById("detail-icon");
 
+  // 1) texto
   if (nameEl) nameEl.innerText = String(asset.name || "--").toUpperCase();
   if (descEl) descEl.innerText = asset.desc || "Sem descrição disponível.";
 
+  // 2) pill = risco (baixo/médio/alto)
   let risco = "Risco Médio";
   if (asset.suitability <= 35) risco = "Risco Baixo";
   else if (asset.suitability <= 60) risco = "Risco Médio";
   else risco = "Risco Alto";
   if (typeEl) typeEl.innerText = risco;
 
+  // 3) ícone = 3 tipos (perfil atual do jogador)
   if (iconEl) {
     const iconMap = {
       CONSERVADOR: "/assets/icons/profile-conservador.png",
@@ -496,6 +602,7 @@ function openCardDetails(asset) {
     iconEl.alt = "";
   }
 
+  // 4) abre
   if (modal) modal.classList.remove("hidden");
 }
 
@@ -564,6 +671,203 @@ function setFieldCardContent(el, asset) {
   applyDebugOnlyVisibility();
 }
 
+/* ============================================================
+   ✅ ANIMAÇÕES DA FILA (FLIP) + VOOS (clone)
+   ============================================================ */
+
+function getSidebarItems() {
+  if (!els.cardsContainer) return [];
+  return Array.from(els.cardsContainer.querySelectorAll(".sidebar-item"))
+    .filter(el => !el.classList.contains("hidden"));
+}
+
+// FLIP para reflow da fila
+function animateSidebarReflow(mutator, duration = 420) {
+  const itemsBefore = getSidebarItems();
+  const first = new Map();
+  itemsBefore.forEach(el => first.set(el, el.getBoundingClientRect()));
+
+  // aplica alteração (remover/insert)
+  mutator?.();
+
+  // força layout e calcula "last"
+  requestAnimationFrame(() => {
+    const itemsAfter = getSidebarItems();
+    itemsAfter.forEach(el => {
+      const r1 = first.get(el);
+      const r2 = el.getBoundingClientRect();
+      if (!r1 || !r2) return;
+      const dx = r1.left - r2.left;
+      const dy = r1.top - r2.top;
+      if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) return;
+
+      el.style.transition = "none";
+      el.style.transform = `translate(${dx}px, ${dy}px)`;
+      el.style.willChange = "transform";
+
+      // play
+      requestAnimationFrame(() => {
+        el.style.transition = `transform ${duration}ms cubic-bezier(0.25, 1, 0.5, 1)`;
+        el.style.transform = "translate(0px, 0px)";
+        const clear = () => {
+          el.style.transition = "";
+          el.style.transform = "";
+          el.style.willChange = "";
+          el.removeEventListener("transitionend", clear);
+        };
+        el.addEventListener("transitionend", clear);
+      });
+    });
+  });
+}
+
+// cria um clone visual para “voar”
+function createFlyCloneFromElement(el, fromRect) {
+  const clone = el.cloneNode(true);
+  clone.classList.remove("is-dragging");
+  clone.classList.add("fly-clone");
+  clone.style.position = "fixed";
+  clone.style.left = `${fromRect.left}px`;
+  clone.style.top = `${fromRect.top}px`;
+  clone.style.width = `${fromRect.width}px`;
+  clone.style.height = `${fromRect.height}px`;
+  clone.style.margin = "0";
+  clone.style.zIndex = "99999";
+  clone.style.pointerEvents = "none";
+  clone.style.transform = "translate(0px, 0px) scale(1)";
+  clone.style.opacity = "1";
+  clone.style.filter = "none";
+  clone.style.willChange = "transform, opacity";
+  document.body.appendChild(clone);
+  return clone;
+}
+
+// anima clone de fromRect -> toRect
+function flyCloneToRect(clone, fromRect, toRect, opts = {}) {
+  const {
+    duration = 520,
+    easing = "cubic-bezier(0.22, 1, 0.36, 1)",
+    scaleTo = 1,
+    fadeOut = false
+  } = opts;
+
+  const dx = toRect.left - fromRect.left;
+  const dy = toRect.top - fromRect.top;
+  const sx = (toRect.width / Math.max(1, fromRect.width)) * scaleTo;
+  const sy = (toRect.height / Math.max(1, fromRect.height)) * scaleTo;
+
+  // start
+  clone.style.transition = "none";
+  clone.style.transformOrigin = "top left";
+  clone.style.transform = "translate(0px, 0px) scale(1, 1)";
+  clone.style.opacity = "1";
+
+  // play
+  requestAnimationFrame(() => {
+    clone.style.transition = `transform ${duration}ms ${easing}, opacity ${duration}ms ${easing}`;
+    clone.style.transform = `translate(${dx}px, ${dy}px) scale(${sx}, ${sy})`;
+    if (fadeOut) clone.style.opacity = "0";
+  });
+
+  return new Promise((resolve) => {
+    const done = () => {
+      clone.removeEventListener("transitionend", done);
+      resolve();
+    };
+    clone.addEventListener("transitionend", done);
+    // fallback
+    setTimeout(() => resolve(), duration + 60);
+  });
+}
+
+// encontra o rect alvo no campo (posição final)
+function getFieldTargetRect(x, y) {
+  const r = getFieldRect() || els.fieldLayer.getBoundingClientRect();
+  // card no campo é absolute dentro do layer, então converte p/ viewport
+  return {
+    left: r.left + x,
+    top: r.top + y,
+    width: CARD_W,
+    height: CARD_H
+  };
+}
+
+// volta animada: cria/mostra card na fila e faz ele voar do campo para a vaga real
+async function restoreSidebarCardAnimated(asset, fromRect) {
+  const id = String(asset.id);
+
+  // ✅ lock anti “volta dupla”
+  if (restoringIds.has(id)) return;
+  restoringIds.add(id);
+
+  try {
+    // cancela hide pendente
+    const t = sidebarHideTimers.get(id);
+    if (t) {
+      clearTimeout(t);
+      sidebarHideTimers.delete(id);
+    }
+
+    if (!els.cardsContainer) return;
+
+    // se já existe, só garante visibilidade
+    let card = document.querySelector(`.sidebar-item[data-id="${id}"]`);
+
+    // vamos animar o reflow da fila na inserção/reativação
+    animateSidebarReflow(() => {
+      if (card) {
+        card.classList.remove("hidden", "removing-to-field", "is-dragging");
+        card.style.width = "";
+        card.style.maxWidth = "";
+        card.style.opacity = "";
+        card.style.transform = "";
+        card.style.pointerEvents = "";
+      } else {
+        card = document.createElement("div");
+        const riskClass = getRiskBorderClass(asset);
+        card.className = `premium-card sidebar-item ${riskClass}`.trim();
+        card.dataset.id = id;
+        card.innerHTML = createPremiumCardHTML(asset);
+        card.addEventListener("pointerdown", (e) => initDrag(e, asset, card));
+
+        // ✅ insere no final (se quiser ordenar por id, dá pra fazer aqui)
+        els.cardsContainer.appendChild(card);
+      }
+    }, 420);
+
+    // se não tem origem, só entra com reflow
+    if (!fromRect || typeof fromRect.left !== "number") return;
+
+    // espera o layout assentar e pega o rect final (vaga real)
+    await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+    if (!card) return;
+
+    const toRect = card.getBoundingClientRect();
+
+    // cria clone “no campo” (a partir do card da fila, mas posiciona no fromRect)
+    // pra evitar “pular” visual
+    const flyClone = createFlyCloneFromElement(card, fromRect);
+
+    // deixa o card real invisível durante o voo (evita duplicar na tela)
+    card.style.opacity = "0";
+
+    await flyCloneToRect(flyClone, fromRect, toRect, {
+      duration: 560,
+      easing: "cubic-bezier(0.22, 1, 0.36, 1)",
+      scaleTo: 1,
+      fadeOut: true
+    });
+
+    flyClone.remove();
+    card.style.opacity = ""; // volta a aparecer certinho
+  } finally {
+    restoringIds.delete(id);
+  }
+}
+
+/* ============================================================
+   CLOSE BUTTON (CORRIGIDO: só pointerdown + animação)
+   ============================================================ */
 function ensureCloseButton(el, asset) {
   let close = el.querySelector(".field-close-btn");
   if (close) return;
@@ -572,28 +876,35 @@ function ensureCloseButton(el, asset) {
   close.className = "field-close-btn";
   close.innerText = "×";
 
-  close.addEventListener("pointerdown", (e) => e.stopPropagation());
-
-  close.addEventListener("click", async (e) => {
+  // Previne drag ao clicar no fechar
+  close.addEventListener("pointerdown", (e) => {
+    e.preventDefault();
     e.stopPropagation();
+    e.stopImmediatePropagation?.();
 
-    // anima campo -> fila (voo)
-    const fieldEl = document.querySelector(`.field-item[data-id="${asset.id}"]`);
-    const fromRect = fieldEl ? fieldEl.getBoundingClientRect() : null;
+    // ✅ anti-duplo clique
+    if (close.dataset.busy === "1") return;
+    close.dataset.busy = "1";
+    close.style.pointerEvents = "none";
 
-    // remove do estado
+    const fromRect = el.getBoundingClientRect();
+
     const idx = placedCards.findIndex(c => c.id === asset.id);
     if (idx !== -1) placedCards.splice(idx, 1);
 
-    // remove elemento do campo
-    if (fieldEl) fieldEl.remove();
+    el.remove();
 
-    // volta pra fila com animação
-    await restoreSidebarCardAnimated(asset, fromRect);
+    // ✅ volta animada
+    restoreSidebarCardAnimated(asset, fromRect);
 
     recomputeScore();
     updateStats();
-  });
+
+    setTimeout(() => {
+      close.dataset.busy = "0";
+      close.style.pointerEvents = "";
+    }, 650);
+  }, { passive: false });
 
   el.appendChild(close);
 }
@@ -665,7 +976,7 @@ function updateNameUI() {
 
 function normalizeNameLive(raw) {
   let s = String(raw || "").replace(/\s+/g, " ");
-  s = s.replace(/^\s+/, "");
+  s = s.replace(/^\s+/, ""); // tira espaços só do começo
   s = s.slice(0, 18);
   return s.toUpperCase();
 }
@@ -768,7 +1079,7 @@ function updateProfileModalContent() {
     };
     const bg = bgMap[currentProfileKey] || bgMap.MODERADO;
     cardEl.style.setProperty("--profile-bg", bg);
-    cardEl.style.backgroundImage = bg;
+    cardEl.style.backgroundImage = bg; // fallback direto
 
     cardEl.classList.remove("profile-theme--arrojado", "profile-theme--moderado", "profile-theme--conservador");
     if (currentProfileKey === "ARROJADO") cardEl.classList.add("profile-theme--arrojado");
@@ -890,200 +1201,7 @@ function renderSidebar() {
 }
 
 /* ============================================================
-   ANIMAÇÕES: FLIP (fila andando sem teleporte)
-   ============================================================ */
-function getSidebarItemsRects() {
-  const items = Array.from(document.querySelectorAll("#cards-container .sidebar-item"));
-  const map = new Map();
-  items.forEach((el) => map.set(el, el.getBoundingClientRect()));
-  return map;
-}
-
-function playSidebarFlip(prevRects) {
-  const items = Array.from(document.querySelectorAll("#cards-container .sidebar-item"));
-  items.forEach((el) => {
-    const prev = prevRects.get(el);
-    if (!prev) return;
-    const next = el.getBoundingClientRect();
-    const dx = prev.left - next.left;
-    const dy = prev.top - next.top;
-
-    if (dx === 0 && dy === 0) return;
-
-    el.style.transition = "none";
-    el.style.transform = `translate(${dx}px, ${dy}px)`;
-
-    requestAnimationFrame(() => {
-      el.style.transition = "transform 380ms cubic-bezier(0.2, 1, 0.3, 1)";
-      el.style.transform = "";
-    });
-  });
-}
-
-/* ============================================================
-   ANIMAÇÕES: CARD VOADOR (SEM TRANSPARENTE)
-   - usa wrapper .drag-ghost e dentro um .field-card
-   - assim o SEU CSS atual aplica o background certinho
-   ============================================================ */
-function buildFlyElement(asset) {
-  const wrap = document.createElement("div");
-  wrap.className = "drag-ghost fly-wrap";
-  wrap.style.position = "fixed";
-  wrap.style.left = "0";
-  wrap.style.top = "0";
-  wrap.style.pointerEvents = "none";
-  wrap.style.zIndex = "9999";
-
-  const inner = document.createElement("div");
-  inner.className = "field-card fly-inner";
-  inner.style.position = "relative"; // dentro do wrapper fixed
-  inner.style.left = "0";
-  inner.style.top = "0";
-  inner.style.width = `${CARD_W}px`;
-  inner.style.height = `${CARD_H}px`;
-  inner.style.setProperty("--innerScale", String(INNER_SCALE));
-  inner.classList.toggle("compact", fieldIsCompact());
-  inner.innerHTML = fieldCardContentHTML(asset);
-
-  wrap.appendChild(inner);
-  document.body.appendChild(wrap);
-  return wrap;
-}
-
-function animateFly(fromX, fromY, toX, toY, asset) {
-  const fly = buildFlyElement(asset);
-
-  const anim = fly.animate(
-    [
-      { transform: `translate(${fromX}px, ${fromY}px) translate(-50%, -50%) scale(1.05)`, opacity: 1 },
-      { transform: `translate(${toX}px, ${toY}px) translate(-50%, -50%) scale(0.95)`, opacity: 1 }
-    ],
-    { duration: 420, easing: "cubic-bezier(0.2, 1, 0.3, 1)", fill: "forwards" }
-  );
-
-  return new Promise((resolve) => {
-    anim.onfinish = () => { fly.remove(); resolve(); };
-    anim.oncancel = () => { fly.remove(); resolve(); };
-  });
-}
-
-/* ============================================================
-   VOLTA PRA FILA COM ANIMAÇÃO + EXPANSÃO + FLIP
-   ============================================================ */
-async function restoreSidebarCardAnimated(asset, fromRect) {
-  const id = String(asset.id);
-
-  const old = sidebarHideTimers.get(id);
-  if (old) { clearTimeout(old); sidebarHideTimers.delete(id); }
-
-  if (!els.cardsContainer) return;
-
-  const prevRects = getSidebarItemsRects();
-
-  let cardEl = document.querySelector(`.sidebar-item[data-id="${id}"]`);
-
-  // se não existe, cria e entra "fechado"
-  if (!cardEl) {
-    cardEl = document.createElement("div");
-    const riskClass = getRiskBorderClass(asset);
-    cardEl.className = `premium-card sidebar-item ${riskClass}`.trim();
-    cardEl.dataset.id = id;
-    cardEl.innerHTML = createPremiumCardHTML(asset);
-    cardEl.addEventListener("pointerdown", (e) => initDrag(e, asset, cardEl));
-    els.cardsContainer.appendChild(cardEl);
-  }
-
-  // garante que está visível
-  cardEl.classList.remove("hidden", "removing-to-field", "is-dragging");
-  cardEl.style.pointerEvents = "none";
-
-  // fecha pra expandir bonito
-  const fullW = cardEl.offsetWidth || 150;
-  cardEl.style.width = "0px";
-  cardEl.style.maxWidth = "0px";
-  cardEl.style.opacity = "0";
-  cardEl.style.transform = "scale(0.98)";
-
-  // desliga snap por um instante pra não dar jump
-  if (els.sidebar) {
-    els.sidebar.style.scrollSnapType = "none";
-    setTimeout(() => { els.sidebar.style.scrollSnapType = ""; }, 500);
-  }
-
-  // próxima frame: expande
-  requestAnimationFrame(() => {
-    cardEl.style.transition =
-      "width 380ms cubic-bezier(0.2,1,0.3,1), max-width 380ms cubic-bezier(0.2,1,0.3,1), opacity 220ms ease, transform 380ms cubic-bezier(0.2,1,0.3,1)";
-    cardEl.style.width = `${fullW}px`;
-    cardEl.style.maxWidth = `${fullW}px`;
-    cardEl.style.opacity = "1";
-    cardEl.style.transform = "";
-  });
-
-  // FLIP nos irmãos
-  requestAnimationFrame(() => {
-    playSidebarFlip(prevRects);
-  });
-
-  // anima voo do campo para o lugar final na fila
-  // (precisa esperar 1 frame pra ter rect válido)
-  await new Promise(r => requestAnimationFrame(r));
-  const toRect = cardEl.getBoundingClientRect();
-
-  if (fromRect) {
-    const fromX = fromRect.left + fromRect.width / 2;
-    const fromY = fromRect.top + fromRect.height / 2;
-    const toX = toRect.left + toRect.width / 2;
-    const toY = toRect.top + toRect.height / 2;
-    await animateFly(fromX, fromY, toX, toY, asset);
-  }
-
-  // limpeza final
-  setTimeout(() => {
-    cardEl.style.transition = "";
-    cardEl.style.width = "";
-    cardEl.style.maxWidth = "";
-    cardEl.style.opacity = "";
-    cardEl.style.pointerEvents = "";
-  }, 450);
-}
-
-/* ============================================================
-   RESTORE SIMPLES (mantido para compatibilidade)
-   ============================================================ */
-function restoreSidebarCard(asset) {
-  const id = String(asset.id);
-
-  const t = sidebarHideTimers.get(id);
-  if (t) {
-    clearTimeout(t);
-    sidebarHideTimers.delete(id);
-  }
-
-  const existing = document.querySelector(`.sidebar-item[data-id="${id}"]`);
-  if (existing) {
-    existing.classList.remove("hidden", "removing-to-field", "is-dragging");
-    existing.style.width = "";
-    existing.style.maxWidth = "";
-    existing.style.opacity = "";
-    existing.style.transform = "";
-    return;
-  }
-
-  if (!els.cardsContainer) return;
-
-  const card = document.createElement("div");
-  const riskClass = getRiskBorderClass(asset);
-  card.className = `premium-card sidebar-item ${riskClass}`.trim();
-  card.dataset.id = id;
-  card.innerHTML = createPremiumCardHTML(asset);
-  card.addEventListener("pointerdown", (e) => initDrag(e, asset, card));
-
-  els.cardsContainer.appendChild(card);
-}
-
-/* ============================================================
-   DRAG & DROP
+   DRAG & DROP (corrigido: voo no drop)
    ============================================================ */
 function initDrag(e, asset, originalEl) {
   if (e.pointerType === "mouse" && e.button !== 0) return;
@@ -1172,36 +1290,19 @@ function handleEnd(e) {
   if (ghost) ghost.remove();
   originalEl.classList.remove("is-dragging");
 
-  // processa drop com animação (do ponto do drop)
-  processDrop(asset.id, e.clientX, e.clientY, CARD_W / 2, CARD_H / 2, { dropClientX: e.clientX, dropClientY: e.clientY });
-
+  processDrop(asset.id, e.clientX, e.clientY, CARD_W / 2, CARD_H / 2, originalEl);
   activeDrag = null;
 }
 
-function checkCollision(newX, newY, ignoreId) {
-  const margin = 5;
-  for (const card of placedCards) {
-    if (card.id === ignoreId) continue;
-    const hit =
-      newX < card.x + CARD_W - margin &&
-      newX + CARD_W - margin > card.x &&
-      newY < card.y + CARD_H - margin &&
-      newY + CARD_H - margin > card.y;
-    if (hit) return true;
-  }
-  return false;
-}
-
-/* ============================================================
-   PROCESS DROP (com animações: voo + fila FLIP)
-   ============================================================ */
-function processDrop(assetId, clientX, clientY, offsetX, offsetY, opts = {}) {
+// ✅ processDrop agora recebe "sourceEl" (o card da fila) pra animar o voo sem “quadrado transparente”
+function processDrop(assetId, clientX, clientY, offsetX, offsetY, sourceEl) {
   const asset = assetsData.find(a => a.id === assetId);
   if (!asset) return;
 
   computeCardSizeFromField();
   const rect = els.fieldLayer.getBoundingClientRect();
 
+  // só aceita drop dentro do campo
   if (clientX < rect.left || clientX > rect.right || clientY < rect.top || clientY > rect.bottom) return;
 
   let x = clientX - rect.left - offsetX;
@@ -1226,82 +1327,72 @@ function processDrop(assetId, clientX, clientY, offsetX, offsetY, opts = {}) {
   const expected = expectedZoneFor(asset.suitability, currentProfileKey);
   const correct = (actualZone === expected);
 
-  // reposicionando no campo (já existia)
+  // se está reposicionando no campo
   if (existingIndex !== -1) {
     const oldEl = document.querySelector(`.field-item[data-id="${asset.id}"]`);
     if (oldEl) oldEl.remove();
     placedCards.splice(existingIndex, 1);
+  } else {
+    // ✅ vindo da fila: anima fila (reflow) + voo para o campo
+    const sidebarItem = document.querySelector(`.sidebar-item[data-id="${String(asset.id)}"]`);
+    if (sidebarItem) {
+      const id = String(asset.id);
 
-    if (!correct) showToast("Posição errada (não conta)", "warn");
-    else showToast("Correto (conta pontos)", "info");
+      if (!movingToFieldIds.has(id)) {
+        movingToFieldIds.add(id);
 
-    placeCardOnField(asset, x, y, actualZone, correct);
-    recomputeScore();
-    updateStats();
-    return;
+        // captura origem
+        const fromRect = sidebarItem.getBoundingClientRect();
+        const toRect = getFieldTargetRect(x, y);
+
+        // ✅ FLIP reflow da fila + “colapso” do item
+        animateSidebarReflow(() => {
+          sidebarItem.classList.add("removing-to-field");
+        }, 420);
+
+        // cria clone e voa pro campo
+        const flyClone = createFlyCloneFromElement(sidebarItem, fromRect);
+
+        // esconde o card real (evita duplicar) — mas mantém no DOM até o reflow terminar
+        sidebarItem.style.opacity = "0";
+
+        flyCloneToRect(flyClone, fromRect, toRect, {
+          duration: 520,
+          easing: "cubic-bezier(0.22, 1, 0.36, 1)",
+          scaleTo: 1,
+          fadeOut: true
+        }).then(() => {
+          flyClone.remove();
+          // depois de tudo, some o card real
+          sidebarItem.classList.add("hidden");
+          sidebarItem.style.opacity = "";
+          sidebarItem.classList.remove("removing-to-field");
+          movingToFieldIds.delete(id);
+        });
+      }
+    }
   }
 
-  // NOVO: pegando da fila -> animações
-  const sidebarItem = document.querySelector(`.sidebar-item[data-id="${String(asset.id)}"]`);
+  if (!correct) showToast("Posição errada (não conta)", "warn");
+  else showToast("Correto (conta pontos)", "info");
 
-  const prevRects = getSidebarItemsRects();
+  placeCardOnField(asset, x, y, actualZone, correct);
+  recomputeScore();
+  updateStats();
+}
 
-  // destino final no campo (centro, viewport coords)
-  const toX = rect.left + x + (CARD_W / 2);
-  const toY = rect.top + y + (CARD_H / 2);
-
-  // origem: ponto do drop (preferível) — fica MUITO natural
-  const fromX = (opts.dropClientX ?? clientX);
-  const fromY = (opts.dropClientY ?? clientY);
-
-  // 1) inicia voo imediatamente (sem depender do sidebar existir)
-  const flyPromise = animateFly(fromX, fromY, toX, toY, asset);
-
-  // 2) colapsa item na fila (sua animação) + cancela timers
-  if (sidebarItem) {
-    const id = String(asset.id);
-
-    const old = sidebarHideTimers.get(id);
-    if (old) {
-      clearTimeout(old);
-      sidebarHideTimers.delete(id);
-    }
-
-    const currentWidth = sidebarItem.offsetWidth;
-    sidebarItem.style.width = currentWidth + "px";
-    sidebarItem.style.maxWidth = currentWidth + "px";
-
-    requestAnimationFrame(() => {
-      sidebarItem.classList.add("removing-to-field");
-    });
-
-    const tid = setTimeout(() => {
-      sidebarItem.classList.add("hidden");
-      sidebarHideTimers.delete(id);
-    }, 400);
-
-    sidebarHideTimers.set(id, tid);
+function checkCollision(newX, newY, ignoreId) {
+  const margin = 5;
+  for (const card of placedCards) {
+    if (card.id === ignoreId) continue;
+    const hit =
+      newX < card.x + CARD_W - margin &&
+      newX + CARD_W - margin > card.x &&
+      newY < card.y + CARD_H - margin &&
+      newY + CARD_H - margin > card.y;
+    if (hit) return true;
   }
-
-  // 3) fila andando sem teleporte (FLIP)
-  requestAnimationFrame(() => {
-    // desliga snap momentâneo pra não “corrigir” scroll no meio
-    if (els.sidebar) {
-      els.sidebar.style.scrollSnapType = "none";
-      setTimeout(() => { els.sidebar.style.scrollSnapType = ""; }, 500);
-    }
-    playSidebarFlip(prevRects);
-  });
-
-  // 4) só coloca no campo quando o voo terminar
-  flyPromise.then(() => {
-    if (!correct) showToast("Posição errada (não conta)", "warn");
-    else showToast("Correto (conta pontos)", "info");
-
-    placeCardOnField(asset, x, y, actualZone, correct);
-    recomputeScore();
-    updateStats();
-  });
+  return false;
 }
 
 function placeCardOnField(asset, x, y, zone, correct) {
@@ -1330,7 +1421,8 @@ function placeCardOnField(asset, x, y, zone, correct) {
 function updateStats() {
   if (!els.playersCount) return;
   const n = String(placedCards.length).padStart(2, "0");
-  els.playersCount.innerText = `${n}/06`; if (placedCards.length === MAX_PLAYERS) {
+  els.playersCount.innerText = `${n}/06`;
+  if (placedCards.length === MAX_PLAYERS) {
     els.playersCount.classList.add("limit-warning");
     if (els.finishBtn) els.finishBtn.classList.remove("hidden");
   } else {
@@ -1417,8 +1509,10 @@ function returnToStart() {
 }
 
 async function finalizeGame() {
+  // 1. Para o timer imediatamente
   if (matchTimerInterval) clearInterval(matchTimerInterval);
 
+  // 2. Calcula a pontuação
   const correctCount = placedCards.reduce((acc, c) => acc + (c.correct ? 1 : 0), 0);
   const baseScore = correctCount * SCORE_CORRECT;
 
@@ -1428,13 +1522,18 @@ async function finalizeGame() {
   }
   gameScore = baseScore + timeBonus;
 
+  // 3. Mostra o splash de "FIM DE JOGO"
   showScreen('endSplash');
 
+  // 4. Aguarda 3 segundos e vai para o resumo
   setTimeout(() => {
+    // Esconde o splash
     SCREENS.endSplash.classList.add("hidden");
 
+    // Esconde a lista de cartas lateral
     if (els.sidebar) els.sidebar.classList.add("hidden");
 
+    // Ativa a tela de resumo
     showScreen('summaryOverlay');
 
     setTimeout(() => {
@@ -1474,6 +1573,7 @@ function showToast(msg, kind = "error") {
    ============================================================ */
 document.addEventListener("DOMContentLoaded", () => {
   const slider = document.getElementById('game-sidebar');
+  if (!slider) return;
   let isDown = false;
   let startX;
   let scrollLeft;
@@ -1531,14 +1631,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     idleBtn.parentNode.replaceChild(newBtn, idleBtn);
 
     newBtn.addEventListener('click', (e) => {
-      console.log("CLIQUE NO BOTÃO DETECTADO!");
       e.preventDefault();
       e.stopPropagation();
       showScreen('name');
     });
 
     newBtn.addEventListener('touchstart', (e) => {
-      console.log("TOQUE NO BOTÃO DETECTADO!");
       e.preventDefault();
       e.stopPropagation();
       showScreen('name');

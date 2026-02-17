@@ -15,6 +15,7 @@
   <link rel="stylesheet" href="/styles/terms.css" />
   <link rel="stylesheet" href="/styles/instructions.css" />
   <link rel="stylesheet" href="/styles/profile-modal.css" />
+  <link rel="stylesheet" href="/styles/ranking.css" />
 
   <script defer src="/src/main.js"></script>
 </head>
@@ -96,7 +97,7 @@
         <p class="name-screen-tip">Dica: ENTER para começar • BACKSPACE para apagar</p>
       </div>
     </div>
-    </div>
+  </div>
 
   <!-- TERMS -->
   <div id="terms-screen" class="hidden">
@@ -286,7 +287,7 @@
   <!-- COUNTDOWN -->
   <div id="countdown-screen" class="hidden screen-overlay" data-z="100">
     <div class="countdown-wrapper">
-  
+
       <div class="countdown-icon-box">
         <svg class="countdown-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M10.5 13.5L10.5 8.5C10.5 7.67157 11.1716 7 12 7C12.8284 7 13.5 7.67157 13.5 8.5V13.5"
@@ -300,19 +301,19 @@
             stroke-width="2" stroke-linecap="round" />
         </svg>
       </div>
-  
+
       <p class="countdown-instr">
         Clique e arraste uma carta<br>
         para a posição que deseja!
       </p>
-  
+
       <h2 class="countdown-title">
         O jogo vai começar,<br>
         preparado?
       </h2>
-  
+
       <div id="countdown-number" class="countdown-val">3</div>
-  
+
     </div>
   </div>
 
@@ -359,34 +360,53 @@
 
       <div class="detail-ball" aria-hidden="true"></div>
     </div>
-    </div>
+  </div>
 
   <!-- RANKING -->
-  <div id="ranking-screen" class="hidden screen-overlay screen-overlay--dark" data-z="170">
-    <div class="ranking-panel">
-      <h2 class="ranking-title">Ranking do Dia</h2>
-      <p id="ranking-date-display" class="ranking-date">--/--/----</p>
+  <div id="ranking-screen" class="hidden ranking-screen" data-z="170">
+    <div class="ranking-wrap">
+      <!-- topo -->
+      <div class="ranking-top">
+        <div class="ranking-top-left">
+          <div class="ranking-dots" aria-hidden="true"></div>
+          <div class="ranking-timer" id="ranking-timer">60</div>
+        </div>
+  
+        <div class="hud-center">
+          <img src="/assets/logos/game-logo-alt.png" class="hud-logo" alt="Craques da Carteira" />
+        </div>
+  
+        <button class="ranking-help" type="button" aria-label="Ajuda">Ajuda ?</button>
+      </div>
+  
+      <!-- conteúdo -->
+      <div class="ranking-main">
+        <h2 class="ranking-h1">PARABÉNS, VOCÊ<br>TERMINOU O DESAFIO!</h2>
+  
+        <div class="ranking-sub">SUA PONTUAÇÃO:</div>
+        <div id="ranking-score" class="ranking-score">9.146</div>
+  
+        <div id="ranking-place" class="ranking-place">Você conquistou o 1º lugar!</div>
 
-      <div class="ranking-table-wrap custom-scrollbar">
-        <table class="ranking-table">
-          <thead class="ranking-thead">
-            <tr>
-              <th>#</th>
-              <th>Jogador</th>
-              <th>Perfil</th>
-              <th class="th-right">Pontos</th>
-              <th class="th-center">Prêmio</th>
-            </tr>
-          </thead>
-          <tbody id="ranking-list" class="ranking-tbody"></tbody>
-        </table>
+        <div class="ranking-top5-title">VEJA O TOP 5 DO DIA:</div>
 
-        <div id="ranking-loading" class="ranking-loading">Carregando ranking...</div>
+        <!-- lista (JS vai preencher AQUI com os .rank-item) -->
+        <div id="ranking-list" class="ranking-list">
+          <div id="ranking-loading" class="ranking-loading">Carregando ranking...</div>
+        </div>
       </div>
 
-      <button id="back-to-home-btn" class="ranking-back" type="button">Voltar ao Início</button>
+      <!-- botão -->
+      <button id="back-to-home-btn" class="ranking-back" type="button">VOLTAR AO INÍCIO</button>
+      
+      <!-- rodapé -->
+      <div class="ranking-footer">
+        <div class="ranking-footer-logo">RIO BRAVO</div>
+      </div>
     </div>
   </div>
+
+
 
   <!-- GAME ROOT -->
   <div id="game-root" class="hidden game-root">

@@ -1,4 +1,4 @@
 {
   "timeLimitActive": true,
-  "timeLimitSeconds": 9999
+  "timeLimitSeconds": 60
 }

@@ -1,0 +1,414 @@
+/* ============================================================
+   14) RANKING SCREEN (IGUAL IMAGEM) — LIMPO / SEM DUPLICAÇÕES
+   - HTML: #ranking-screen.ranking-screen > .ranking-wrap
+   - JS:  .ranking-list.has-me + .rank-item (.is-me / .is-first)
+   ============================================================ */
+
+/* ===== Tela + Fundo ===== */
+#ranking-screen.ranking-screen {
+  background: #022c22; /* fallback */
+  background-image: url("/assets/backgrounds/fundo-ranking.png"); /* troque aqui */
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/* “véu” pra contraste (fica atrás do conteúdo) */
+#ranking-screen.ranking-screen .ranking-wrap {
+  position: relative;
+  isolation: isolate;
+  width: 100vw;
+  height: 100vh;
+  padding: 18px 18px 22px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+#ranking-screen.ranking-screen .ranking-wrap::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(
+    circle at 40% 25%,
+    rgba(255, 255, 255, 0.25),
+    rgba(0, 0, 0, 0.25)
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
+#ranking-screen.ranking-screen .ranking-wrap > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ===== Top bar ===== */
+.ranking-top {
+  width: 100%;
+  max-width: 520px;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: start;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.ranking-top-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ranking-dots {
+  width: 22px;
+  height: 22px;
+  position: relative;
+  opacity: 0.9;
+}
+
+.ranking-dots::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow:
+    0 8px 0 rgba(255, 255, 255, 0.9),
+    0 16px 0 rgba(255, 255, 255, 0.9);
+}
+
+.ranking-timer {
+  font-family: "Poppins", sans-serif;
+  font-weight: 800;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.ranking-brand {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.92);
+  user-select: none;
+}
+
+.ranking-brand-small {
+  font-family: "Poppins", sans-serif;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  opacity: 0.9;
+}
+
+.ranking-brand-big {
+  font-family: "Exo 2", sans-serif;
+  font-size: 14px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+}
+
+.ranking-help {
+  justify-self: end;
+  border: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.7);
+  font-family: "Poppins", sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+/* ===== Main ===== */
+.ranking-main {
+  width: 100%;
+  max-width: 520px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 14px;
+}
+
+.ranking-h1 {
+  font-family: "Exo 2", sans-serif;
+  font-weight: 900;
+  font-size: 22px;
+  line-height: 1.12;
+  text-transform: uppercase;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.92);
+  margin: 0 0 12px;
+  letter-spacing: 0.02em;
+  text-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.ranking-sub {
+  font-family: "Poppins", sans-serif;
+  font-weight: 900;
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.8);
+  margin-top: 6px;
+}
+
+.ranking-score {
+  font-family: "Exo 2", sans-serif;
+  font-weight: 900;
+  font-size: 64px;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: rgba(10, 25, 18, 0.78);
+  margin: 6px 0 6px;
+  text-shadow: 0 10px 30px rgba(0, 0, 0, 0.10);
+}
+
+.ranking-place {
+  font-family: "Poppins", sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.92);
+  margin-bottom: 14px;
+}
+
+.ranking-top5-title {
+  font-family: "Poppins", sans-serif;
+  font-weight: 900;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.92);
+  margin: 8px 0 10px;
+}
+
+/* ===== Lista (container) ===== */
+.ranking-list {
+  width: min(520px, 92vw);
+  margin: 0 auto;
+  padding: 10px 10px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(6px);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ✅ quando VOCÊ aparecer: container fica branco */
+.ranking-list.has-me {
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.18);
+}
+
+/* Loading */
+.ranking-loading {
+  display: none;
+  text-align: center;
+  padding: 18px 12px;
+  font-family: "Poppins", sans-serif;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.ranking-loading:not(.hidden) {
+  display: block;
+}
+
+/* Mensagem vazia */
+.rank-empty {
+  text-align: center;
+  padding: 30px 10px;
+  font-weight: 800;
+  opacity: 0.85;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+/* ===== Itens do Top 5 (o JS gera estes) =====
+   Estrutura:
+   <div class="rank-item is-me is-first?">
+     <div class="rank-left">
+       <div class="rank-pos">1º</div>
+       <div class="rank-icon">🏆</div>
+     </div>
+     <div class="rank-mid">
+       <div class="rank-name">VOCÊ</div>
+       <div class="rank-profile">MODERADO</div>
+     </div>
+     <div class="rank-right">
+       <div class="rank-points">10.146</div>
+       <div class="rank-points-label">Pontos</div>
+     </div>
+   </div>
+*/
+
+/* Item base */
+.rank-item {
+  width: 100%;
+  border-radius: 14px;
+  padding: 12px 12px;
+  display: grid;
+  grid-template-columns: 92px 1fr 110px; /* esquerda / meio / direita */
+  align-items: center;
+  gap: 10px;
+
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow:
+    0 10px 26px rgba(0, 0, 0, 0.10),
+    inset 0 1px 0 rgba(255, 255, 255, 0.20);
+  backdrop-filter: blur(6px);
+}
+
+/* Se o container estiver branco, os cards ficam mais “sólidos” */
+.ranking-list.has-me .rank-item {
+  background: rgba(0, 0, 0, 0.06);
+  border-color: rgba(0, 0, 0, 0.06);
+  box-shadow:
+    0 12px 28px rgba(0, 0, 0, 0.10),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+/* Primeiro lugar */
+.rank-item.is-first {
+  background: rgba(255, 255, 255, 0.22);
+  border-color: rgba(255, 255, 255, 0.26);
+}
+
+/* Destaque do VOCÊ (JS usa .is-me) */
+.rank-item.is-me {
+  background: rgba(255, 255, 255, 0.92);
+  border-color: rgba(255, 255, 255, 0.40);
+  box-shadow:
+    0 14px 32px rgba(0, 0, 0, 0.14),
+    0 0 0 2px rgba(255, 255, 255, 0.20),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+
+/* Colunas internas */
+.rank-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.rank-pos {
+  font-family: "Exo 2", sans-serif;
+  font-weight: 900;
+  font-size: 30px;
+  color: rgba(255, 255, 255, 0.92);
+  text-align: center;
+  min-width: 44px;
+}
+
+.rank-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  background: rgba(10, 25, 18, 0.10);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  font-size: 16px;
+}
+
+/* quando VOCÊ está destacado (fundo branco), escurece os textos */
+.rank-item.is-me .rank-pos,
+.rank-item.is-me .rank-name,
+.rank-item.is-me .rank-profile,
+.rank-item.is-me .rank-points,
+.rank-item.is-me .rank-points-label {
+  color: rgba(10, 25, 18, 0.82) !important;
+}
+
+.rank-mid {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+  min-width: 0;
+}
+
+.rank-name {
+  font-family: "Exo 2", sans-serif;
+  font-weight: 900;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.92);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rank-profile {
+  font-family: "Poppins", sans-serif;
+  font-weight: 800;
+  font-size: 10px;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.70);
+  margin-top: 2px;
+}
+
+.rank-right {
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.rank-points {
+  font-family: "Exo 2", sans-serif;
+  font-weight: 900;
+  font-size: 18px;
+  color: rgba(10, 25, 18, 0.80);
+}
+
+.rank-points-label {
+  font-family: "Poppins", sans-serif;
+  font-weight: 800;
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.78);
+  text-transform: uppercase;
+}
+
+/* ===== Botão ===== */
+.ranking-back {
+  margin-top: 14px;
+  width: 100%;
+  max-width: 520px;
+  height: 64px;
+  border-radius: 999px;
+  border: 0;
+  background: rgba(10, 25, 18, 0.35);
+  color: rgba(255, 255, 255, 0.92);
+  font-family: "Exo 2", sans-serif;
+  font-weight: 900;
+  font-size: 16px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.18);
+  cursor: pointer;
+}
+
+.ranking-back:active {
+  transform: scale(0.98);
+}
+
+/* ===== Footer ===== */
+.ranking-footer {
+  margin-top: 12px;
+  display: grid;
+  place-items: center;
+  opacity: 0.85;
+}
+
+.ranking-footer-logo {
+  font-family: "Exo 2", sans-serif;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  color: rgba(10, 25, 18, 0.70);
+}

@@ -3,21 +3,21 @@
     {
       "id": "bronze",
       "name": "Brinde Bronze",
-      "stock": 46,
+      "stock": 39,
       "threshold": 30
     },
     {
       "id": "prata",
       "name": "Brinde Prata",
-      "stock": 5,
+      "stock": 7,
       "threshold": 60
     },
     {
       "id": "ouro",
       "name": "Brinde Ouro",
-      "stock": 0,
+      "stock": 5,
       "threshold": 90
     }
   ],
-  "updatedAt": "2026-02-15T21:05:51.088Z"
+  "updatedAt": "2026-02-16T23:04:41.463Z"
 }
