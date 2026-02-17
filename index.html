@@ -538,6 +538,68 @@
 
   </div>
 
+  <!-- HELP MODAL (Precisa de ajuda?) -->
+  <div id="help-modal" class="hidden screen-overlay screen-overlay--modal app-modal" data-z="210">
+    <div class="app-modal-box">
+      <button type="button" class="app-modal-close" id="help-modal-close" aria-label="Fechar">Cancelar <span aria-hidden="true">×</span></button>
+      <h2 class="app-modal-title">PRECISA DE AJUDA?</h2>
+      <img src="/assets/icons/help-emoji.png" class="app-modal-icon help-modal-icon" alt="" aria-hidden="true" />
+      <p class="app-modal-text">Se precisar de ajuda, basta clicar no botão abaixo, e esperar um pouquinho que um técnico já vai aí para te auxiliar.</p>
+      <div class="app-modal-actions app-modal-actions--stacked">
+        <button type="button" class="app-modal-btn app-modal-btn--secondary" id="help-modal-instructions">INSTRUÇÕES DO JOGO</button>
+        <button type="button" class="app-modal-btn app-modal-btn--primary" id="help-modal-call-tech">CHAMAR TÉCNICO</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CANCEL MATCH MODAL -->
+  <div id="cancel-match-modal" class="hidden screen-overlay screen-overlay--modal app-modal" data-z="210">
+    <div class="app-modal-box">
+      <button type="button" class="app-modal-close" id="cancel-match-modal-close" aria-label="Fechar">Cancelar <span aria-hidden="true">×</span></button>
+      <h2 class="app-modal-title">CANCELAR A PARTIDA</h2>
+      <img src="/assets/icons/cancel-emoji.png" class="app-modal-icon cancel-modal-icon" alt="" aria-hidden="true" />
+      <p class="app-modal-text">Tem certeza que deseja cancelar a partida?</p>
+      <div class="app-modal-actions">
+        <button type="button" class="app-modal-btn app-modal-btn--secondary" id="cancel-match-confirm">ENCERRAR</button>
+        <button type="button" class="app-modal-btn app-modal-btn--primary" id="cancel-match-back">VOLTAR AO JOGO</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- INSTRUCTIONS CAROUSEL MODAL -->
+  <div id="instructions-carousel-modal" class="hidden screen-overlay screen-overlay--modal app-modal" data-z="220">
+    <div class="app-modal-box app-modal-box--carousel">
+      <button type="button" class="app-modal-close" id="instructions-carousel-close" aria-label="Fechar">Cancelar <span aria-hidden="true">×</span></button>
+      <h2 class="app-modal-title">INSTRUÇÕES</h2>
+      <div class="instructions-carousel-wrap">
+        <button type="button" class="carousel-prev" id="instructions-carousel-prev" aria-label="Anterior">‹</button>
+        <div class="instructions-carousel">
+          <div class="instructions-carousel-slide active" data-slide="0">
+            <img src="/assets/icons/icon-profile.png" class="instructions-carousel-icon" alt="" />
+            <h3 class="instructions-carousel-subtitle">SEU PERFIL DE INVESTIDOR</h3>
+            <p class="instructions-carousel-text">Você receberá um perfil de investidor: Arrojado, Moderado ou Conservador. Seu desafio é montar um time de investimentos que combine com seu perfil dentro do tempo de 1 minuto e 30 segundos.</p>
+          </div>
+          <div class="instructions-carousel-slide" data-slide="1">
+            <img src="/assets/icons/icon-team.png" class="instructions-carousel-icon" alt="" />
+            <h3 class="instructions-carousel-subtitle">MONTE SEU TIME</h3>
+            <p class="instructions-carousel-text">Você deve escolher 6 cartas de investimento e arrastá-las para a posição tática correta. Lembre-se da regra de ouro: Defesa protege (baixo risco), Meio equilibra (médio risco) e Ataque rentabiliza (alto risco).</p>
+          </div>
+          <div class="instructions-carousel-slide" data-slide="2">
+            <img src="/assets/icons/icon-score.png" class="instructions-carousel-icon" alt="" />
+            <h3 class="instructions-carousel-subtitle">COMO PONTUAR</h3>
+            <p class="instructions-carousel-text">Para subir no ranking, suas escolhas precisam ser perfeitas. A pontuação máxima é atingida quando você acerta tanto a adequação do ativo ao perfil do investidor quanto a posição dele no campo de futebol.</p>
+          </div>
+        </div>
+        <button type="button" class="carousel-next" id="instructions-carousel-next" aria-label="Próximo">›</button>
+      </div>
+      <div class="carousel-dots" id="instructions-carousel-dots"></div>
+      <div class="app-modal-actions">
+        <button type="button" class="app-modal-btn app-modal-btn--secondary" id="instructions-carousel-help">AJUDA</button>
+        <button type="button" class="app-modal-btn app-modal-btn--primary" id="instructions-carousel-back">VOLTAR AO JOGO</button>
+      </div>
+    </div>
+  </div>
+
   <!-- PRIZE MODAL -->
   <div id="prize-modal" class="hidden screen-overlay screen-overlay--modal" data-z="180">
     <div class="prize-panel">

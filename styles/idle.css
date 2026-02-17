@@ -122,10 +122,17 @@ text-align: center;
     transition: all 0.2s ease;
     z-index: 10000;
     pointer-events: auto !important;
+    animation: pulseBtn 2.5s ease-in-out infinite;
+}
+
+.idle-play-btn:hover {
+    transform: translateY(-3px);
+    filter: brightness(1.05);
 }
 
 .idle-play-btn:active {
     transform: scale(0.98);
+    animation: none;
 }
 
 /* --- ANIMAÇÕES --- */

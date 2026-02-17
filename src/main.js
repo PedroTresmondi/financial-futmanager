@@ -59,6 +59,8 @@ let matchTimerInterval = null;
 let matchTimeRemaining = 0;
 let matchTimeConfig = { active: false, seconds: 60 };
 let isTimerPaused = false;
+/** Pausa do timer por modal de ajuda/cancelar: só retoma quando ambos estiverem fechados */
+let timerPausedByAppModal = { help: false, cancel: false };
 
 // ---------- Campo responsivo ----------
 const BASE_CARD_W = 140;
@@ -1175,6 +1177,86 @@ function bindEls() {
   flowEls.profileConfirmBtn = document.getElementById('profile-confirm-btn');
 }
 
+/* ========== Modais: Ajuda, Cancelar partida, Instruções (carousel) ========== */
+let instructionsCarouselIndex = 0;
+const INSTRUCTIONS_CAROUSEL_TOTAL = 3;
+
+function isGameScreenActive() {
+  return SCREENS.game && !SCREENS.game.classList.contains('hidden');
+}
+
+function openHelpModal() {
+  if (isGameScreenActive() && matchTimeConfig.active) {
+    pauseMatchTimer();
+    timerPausedByAppModal.help = true;
+  }
+  const el = document.getElementById('help-modal');
+  if (el) el.classList.remove('hidden');
+}
+
+function closeHelpModal() {
+  const el = document.getElementById('help-modal');
+  if (el) el.classList.add('hidden');
+  if (timerPausedByAppModal.help) {
+    timerPausedByAppModal.help = false;
+    if (!timerPausedByAppModal.cancel) resumeMatchTimer();
+  }
+}
+
+function openCancelMatchModal() {
+  if (isGameScreenActive() && matchTimeConfig.active) {
+    pauseMatchTimer();
+    timerPausedByAppModal.cancel = true;
+  }
+  const el = document.getElementById('cancel-match-modal');
+  if (el) el.classList.remove('hidden');
+}
+
+function closeCancelMatchModal() {
+  const el = document.getElementById('cancel-match-modal');
+  if (el) el.classList.add('hidden');
+  if (timerPausedByAppModal.cancel) {
+    timerPausedByAppModal.cancel = false;
+    if (!timerPausedByAppModal.help) resumeMatchTimer();
+  }
+}
+
+function openInstructionsCarouselModal() {
+  instructionsCarouselIndex = 0;
+  updateInstructionsCarouselSlide();
+  const el = document.getElementById('instructions-carousel-modal');
+  if (el) el.classList.remove('hidden');
+}
+
+function closeInstructionsCarouselModal() {
+  const el = document.getElementById('instructions-carousel-modal');
+  if (el) el.classList.add('hidden');
+}
+
+function updateInstructionsCarouselSlide() {
+  const slides = document.querySelectorAll('.instructions-carousel-slide');
+  const dots = document.querySelectorAll('.carousel-dot');
+  slides.forEach((s, i) => s.classList.toggle('active', i === instructionsCarouselIndex));
+  dots.forEach((d, i) => d.classList.toggle('active', i === instructionsCarouselIndex));
+}
+
+function initInstructionsCarousel() {
+  const dotsContainer = document.getElementById('instructions-carousel-dots');
+  if (!dotsContainer) return;
+  dotsContainer.innerHTML = '';
+  for (let i = 0; i < INSTRUCTIONS_CAROUSEL_TOTAL; i++) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'carousel-dot' + (i === 0 ? ' active' : '');
+    btn.setAttribute('aria-label', `Slide ${i + 1}`);
+    btn.addEventListener('click', () => {
+      instructionsCarouselIndex = i;
+      updateInstructionsCarouselSlide();
+    });
+    dotsContainer.appendChild(btn);
+  }
+}
+
 function pickProfile() {
   const keys = Object.keys(PROFILES);
   currentProfileKey = keys[Math.floor(Math.random() * keys.length)];
@@ -1434,7 +1516,9 @@ function checkCollision(newX, newY, ignoreId) {
 function placeCardOnField(asset, x, y, zone, correct) {
   const el = document.createElement("div");
   const borderClass = getRiskBorderClass(asset);
-  el.className = `field-card field-item ${borderClass}`.trim();
+  el.className = `field-card field-item field-card-land ${borderClass}`.trim();
+  el.classList.toggle("correct", correct);
+  el.classList.toggle("incorrect", !correct);
   el.style.width = `${CARD_W}px`;
   el.style.height = `${CARD_H}px`;
   el.style.left = `${x}px`;
@@ -1452,6 +1536,8 @@ function placeCardOnField(asset, x, y, zone, correct) {
   placedCards.push(item);
   applyDebugOnlyVisibility();
   applyDebugVisualsToElement(el, asset);
+  // Remove classe de entrada após animação; mantém correct/incorrect para estilo opcional
+  setTimeout(() => el.classList.remove("field-card-land"), 500);
 }
 
 function updateStats() {
@@ -1515,6 +1601,7 @@ function scheduleGoToRanking() {
 
 function returnToStart() {
   navigatedViaMenu = false;
+  timerPausedByAppModal = { help: false, cancel: false };
   if (prizeResetTimer) clearTimeout(prizeResetTimer);
   prizeResetTimer = null;
   if (matchTimerInterval) clearInterval(matchTimerInterval);
@@ -1548,6 +1635,7 @@ function returnToStart() {
 
 async function finalizeGame() {
   // 1. Para o timer imediatamente
+  timerPausedByAppModal = { help: false, cancel: false };
   if (matchTimerInterval) clearInterval(matchTimerInterval);
 
   // 2. Calcula a pontuação
@@ -1766,6 +1854,98 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("detail-card-container")?.addEventListener("pointerdown", (e) => {
     e.stopPropagation();
   }, { passive: false });
+
+  /* --- Botões Ajuda (abrem modal de ajuda) --- */
+  const helpButtons = [
+    document.getElementById('help-btn'),
+    document.getElementById('name-help'),
+    document.getElementById('terms-help'),
+    document.getElementById('instructions-help'),
+    document.querySelector('.ranking-help')
+  ];
+  helpButtons.forEach(btn => {
+    if (btn) btn.addEventListener('click', openHelpModal);
+  });
+
+  /* --- Cancelar partida (abre modal de confirmação) --- */
+  const cancelMatchBtn = document.getElementById('cancel-match-btn');
+  if (cancelMatchBtn) cancelMatchBtn.addEventListener('click', openCancelMatchModal);
+
+  /* --- Delegação de cliques nos modais (garante que fecham e ações funcionem) --- */
+  document.body.addEventListener('click', (e) => {
+    const id = e.target.id || e.target.closest?.('[id]')?.id;
+    const closeBtn = e.target.closest?.('button.app-modal-close, [id$="-close"]');
+    if (closeBtn) {
+      e.preventDefault();
+      if (closeBtn.id === 'help-modal-close') closeHelpModal();
+      else if (closeBtn.id === 'cancel-match-modal-close') closeCancelMatchModal();
+      else if (closeBtn.id === 'instructions-carousel-close') closeInstructionsCarouselModal();
+      return;
+    }
+    if (id === 'help-modal-instructions') {
+      e.preventDefault();
+      closeHelpModal();
+      openInstructionsCarouselModal();
+      return;
+    }
+    if (id === 'help-modal-call-tech') {
+      e.preventDefault();
+      closeHelpModal();
+      return;
+    }
+    if (id === 'cancel-match-confirm') {
+      e.preventDefault();
+      closeCancelMatchModal();
+      returnToStart();
+      return;
+    }
+    if (id === 'cancel-match-back') {
+      e.preventDefault();
+      closeCancelMatchModal();
+      return;
+    }
+    if (id === 'instructions-carousel-back') {
+      e.preventDefault();
+      closeInstructionsCarouselModal();
+      return;
+    }
+    if (id === 'instructions-carousel-help') {
+      e.preventDefault();
+      closeInstructionsCarouselModal();
+      openHelpModal();
+      return;
+    }
+    if (id === 'instructions-carousel-prev') {
+      e.preventDefault();
+      instructionsCarouselIndex = (instructionsCarouselIndex - 1 + INSTRUCTIONS_CAROUSEL_TOTAL) % INSTRUCTIONS_CAROUSEL_TOTAL;
+      updateInstructionsCarouselSlide();
+      return;
+    }
+    if (id === 'instructions-carousel-next') {
+      e.preventDefault();
+      instructionsCarouselIndex = (instructionsCarouselIndex + 1) % INSTRUCTIONS_CAROUSEL_TOTAL;
+      updateInstructionsCarouselSlide();
+      return;
+    }
+    /* Backdrop: fechar ao clicar no overlay (no próprio modal, não na caixa) */
+    const modal = e.target.closest?.('.app-modal');
+    if (modal && e.target === modal) {
+      e.preventDefault();
+      if (modal.id === 'help-modal') closeHelpModal();
+      else if (modal.id === 'cancel-match-modal') closeCancelMatchModal();
+      else if (modal.id === 'instructions-carousel-modal') closeInstructionsCarouselModal();
+    }
+  }, true);
+
+  initInstructionsCarousel();
+
+  /* --- Voltar: uma tela anterior --- */
+  const nameBack = document.getElementById('name-back');
+  if (nameBack) nameBack.addEventListener('click', (e) => { e.preventDefault(); showScreen('idle'); });
+  const termsBack = document.getElementById('terms-back');
+  if (termsBack) termsBack.addEventListener('click', (e) => { e.preventDefault(); showScreen('name'); });
+  const instructionsBack = document.getElementById('instructions-back');
+  if (instructionsBack) instructionsBack.addEventListener('click', (e) => { e.preventDefault(); showScreen('terms'); });
 
   showScreen('idle');
 

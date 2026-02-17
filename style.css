@@ -280,6 +280,11 @@ h2,
 }
 
 /* Stagger (atraso) opcional para as cartas (melhora muito o visual) */
+/* Entrada em sequência (stagger) */
+.sidebar-item {
+  animation: slideUpIn 0.4s ease-out both;
+}
+
 .sidebar-item:nth-child(1) {
   animation-delay: 0.1s;
 }
@@ -745,7 +750,12 @@ body.game-mode {
 
 #game-root .timer-danger {
   color: #ef4444 !important;
-  animation: pulse 1s infinite;
+  animation: timerDangerPulse 1.2s ease-in-out infinite;
+}
+
+@keyframes timerDangerPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.9; transform: scale(1.05); }
 }
 
 /* LISTA HORIZONTAL (SIDEBAR) */
@@ -1783,13 +1793,69 @@ body.debug .game-card-base {
   }
 }
 
+/* Card caindo no campo (satisfatório) */
+@keyframes cardLand {
+  0% {
+    opacity: 0;
+    transform: scale(0.3) translateY(-80px);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.08) translateY(4px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Feedback correto: brilho verde rápido */
+@keyframes correctPulse {
+  0%, 100% { box-shadow: 0 12px 24px rgba(0, 0, 0, 0.18); filter: brightness(1); }
+  50% { box-shadow: 0 0 0 4px rgba(74, 222, 128, 0.6), 0 12px 24px rgba(0, 0, 0, 0.18); filter: brightness(1.08); }
+}
+
+/* Feedback errado: leve shake */
+@keyframes wrongShake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-6px); }
+  40% { transform: translateX(6px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
+}
+
+/* Botão finish aparecendo */
+@keyframes fabPopIn {
+  0% { opacity: 0; transform: scale(0.5); }
+  70% { transform: scale(1.08); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+/* Idle screen entrada suave */
+@keyframes idleIn {
+  from { opacity: 0; filter: blur(8px); }
+  to { opacity: 1; filter: blur(0); }
+}
+
 /* 4) Telas principais: entrada premium (sem quebrar layout) */
+#idle-screen:not(.hidden) {
+  animation: idleIn var(--dur-3) var(--ease-out) both;
+}
+
 #name-screen:not(.hidden),
 #terms-screen:not(.hidden),
 #instructions-screen:not(.hidden),
 #profile-modal-screen:not(.hidden),
 #ranking-screen:not(.hidden) {
   animation: screenIn var(--dur-3) var(--ease-out) both;
+}
+
+/* 4b) App modais (Ajuda, Cancelar, Instruções): caixa com pop */
+#help-modal:not(.hidden) .app-modal-box,
+#cancel-match-modal:not(.hidden) .app-modal-box,
+#instructions-carousel-modal:not(.hidden) .app-modal-box {
+  animation: modalIn var(--dur-3) var(--ease-bounce) both;
+  transform-origin: 50% 50%;
 }
 
 /* 5) Overlay base (modal / ranking / countdown etc) com “backdrop” melhor */
@@ -1851,7 +1917,7 @@ body.debug .game-card-base {
   animation-delay: 160ms;
 }
 
-/* 9) Botões: toque satisfatório */
+/* 9) Botões: toque satisfatório (lift + squash) */
 button,
 .ranking-back,
 .prize-cta,
@@ -1867,9 +1933,31 @@ button,
 
 button:hover {
   filter: brightness(1.03);
+  transform: translateY(-2px);
 }
 button:active {
-  transform: scale(.985);
+  transform: scale(.985) translateY(0);
+}
+
+/* 9b) Finish FAB: pop quando aparece */
+#finish-btn.finish-fab:not(.hidden) {
+  animation: fabPopIn 0.4s var(--ease-bounce) both;
+}
+
+/* 9c) Summary: título e CTA com entrada */
+#summary-overlay:not(.hidden) .summary-title {
+  animation: screenIn var(--dur-3) var(--ease-out) both;
+}
+
+#summary-overlay:not(.hidden) .summary-cta {
+  animation: modalIn var(--dur-4) var(--ease-bounce) both;
+  animation-delay: 120ms;
+  transform-origin: 50% 50%;
+}
+
+/* 9d) Countdown: conteúdo entra suave */
+#countdown-screen:not(.hidden) .countdown-wrapper {
+  animation: screenIn var(--dur-3) var(--ease-out) both;
 }
 
 /* 10) Toast: entra/saí com mais vida */
@@ -1885,6 +1973,19 @@ button:active {
 }
 
 /* 11) Drag ghost: dá “peso” e reduz sensação de transparente */
+/* 10b) Carta no campo: entrada (land) + feedback correto/errado */
+#game-root .field-card.field-card-land {
+  animation: cardLand 0.45s var(--ease-bounce) both;
+}
+
+#game-root .field-card.correct .game-card-base {
+  animation: correctPulse 0.6s ease-out;
+}
+
+#game-root .field-card.incorrect {
+  animation: wrongShake 0.45s var(--ease-out);
+}
+
 .drag-ghost .game-card-base {
   filter: drop-shadow(0 18px 26px rgba(0, 0, 0, .22)) saturate(1.05);
 }
@@ -1930,6 +2031,240 @@ body.summary-mode #reveal-score-btn:hover,
 #start-game-btn:hover {
   background: #475569 !important;
   box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.1), 0 8px 24px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* 12.6) MODAIS APP (Ajuda, Cancelar partida, Instruções carousel) */
+#help-modal,
+#cancel-match-modal,
+#instructions-carousel-modal {
+  z-index: 1500;
+}
+
+.app-modal {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+}
+
+.app-modal-box {
+  background: #fff;
+  border-radius: 24px;
+  padding: 32px 28px 28px;
+  max-width: 480px;
+  width: 100%;
+  position: relative;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.2);
+  pointer-events: auto;
+}
+
+.app-modal-box--carousel {
+  max-width: 520px;
+}
+
+.app-modal-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  border: 0;
+  background: none;
+  color: #94a3b8;
+  font-family: "Poppins", sans-serif;
+  font-size: 0.95rem;
+  cursor: pointer;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.app-modal-close:hover {
+  color: #64748b;
+}
+
+.app-modal-title {
+  margin: 0 0 20px;
+  font-family: "Exo 2", sans-serif;
+  font-weight: 900;
+  font-size: 1.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #334155;
+  text-align: center;
+}
+
+.app-modal-icon {
+  width: 100px;
+  height: 100px;
+  margin: 0 auto 20px;
+  display: block;
+  font-size: 4rem;
+  border-radius: 20px;
+  background: linear-gradient(145deg, #0d9488 0%, #10b981 100%);
+  object-fit: contain;
+  box-sizing: border-box;
+}
+
+.app-modal-icon.help-modal-icon {
+  font-size: 3.5rem;
+}
+
+.app-modal-icon.cancel-modal-icon {
+  background: linear-gradient(145deg, #0d9488 0%, #86efac 100%);
+}
+
+.app-modal-text {
+  margin: 0 0 24px;
+  font-family: "Poppins", sans-serif;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: #64748b;
+  text-align: center;
+}
+
+.app-modal-actions {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.app-modal-actions--stacked {
+  flex-direction: column;
+}
+
+.app-modal-btn {
+  flex: 1;
+  min-width: 140px;
+  padding: 14px 24px;
+  border: none;
+  border-radius: 16px;
+  font-family: "Exo 2", sans-serif;
+  font-weight: 800;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.app-modal-btn--secondary {
+  background: #e2e8f0;
+  color: #334155;
+}
+
+.app-modal-btn--secondary:hover {
+  background: #cbd5e1;
+}
+
+.app-modal-btn--primary {
+  background: #15803d;
+  color: #fff;
+}
+
+.app-modal-btn--primary:hover {
+  background: #166534;
+}
+
+.app-modal-btn:active {
+  transform: scale(0.98);
+}
+
+/* Carousel instruções */
+.instructions-carousel-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.carousel-prev,
+.carousel-next {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 50%;
+  background: #e2e8f0;
+  color: #475569;
+  font-size: 1.5rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.carousel-prev:hover,
+.carousel-next:hover {
+  background: #cbd5e1;
+}
+
+.instructions-carousel {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+  min-height: 200px;
+}
+
+.instructions-carousel-slide {
+  display: none;
+  padding: 8px 0;
+  text-align: center;
+}
+
+.instructions-carousel-slide.active {
+  display: block;
+  animation: screenIn 0.35s var(--ease-out) both;
+}
+
+.instructions-carousel-icon {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 12px;
+  object-fit: contain;
+}
+
+.instructions-carousel-subtitle {
+  margin: 0 0 12px;
+  font-family: "Exo 2", sans-serif;
+  font-weight: 800;
+  font-size: 1.1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #334155;
+}
+
+.instructions-carousel-text {
+  margin: 0;
+  font-family: "Poppins", sans-serif;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: #64748b;
+}
+
+.carousel-dots {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.carousel-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: none;
+  background: #cbd5e1;
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.2s;
+}
+
+.carousel-dot.active {
+  background: #475569;
 }
 
 /* 13) Respeita quem não quer animação */

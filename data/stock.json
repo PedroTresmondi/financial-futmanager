@@ -3,7 +3,7 @@
     {
       "id": "bronze",
       "name": "Brinde Bronze",
-      "stock": 30,
+      "stock": 28,
       "threshold": 30
     },
     {
@@ -19,5 +19,5 @@
       "threshold": 90
     }
   ],
-  "updatedAt": "2026-02-17T21:47:46.136Z"
+  "updatedAt": "2026-02-17T22:11:00.366Z"
 }
