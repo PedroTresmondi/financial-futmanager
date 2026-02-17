@@ -1070,6 +1070,14 @@ function prepareMatch() {
   initGame();
   updateProfileModalContent();
   showScreen('profileModal');
+
+  const cardWrap = document.getElementById('profile-card-wrap');
+  if (cardWrap) cardWrap.classList.remove('flipped');
+
+  if (flowEls.profileConfirmBtn) {
+    flowEls.profileConfirmBtn.disabled = false;
+    flowEls.profileConfirmBtn.textContent = "REVELAR MEU PERFIL";
+  }
 }
 
 function updateProfileModalContent() {
@@ -1600,7 +1608,9 @@ function showToast(msg, kind = "error") {
 }
 
 /* ============================================================
-   SCRIPT DE ARRASTAR (DRAG-TO-SCROLL) PARA MOUSE
+   SWIPE / DRAG-TO-SCROLL NA LISTA DE CARTAS
+   - Mouse: drag manual (arrastar)
+   - Touch: swipe nativo via touch-action: pan-x no CSS
    ============================================================ */
 document.addEventListener("DOMContentLoaded", () => {
   const slider = document.getElementById('game-sidebar');
@@ -1726,7 +1736,15 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   flowEls.termsBtn.addEventListener('click', () => { showScreen('instructions'); });
   flowEls.instBtn.addEventListener('click', () => { prepareMatch(); });
-  flowEls.profileConfirmBtn.addEventListener('click', () => { startCountdown(); });
+  flowEls.profileConfirmBtn.addEventListener('click', () => {
+  const cardWrap = document.getElementById('profile-card-wrap');
+  if (cardWrap && !cardWrap.classList.contains('flipped')) {
+    cardWrap.classList.add('flipped');
+    flowEls.profileConfirmBtn.textContent = "ESCALAR MEU TIME";
+  } else {
+    startCountdown();
+  }
+});
 
   const btnGoRanking = document.getElementById("go-to-ranking-btn");
   if (btnGoRanking) btnGoRanking.addEventListener("click", () => {

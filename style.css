@@ -568,6 +568,7 @@ body.game-mode {
   position: absolute;
   top: 0;
   left: 0;
+  color: white;
   /* height: 5vh; */
   width: 95%;
   display: flex;
@@ -761,6 +762,9 @@ body.game-mode {
   gap: 12px;
   background: linear-gradient(to bottom, #ffffff 50%, rgba(255, 255, 255, 0) 100%);
 
+  /* --- SWIPE/TOUCH: permite gesto horizontal --- */
+  touch-action: pan-x;
+
   /* --- MÁGICA DO SWIPE/SNAP --- */
   display: flex;
   overflow-x: auto;
@@ -936,6 +940,11 @@ body.game-mode {
 #game-root .premium-card:active,
 #game-root .field-card:active {
   cursor: grabbing;
+}
+
+/* Cartas na sidebar: permitir swipe horizontal (touch) */
+#game-root #game-sidebar .premium-card {
+  touch-action: pan-x;
 }
 
 #game-root .field-card {
@@ -1885,6 +1894,42 @@ button:active {
   transition:
       transform 520ms var(--ease-out),
       opacity 260ms ease-out;
+}
+
+/* 12.5) BOTÕES CTA – aparência unificada (embossed, sem verde) */
+.idle-play-btn,
+.instructions-btn,
+.terms-btn,
+#profile-modal-screen .profile-cta,
+#reveal-score-btn,
+body.summary-mode #reveal-score-btn,
+.ranking-back,
+#back-to-home-btn,
+.prize-cta,
+#go-to-ranking-btn,
+.detail-action,
+#start-game-btn {
+  background: #334155 !important;
+  border: none !important;
+  border-radius: 24px !important;
+  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.08), 0 6px 20px rgba(0, 0, 0, 0.25) !important;
+  color: #fff !important;
+}
+
+.idle-play-btn:hover,
+.instructions-btn:hover,
+.terms-btn:hover,
+#profile-modal-screen .profile-cta:hover,
+#reveal-score-btn:hover,
+body.summary-mode #reveal-score-btn:hover,
+.ranking-back:hover,
+#back-to-home-btn:hover,
+.prize-cta:hover,
+#go-to-ranking-btn:hover,
+.detail-action:hover,
+#start-game-btn:hover {
+  background: #475569 !important;
+  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.1), 0 8px 24px rgba(0, 0, 0, 0.3) !important;
 }
 
 /* 13) Respeita quem não quer animação */
