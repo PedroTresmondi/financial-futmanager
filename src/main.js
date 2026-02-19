@@ -1,12 +1,19 @@
-/* ============================================================
-   Financial Football Manager • main.js (COMPLETO)
-   - Corrige “volta dupla” (lock + apenas pointerdown no X)
-   - Remove “quadrado transparente” no drop (voo com clone visual do card)
-   - Anima:
-     (1) card indo pro campo
-     (2) fila (reflow) andando (FLIP)
-     (3) card voltando pra fila (voo + reflow)
-   ============================================================ */
+
+
+import {
+  clamp,
+  onlySpaces,
+  normalizeName,
+  normalizeNameLive,
+  shuffleArray,
+  zoneFromPoint,
+  expectedZoneFor,
+  getExpectedZoneForAsset,
+  getRiskLevel,
+  escapeHtml,
+  formatPtsBR
+} from "./utils.js";
+import { loadAssets, tryAwardPrize as apiTryAwardPrize } from "./api.js";
 
 const PROFILES = {
   CONSERVADOR: { min: 15, max: 35, color: "text-blue-400", label: "Conservador" },
@@ -16,7 +23,17 @@ const PROFILES = {
 
 const MAX_PLAYERS = 6;
 const PLAYER_NAME_KEY = "ffm_player_name";
-const SCORE_CORRECT = 100;
+/** Regras de pontuação (carregadas do /api/config ao iniciar a partida) */
+let POINTS_PER_CORRECT_CARD = 3;
+let BONUS_IDEAL_LINEUP = 20;
+let MAX_SCORE = 38;
+
+/** Escalação ideal por tipo de carteira: quantidade de cartas em Defesa, Meio, Ataque */
+const IDEAL_FORMATION = {
+  CONSERVADOR: { defense: 2, midfield: 3, attack: 1 },
+  MODERADO: { defense: 2, midfield: 2, attack: 2 },
+  ARROJADO: { defense: 1, midfield: 3, attack: 2 },
+};
 
 const els = {};
 const flowEls = {};
@@ -74,71 +91,6 @@ let CARD_H = BASE_CARD_H;
 
 let fieldResizeObserver = null;
 
-const FALLBACK_ASSETS = [
-  { "id": 1, "name": "Tesouro Selic", "type": "Renda Fixa", "suitability": 10, "retorno": 15, "seguranca": 100, "desc": "O investimento mais seguro do país. Ideal para reservas de emergência e perfis conservadores." },
-  { "id": 2, "name": "CDB Banco", "type": "Renda Fixa", "suitability": 20, "retorno": 25, "seguranca": 90, "desc": "Emprestimo para o banco com garantia do FGC. Retorno superior à poupança." },
-  { "id": 3, "name": "Fundo DI", "type": "Fundo", "suitability": 25, "retorno": 30, "seguranca": 85, "desc": "Carteira diversificada em renda fixa. Liquidez diária e gestão profissional." },
-  { "id": 4, "name": "LCI / LCA", "type": "Isento", "suitability": 30, "retorno": 35, "seguranca": 85, "desc": "Investimento isento de Imposto de Renda, focado nos setores imobiliário e do agronegócio." },
-  { "id": 5, "name": "Debênture", "type": "Crédito", "suitability": 40, "retorno": 45, "seguranca": 70, "desc": "Dívida de empresas privadas. Maior risco de crédito, mas com taxas atrativas." },
-  { "id": 6, "name": "Multimercado", "type": "Fundo", "suitability": 50, "retorno": 55, "seguranca": 60, "desc": "Fundo que mistura renda fixa, ações e câmbio. Busca superar o CDI com volatilidade controlada." },
-  { "id": 7, "name": "FII Papel", "type": "Imobiliário", "suitability": 55, "retorno": 60, "seguranca": 55, "desc": "Fundo imobiliário focado em dívidas (CRIs). Paga dividendos mensais isentos de IR." },
-  { "id": 8, "name": "FII Tijolo", "type": "Imobiliário", "suitability": 60, "retorno": 65, "seguranca": 50, "desc": "Investimento em imóveis físicos como shoppings e galpões. Renda de aluguéis e valorização." },
-  { "id": 9, "name": "ETF S&P500", "type": "Internacional", "suitability": 65, "retorno": 70, "seguranca": 50, "desc": "Exposição às 500 maiores empresas dos EUA. Diversificação em dólar sem sair do Brasil." },
-  { "id": 10, "name": "Ações Blue Chips", "type": "Ações", "suitability": 70, "retorno": 75, "seguranca": 45, "desc": "Ações de empresas grandes, consolidadas e com bom histórico de lucros na Bolsa." },
-  { "id": 11, "name": "Small Caps", "type": "Ações", "suitability": 80, "retorno": 85, "seguranca": 30, "desc": "Ações de empresas menores com alto potencial de crescimento, mas maior volatilidade." },
-  { "id": 12, "name": "Dólar Futuro", "type": "Derivativos", "suitability": 85, "retorno": 80, "seguranca": 30, "desc": "Proteção ou especulação com a variação cambial. Alto risco e alavancagem." },
-  { "id": 13, "name": "Bitcoin", "type": "Cripto", "suitability": 90, "retorno": 95, "seguranca": 20, "desc": "A principal criptomoeda do mercado. Ouro digital, descentralizado e escasso." },
-  { "id": 14, "name": "Altcoins", "type": "Cripto", "suitability": 95, "retorno": 100, "seguranca": 10, "desc": "Criptomoedas alternativas com projetos inovadores, mas risco extremo de oscilação." },
-  { "id": 15, "name": "Opções", "type": "Derivativos", "suitability": 100, "retorno": 100, "seguranca": 5, "desc": "Instrumentos para alavancagem máxima. Potencial de ganhos explosivos ou perda total." }
-];
-
-function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
-function onlySpaces(str) { return !str || !String(str).trim(); }
-
-function normalizeName(raw) {
-  const s = String(raw || "").replace(/\s+/g, " ").trim().slice(0, 18);
-  return s.toUpperCase();
-}
-
-function shuffleArray(arr) {
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
-  }
-  return arr;
-}
-
-function zoneFromPoint(centerY, fieldHeight) {
-  const zoneHeight = fieldHeight / 3;
-  if (centerY < zoneHeight) return "attack";
-  if (centerY < zoneHeight * 2) return "midfield";
-  return "defense";
-}
-
-function expectedZoneFor(assetSuit, profileKey) {
-  if (profileKey === "CONSERVADOR") {
-    if (assetSuit <= 25) return "defense";
-    if (assetSuit <= 45) return "midfield";
-    return "attack";
-  }
-  if (profileKey === "MODERADO") {
-    if (assetSuit <= 35) return "defense";
-    if (assetSuit <= 60) return "midfield";
-    return "attack";
-  }
-  if (assetSuit <= 50) return "defense";
-  if (assetSuit <= 80) return "midfield";
-  return "attack";
-}
-
-function zoneFlags(expectedZone) {
-  return {
-    def: expectedZone === "defense",
-    mid: expectedZone === "midfield",
-    atk: expectedZone === "attack"
-  };
-}
-
 function getRiskBorderClass(asset) {
   if (!debugMode) return "";
   if (asset.suitability > 70) return "risk-high";
@@ -150,8 +102,13 @@ function showScreen(screenKey) {
   Object.values(SCREENS).forEach(el => {
     if (el && el.id !== 'game-root') el.classList.add('hidden');
   });
-  if (screenKey && SCREENS[screenKey]) {
-    SCREENS[screenKey].classList.remove('hidden');
+  if (screenKey) {
+    let el = SCREENS[screenKey];
+    if (!el && screenKey === "ranking") {
+      el = document.getElementById("ranking-screen");
+      if (el) SCREENS.ranking = el;
+    }
+    if (el) el.classList.remove('hidden');
   }
 
   // ✅ modos de UI
@@ -263,14 +220,65 @@ function refreshCardsDebugVisuals() {
   });
 }
 
+function updateDebugPanel() {
+  const panel = document.getElementById("debug-panel-content");
+  if (!panel || !debugMode) return;
+
+  const correctCount = placedCards.reduce((acc, c) => acc + (c.correct ? 1 : 0), 0);
+  const ptsCartas = correctCount * POINTS_PER_CORRECT_CARD;
+  const formationIdeal = isIdealFormation();
+  const bonusIdeal = formationIdeal ? BONUS_IDEAL_LINEUP : 0;
+  const zoneMap = { attack: "ATQ", midfield: "MEIO", defense: "DEF" };
+  const counts = getFormationCounts();
+
+  let html = "<div class=\"debug-section\"><strong>Pontuação</strong><br>";
+  html += `Total: <strong>${gameScore}</strong> pts (máx. ${MAX_SCORE})<br>`;
+  html += `Certas: ${correctCount} × ${POINTS_PER_CORRECT_CARD} = ${ptsCartas} pts<br>`;
+  html += `Formação: ${counts.defense} DEF, ${counts.midfield} MEIO, ${counts.attack} ATQ`;
+  if (placedCards.length === MAX_PLAYERS) {
+    const ideal = IDEAL_FORMATION[currentProfileKey];
+    if (ideal) html += ` (ideal: ${ideal.defense}-${ideal.midfield}-${ideal.attack})`;
+    if (formationIdeal) html += ` ✓ +${BONUS_IDEAL_LINEUP} pts`;
+  }
+  html += "<br></div>";
+
+  html += "<div class=\"debug-section\"><strong>Perfil</strong><br>";
+  html += `${currentProfileKey || "—"} (suit ${currentProfile?.min ?? "?"}-${currentProfile?.max ?? "?"})</div>`;
+
+  html += "<div class=\"debug-section\"><strong>Timer</strong><br>";
+  html += matchTimeConfig.active
+    ? `${matchTimeRemaining}s restantes · ${isTimerPaused ? "⏸ Pausado" : "▶ Ativo"}`
+    : "Desativado";
+  html += "</div>";
+
+  if (placedCards.length > 0) {
+    html += "<div class=\"debug-section\"><strong>Cartas no campo</strong><br>";
+    placedCards.forEach((c, i) => {
+      const exp = currentProfileKey ? getExpectedZoneForAsset(c.asset, currentProfileKey) : "?";
+      const expLabel = zoneMap[exp] || exp;
+      const actLabel = zoneMap[c.zone] || c.zone;
+      const ok = c.correct ? "✓" : "✗";
+      html += `${i + 1}. ${escapeHtml(c.asset.name)} · suit ${c.asset.suitability} · esperado ${expLabel} → ${actLabel} ${ok}<br>`;
+    });
+    html += "</div>";
+  }
+
+  html += "<div class=\"debug-section\"><strong>Assets</strong><br>";
+  html += `${assetsData.length} cartas carregadas</div>`;
+
+  panel.innerHTML = html;
+}
+
 function setDebugMode(on) {
   debugMode = !!on;
   document.body.classList.toggle("debug", debugMode);
   if (els.debugBadge) els.debugBadge.classList.toggle("hidden", !debugMode);
+  if (els.debugPanel) els.debugPanel.setAttribute("aria-hidden", !debugMode);
   if (debugMode && els.scoreVal) els.scoreVal.innerText = String(gameScore);
   if (!debugMode && els.scoreVal) els.scoreVal.innerText = "";
   applyDebugOnlyVisibility();
   refreshCardsDebugVisuals();
+  updateDebugPanel();
   showToast(debugMode ? "DEBUG: ON" : "DEBUG: OFF", "info");
 }
 
@@ -278,43 +286,35 @@ function toggleDebug() {
   setDebugMode(!debugMode);
 }
 
+function getFormationCounts() {
+  const counts = { defense: 0, midfield: 0, attack: 0 };
+  for (const c of placedCards) {
+    if (c.zone === "defense") counts.defense += 1;
+    else if (c.zone === "midfield") counts.midfield += 1;
+    else if (c.zone === "attack") counts.attack += 1;
+  }
+  return counts;
+}
+
+function isIdealFormation() {
+  if (!currentProfileKey || placedCards.length !== MAX_PLAYERS) return false;
+  const ideal = IDEAL_FORMATION[currentProfileKey];
+  if (!ideal) return false;
+  const counts = getFormationCounts();
+  return counts.defense === ideal.defense && counts.midfield === ideal.midfield && counts.attack === ideal.attack;
+}
+
 function recomputeScore() {
   const correctCount = placedCards.reduce((acc, c) => acc + (c.correct ? 1 : 0), 0);
-  const baseScore = correctCount * SCORE_CORRECT;
-  gameScore = baseScore;
-  if (debugMode && els.scoreVal) {
-    els.scoreVal.innerText = String(gameScore);
-  }
+  const ptsCartas = correctCount * POINTS_PER_CORRECT_CARD;
+  const bonusIdeal = isIdealFormation() ? BONUS_IDEAL_LINEUP : 0;
+  gameScore = Math.min(MAX_SCORE, ptsCartas + bonusIdeal);
+  if (debugMode && els.scoreVal) els.scoreVal.innerText = String(gameScore);
+  updateDebugPanel();
 }
 
 async function tryAwardPrize(points) {
-  try {
-    const cardsSummary = placedCards.map(c => ({
-      assetId: c.asset.id,
-      assetName: c.asset.name,
-      zone: c.zone,
-      correct: c.correct,
-      x: Math.round(c.x),
-      y: Math.round(c.y)
-    }));
-
-    const r = await fetch("/api/award", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        playerName,
-        points,
-        cards: cardsSummary,
-        profile: currentProfileKey
-      })
-    });
-
-    if (!r.ok) return null;
-    return await r.json();
-  } catch (error) {
-    console.error("Erro ao salvar partida:", error);
-    return null;
-  }
+  return apiTryAwardPrize(points, { playerName, placedCards, currentProfileKey });
 }
 
 async function showRankingScreen(opts = {}) {
@@ -329,6 +329,11 @@ async function showRankingScreen(opts = {}) {
   showScreen("ranking");
   const rankingEl = document.getElementById("ranking-screen");
   if (rankingEl) rankingEl.classList.remove("hidden");
+  // Força o ranking a ficar por cima: esconde game e overlay de resumo que vêm depois no DOM
+  const gameRoot = document.getElementById("game-root");
+  const summaryOverlay = document.getElementById("summary-overlay");
+  if (gameRoot) gameRoot.classList.add("hidden");
+  if (summaryOverlay) summaryOverlay.classList.add("hidden");
 
   // --- refs do novo layout ---
   const scoreEl = document.getElementById("ranking-score");
@@ -338,21 +343,11 @@ async function showRankingScreen(opts = {}) {
   const listWrapEl = document.querySelector(".ranking-list");      // container que deve ficar branco
   const timerEl = document.getElementById("ranking-timer");        // opcional (se existir)
 
-  // Prêmio recebido (quando vindo do resumo após "Ver Minha Pontuação")
+  // Brinde não é exibido ao usuário (mantém elemento oculto)
   if (prizeEl) {
-    if (awardData) {
-      prizeEl.classList.remove("hidden");
-      prizeEl.removeAttribute("aria-hidden");
-      if (awardData.awarded) {
-        prizeEl.innerHTML = `<span class="ranking-prize-label">🎁 Prêmio recebido:</span> <strong class="ranking-prize-name">${escapeHtml(awardData.awarded.name || "")}</strong>`;
-      } else {
-        prizeEl.innerHTML = `<span class="ranking-prize-label">🎁</span> <span class="ranking-prize-name">Sem brinde desta vez. Tente fazer mais pontos!</span>`;
-      }
-    } else {
-      prizeEl.classList.add("hidden");
-      prizeEl.setAttribute("aria-hidden", "true");
-      prizeEl.innerHTML = "";
-    }
+    prizeEl.classList.add("hidden");
+    prizeEl.setAttribute("aria-hidden", "true");
+    prizeEl.innerHTML = "";
   }
 
   // Pontuação do jogador na tela
@@ -376,12 +371,12 @@ async function showRankingScreen(opts = {}) {
     const res = await fetch("/api/ranking", { cache: "no-store" });
     const data = await res.json();
 
-    // Top 5
-    const top5 = Array.isArray(data) ? data.slice(0, 5) : [];
+    // Top 3
+    const top3 = Array.isArray(data) ? data.slice(0, 3) : [];
 
     if (!listHostEl) return;
 
-    if (top5.length === 0) {
+    if (top3.length === 0) {
       if (placeEl) placeEl.textContent = "O dia está começando! Seja o primeiro.";
       listHostEl.innerHTML = `
         <div class="rank-empty">Sem resultados ainda</div>
@@ -391,8 +386,8 @@ async function showRankingScreen(opts = {}) {
 
     // detectar "VOCÊ"
     let myIndex = -1;
-    for (let i = 0; i < top5.length; i++) {
-      const g = top5[i];
+    for (let i = 0; i < top3.length; i++) {
+      const g = top3[i];
       if (!g) continue;
 
       const sameName = String(g.playerName || "").trim().toUpperCase() === String(playerName || "").trim().toUpperCase();
@@ -417,12 +412,12 @@ async function showRankingScreen(opts = {}) {
         const suffix = place === 1 ? "º" : "º";
         placeEl.textContent = `Você conquistou o ${place}${suffix} lugar!`;
       } else {
-        placeEl.textContent = `Você ficou fora do Top 5 hoje. Tente de novo!`;
+        placeEl.textContent = `Você ficou fora do Top 3 hoje. Tente de novo!`;
       }
     }
 
     // Render dos itens (estilo igual ao mock)
-    listHostEl.innerHTML = top5
+    listHostEl.innerHTML = top3
       .map((g, i) => {
         const rank = i + 1;
 
@@ -482,30 +477,15 @@ async function showRankingScreen(opts = {}) {
 
 
 
-/* Helpers do ranking */
-function formatPtsBR(v) {
-  const n = Number(v) || 0;
-  return n.toLocaleString("pt-BR");
-}
-
-function escapeHtml(str) {
-  return String(str)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-}
-
-
 function startCountdown() {
   fetch("/api/config")
     .then(r => r.json())
     .then(config => {
       matchTimeConfig.active = config.timeLimitActive;
       matchTimeConfig.seconds = config.timeLimitSeconds;
+      applyScoringConfig(config);
     })
-    .catch(() => { console.log("Usando config default de tempo"); })
+    .catch(() => { console.log("Usando config default de tempo e pontuação"); })
     .finally(() => {
       // 1. Tira o 'hidden' do jogo AGORA, para ele aparecer no fundo
       const gameRoot = document.getElementById('game-root');
@@ -593,17 +573,32 @@ function updateTimerDisplay(el) {
   el.innerText = `${mm}:${ss}`;
 
   el.classList.toggle("timer-danger", s <= 10);
+  if (debugMode) updateDebugPanel();
 }
+
+const MODAL_BG_BY_TYPE = {
+  "Crédito": "/assets/backgrounds/modal-background-credito.png",
+  "Imobiliário": "/assets/backgrounds/modal-background-imobiliario.png",
+  "Ações e Multiestratégia": "/assets/backgrounds/modal-background-am.png",
+};
 
 function openCardDetails(asset) {
   if (!asset) return;
   pauseMatchTimer();
 
   const modal = document.getElementById("card-details-modal");
+  const container = document.getElementById("detail-card-container");
   const nameEl = document.getElementById("detail-name");
   const typeEl = document.getElementById("detail-type");
   const descEl = document.getElementById("detail-desc");
   const iconEl = document.getElementById("detail-icon");
+
+  // 0) fundo e tema do modal conforme o tipo da carta (cores de texto no CSS por data-modal-category)
+  if (container) {
+    const bgUrl = MODAL_BG_BY_TYPE[asset.type] || MODAL_BG_BY_TYPE["Crédito"];
+    container.style.backgroundImage = bgUrl ? `url("${bgUrl}")` : "";
+    container.dataset.modalCategory = asset.type || "";
+  }
 
   // 1) texto
   if (nameEl) nameEl.innerText = String(asset.name || "--").toUpperCase();
@@ -616,15 +611,32 @@ function openCardDetails(asset) {
   else risco = "Risco Alto";
   if (typeEl) typeEl.innerText = risco;
 
-  // 3) ícone = 3 tipos (perfil atual do jogador)
+  // 3) ícone = conforme o perfil/risco da CARTA (suitability), não do jogador
   if (iconEl) {
+    const origin = (typeof window !== "undefined" && window.location?.origin) ? window.location.origin : "";
+    const isFile = !origin || origin === "file://" || origin.startsWith("file:");
+    const prefix = isFile ? "" : origin;
     const iconMap = {
-      CONSERVADOR: "/assets/icons/profile-conservador.png",
-      MODERADO: "/assets/icons/profile-moderado.png",
-      ARROJADO: "/assets/icons/profile-arrojado.png",
+      conservador: prefix + "/assets/icons/profile-conservador.png",
+      moderado: prefix + "/assets/icons/profile-moderado.png",
+      arrojado: prefix + "/assets/icons/profile-arrojado.png",
     };
-    iconEl.src = iconMap[currentProfileKey] || iconMap.MODERADO;
-    iconEl.alt = "";
+    const cardProfile =
+      asset.suitability <= 35 ? "conservador" : asset.suitability <= 60 ? "moderado" : "arrojado";
+    let iconSrc = iconMap[cardProfile] || iconMap.moderado;
+    if (isFile) {
+      iconMap.conservador = "assets/icons/profile-conservador.png";
+      iconMap.moderado = "assets/icons/profile-moderado.png";
+      iconMap.arrojado = "assets/icons/profile-arrojado.png";
+      iconSrc = iconMap[cardProfile] || iconMap.moderado;
+    }
+    if (cardProfile === "conservador") iconSrc += "?v=1";
+    iconEl.onerror = function onDetailIconError() {
+      iconEl.onerror = null;
+      iconEl.src = iconMap.moderado;
+    };
+    iconEl.alt = risco;
+    iconEl.src = iconSrc;
   }
 
   // 4) abre
@@ -644,49 +656,41 @@ function getStars(percentage) {
   return html;
 }
 
-function getRiskLevel(suitability) {
-  if (suitability <= 35) return "low";
-  if (suitability <= 60) return "med";
-  return "high";
-}
-
 function createPremiumCardHTML(asset) {
-  const zone = currentProfileKey ? expectedZoneFor(asset.suitability, currentProfileKey) : "?";
+  const zone = currentProfileKey ? getExpectedZoneForAsset(asset, currentProfileKey) : "?";
   const zoneMap = { attack: "ATQ", midfield: "MEIO", defense: "DEF" };
   const zoneLabel = zoneMap[zone] || zone;
+  const riskLabel = getRiskLevel(asset.suitability);
 
   return `
-    <div class="game-card-base" data-risk="${getRiskLevel(asset.suitability)}">
+    <div class="game-card-base" data-risk="${riskLabel}">
       <div class="card-debug-info debug-only">
-        ID: ${asset.id}<br>
-        Suit: ${asset.suitability}<br>
-        Ret: ${asset.retorno}%<br>
+        ID: ${asset.id} · Type: ${escapeHtml(asset.type || "—")}<br>
+        Suit: ${asset.suitability} · Ret: ${asset.retorno ?? "?"}% · Risk: ${riskLabel}<br>
         <strong>ZONA: ${zoneLabel}</strong>
       </div>
 
       <div class="card-name">${asset.name}</div>
-      <div class="card-type-pill">${asset.type}</div>
     </div>
     <div class="card-hit-area" title="Arraste / Clique"></div>
   `;
 }
 
 function fieldCardContentHTML(asset) {
-  const zone = currentProfileKey ? expectedZoneFor(asset.suitability, currentProfileKey) : "?";
+  const zone = currentProfileKey ? getExpectedZoneForAsset(asset, currentProfileKey) : "?";
   const zoneMap = { attack: "ATQ", midfield: "MEIO", defense: "DEF" };
   const zoneLabel = zoneMap[zone] || zone;
+  const riskLabel = getRiskLevel(asset.suitability);
 
   return `
-    <div class="game-card-base" data-risk="${getRiskLevel(asset.suitability)}">
-      <div class="card-debug-info debug-only">
-        ID: ${asset.id}<br>
-        Suit: ${asset.suitability}<br>
-        Ret: ${asset.retorno}%<br>
+    <div class="game-card-base" data-risk="${riskLabel}">
+      <div class="card-debug-info debug-only style="font-size: 26px;">
+        ID: ${asset.id} · Type: ${escapeHtml(asset.type || "—")}<br>
+        Suit: ${asset.suitability} · Ret: ${asset.retorno ?? "?"}% · Risk: ${riskLabel}<br>
         <strong>Target: ${zoneLabel}</strong>
       </div>
 
       <div class="card-name">${asset.name}</div>
-      <div class="card-type-pill">${asset.type}</div>
     </div>
   `;
 }
@@ -857,6 +861,7 @@ async function restoreSidebarCardAnimated(asset, fromRect) {
         const riskClass = getRiskBorderClass(asset);
         card.className = `premium-card sidebar-item ${riskClass}`.trim();
         card.dataset.id = id;
+        if (asset.type) card.dataset.category = asset.type;
         card.innerHTML = createPremiumCardHTML(asset);
         card.addEventListener("pointerdown", (e) => initDrag(e, asset, card));
 
@@ -939,17 +944,6 @@ function ensureCloseButton(el, asset) {
   el.appendChild(close);
 }
 
-async function loadAssets() {
-  try {
-    const res = await fetch("./cards.json", { cache: "no-store" });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const json = await res.json();
-    return json.assets;
-  } catch (err) {
-    return FALLBACK_ASSETS;
-  }
-}
-
 function buildVirtualKeyboard() {
   const rows = [
     ["Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P"],
@@ -1002,13 +996,6 @@ function updateNameUI() {
   const disabled = onlySpaces(value);
   els.startGameBtn.disabled = disabled;
   if (!disabled) els.nameWarning.classList.add("hidden");
-}
-
-function normalizeNameLive(raw) {
-  let s = String(raw || "").replace(/\s+/g, " ");
-  s = s.replace(/^\s+/, ""); // tira espaços só do começo
-  s = s.slice(0, 18);
-  return s.toUpperCase();
 }
 
 function applyNameKey(key) {
@@ -1150,6 +1137,8 @@ function bindEls() {
   els.playerName = document.getElementById("player-name");
   els.scoreVal = document.getElementById("score-val");
   els.debugBadge = document.getElementById("debug-badge");
+  els.debugPanel = document.getElementById("debug-panel");
+  els.debugPanelContent = document.getElementById("debug-panel-content");
 
   els.nameScreen = document.getElementById("name-screen");
   els.nameInput = document.getElementById("name-input");
@@ -1311,6 +1300,7 @@ function renderSidebar() {
     const riskClass = getRiskBorderClass(asset);
     card.className = `premium-card sidebar-item ${riskClass}`.trim();
     card.dataset.id = String(asset.id);
+    if (asset.type) card.dataset.category = asset.type;
     card.innerHTML = createPremiumCardHTML(asset);
     card.addEventListener("pointerdown", (e) => initDrag(e, asset, card));
     els.cardsContainer.appendChild(card);
@@ -1370,6 +1360,7 @@ function startRealDrag(e) {
   const ghost = document.createElement("div");
   const borderClass = getRiskBorderClass(activeDrag.asset);
   ghost.className = `field-card ${borderClass} drag-ghost`.trim();
+  if (activeDrag.asset.type) ghost.dataset.category = activeDrag.asset.type;
   ghost.style.width = `${CARD_W}px`;
   ghost.style.height = `${CARD_H}px`;
   ghost.style.left = `${e.clientX}px`;
@@ -1442,7 +1433,7 @@ function processDrop(assetId, clientX, clientY, offsetX, offsetY, sourceEl) {
   }
 
   const actualZone = zoneFromPoint(y + (CARD_H / 2), rect.height);
-  const expected = expectedZoneFor(asset.suitability, currentProfileKey);
+  const expected = getExpectedZoneForAsset(asset, currentProfileKey);
   const correct = (actualZone === expected);
 
   // se está reposicionando no campo
@@ -1491,8 +1482,10 @@ function processDrop(assetId, clientX, clientY, offsetX, offsetY, sourceEl) {
     }
   }
 
-  if (!correct) showToast("Posição errada (não conta)", "warn");
-  else showToast("Correto (conta pontos)", "info");
+  if (debugMode) {
+    if (!correct) showToast("Posição errada (não conta)", "warn");
+    else showToast("Correto (conta pontos)", "info");
+  }
 
   placeCardOnField(asset, x, y, actualZone, correct);
   recomputeScore();
@@ -1517,6 +1510,7 @@ function placeCardOnField(asset, x, y, zone, correct) {
   const el = document.createElement("div");
   const borderClass = getRiskBorderClass(asset);
   el.className = `field-card field-item field-card-land ${borderClass}`.trim();
+  if (asset.type) el.dataset.category = asset.type;
   el.classList.toggle("correct", correct);
   el.classList.toggle("incorrect", !correct);
   el.style.width = `${CARD_W}px`;
@@ -1551,43 +1545,15 @@ function updateStats() {
     els.playersCount.classList.remove("limit-warning");
     if (els.finishBtn) els.finishBtn.classList.add("hidden");
   }
+  updateDebugPanel();
 }
 
 function showPrizeModal(awardData, points, opts = {}) {
   const fromMenu = opts.fromMenu === true;
   if (els.prizePoints) els.prizePoints.innerText = String(points);
-  if (!awardData) {
-    if (els.prizeStatus) {
-      els.prizeStatus.innerText = fromMenu ? "Concorra ao brinde!" : "Servidor indisponível";
-      els.prizeStatus.className = fromMenu ? "text-sm font-bold text-white mb-1" : "text-sm font-bold text-red-300 mb-1";
-    }
-    if (els.prizeName) els.prizeName.innerText = fromMenu ? "Jogue e pontue para concorrer" : "--";
-    if (els.prizeExtra) els.prizeExtra.innerText = fromMenu ? "Finalize uma partida e veja seu resultado aqui." : "Tente novamente.";
-    if (els.prizeModal) els.prizeModal.classList.remove("hidden");
-    scheduleGoToRanking();
-    return;
-  }
-  if (awardData.awarded) {
-    if (els.prizeStatus) {
-      els.prizeStatus.innerText = "Parabéns! Você ganhou:";
-      els.prizeStatus.className = "text-sm font-bold text-white mb-1";
-    }
-    if (els.prizeName) els.prizeName.innerText = awardData.awarded.name;
-    const remaining = (awardData.remainingStock ?? null);
-    const thr = awardData.awarded.threshold ?? null;
-    const parts = [];
-    if (thr != null) parts.push(`Threshold: ${thr} pts`);
-    if (remaining != null) parts.push(`Estoque: ${remaining}`);
-    if (els.prizeExtra) els.prizeExtra.innerText = parts.join(" • ");
-  } else {
-    if (els.prizeStatus) {
-      els.prizeStatus.innerText = "Sem brinde desta vez";
-      els.prizeStatus.className = "text-sm font-bold text-slate-200 mb-1";
-    }
-    if (els.prizeName) els.prizeName.innerText = "—";
-    if (els.prizeExtra) els.prizeExtra.innerText = "Tente fazer mais pontos!";
-  }
-
+  if (els.prizeStatus) els.prizeStatus.innerText = "";
+  if (els.prizeName) els.prizeName.innerText = "";
+  if (els.prizeExtra) els.prizeExtra.innerText = "";
   if (els.prizeModal) els.prizeModal.classList.remove("hidden");
   if (!fromMenu) scheduleGoToRanking();
 }
@@ -1638,15 +1604,11 @@ async function finalizeGame() {
   timerPausedByAppModal = { help: false, cancel: false };
   if (matchTimerInterval) clearInterval(matchTimerInterval);
 
-  // 2. Calcula a pontuação
+  // 2. Calcula a pontuação: +3 por carta na posição certa, +20 se a formação (qtd por zona) for a ideal do perfil; máx. 38
   const correctCount = placedCards.reduce((acc, c) => acc + (c.correct ? 1 : 0), 0);
-  const baseScore = correctCount * SCORE_CORRECT;
-
-  let timeBonus = 0;
-  if (matchTimeConfig.active && matchTimeRemaining > 0) {
-    timeBonus = matchTimeRemaining;
-  }
-  gameScore = baseScore + timeBonus;
+  const ptsCartas = correctCount * POINTS_PER_CORRECT_CARD;
+  const bonusIdeal = isIdealFormation() ? BONUS_IDEAL_LINEUP : 0;
+  gameScore = Math.min(MAX_SCORE, ptsCartas + bonusIdeal);
 
   // 3. Mostra o splash de "FIM DE JOGO"
   showScreen('endSplash');
@@ -1671,8 +1633,12 @@ async function finalizeGame() {
 }
 
 async function revealScoreAndAward() {
-  const award = await tryAwardPrize(gameScore);
-  // Ir direto para o ranking e mostrar o prêmio lá
+  let award = null;
+  try {
+    award = await tryAwardPrize(gameScore);
+  } catch (_) {
+    // Falha na API não impede de abrir o ranking
+  }
   showRankingScreen({ award });
 }
 
@@ -1733,12 +1699,22 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
+function applyScoringConfig(config) {
+  if (!config) return;
+  if ("pointsPerCorrectCard" in config) POINTS_PER_CORRECT_CARD = Math.max(0, Number(config.pointsPerCorrectCard) || 3);
+  if ("bonusIdealLineup" in config) BONUS_IDEAL_LINEUP = Math.max(0, Number(config.bonusIdealLineup) || 20);
+  if ("maxScore" in config) MAX_SCORE = Math.max(1, Number(config.maxScore) || 38);
+}
+
 document.addEventListener("DOMContentLoaded", async () => {
   bindEls();
   computeCardSizeFromField();
   setupFieldResizeWatcher();
   setPlayerName("");
   setDebugMode(false);
+
+  // Carrega regras de pontuação do admin logo ao abrir o jogo (e de novo no countdown)
+  fetch("/api/config").then(r => r.json()).then(applyScoringConfig).catch(() => {});
 
   if (els.finishBtn) els.finishBtn.addEventListener("click", finalizeGame);
   if (els.revealScoreBtn) els.revealScoreBtn.addEventListener("click", revealScoreAndAward);
@@ -1763,7 +1739,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }, { passive: false });
 
-  SCREENS.idle.addEventListener('click', (e) => {
+  if (SCREENS.idle) SCREENS.idle.addEventListener('click', (e) => {
     const menuEl = document.getElementById("idle-nav-menu");
     if (menuEl && !menuEl.classList.contains("hidden")) return;
     showScreen('name');
@@ -1822,17 +1798,17 @@ document.addEventListener("DOMContentLoaded", async () => {
     }, { passive: false });
   }
 
-  flowEls.termsBtn.addEventListener('click', () => { showScreen('instructions'); });
-  flowEls.instBtn.addEventListener('click', () => { prepareMatch(); });
-  flowEls.profileConfirmBtn.addEventListener('click', () => {
-  const cardWrap = document.getElementById('profile-card-wrap');
-  if (cardWrap && !cardWrap.classList.contains('flipped')) {
-    cardWrap.classList.add('flipped');
-    flowEls.profileConfirmBtn.textContent = "ESCALAR MEU TIME";
-  } else {
-    startCountdown();
-  }
-});
+  if (flowEls.termsBtn) flowEls.termsBtn.addEventListener('click', () => { showScreen('instructions'); });
+  if (flowEls.instBtn) flowEls.instBtn.addEventListener('click', () => { prepareMatch(); });
+  if (flowEls.profileConfirmBtn) flowEls.profileConfirmBtn.addEventListener('click', () => {
+    const cardWrap = document.getElementById('profile-card-wrap');
+    if (cardWrap && !cardWrap.classList.contains('flipped')) {
+      cardWrap.classList.add('flipped');
+      flowEls.profileConfirmBtn.textContent = "ESCALAR MEUS ATIVOS";
+    } else {
+      startCountdown();
+    }
+  });
 
   const btnGoRanking = document.getElementById("go-to-ranking-btn");
   if (btnGoRanking) btnGoRanking.addEventListener("click", () => {

@@ -2,10 +2,9 @@ document.addEventListener("DOMContentLoaded", () => {
     loadConfig();
     loadPrizes();
 
-    // Eventos de Config
     document.getElementById("save-config-btn").addEventListener("click", saveConfig);
-
-    // Eventos de Prêmios (Existente)
+    const saveScoringBtn = document.getElementById("save-scoring-btn");
+    if (saveScoringBtn) saveScoringBtn.addEventListener("click", saveConfig);
     document.getElementById("add-prize-form").addEventListener("submit", addPrize);
 });
 
@@ -18,6 +17,11 @@ async function loadConfig() {
 
         document.getElementById("config-time-active").checked = data.timeLimitActive;
         document.getElementById("config-time-seconds").value = data.timeLimitSeconds;
+        document.getElementById("config-stock-with-game").checked = data.stockWithGame !== false;
+
+        document.getElementById("config-points-per-card").value = data.pointsPerCorrectCard ?? 3;
+        document.getElementById("config-bonus-ideal").value = data.bonusIdealLineup ?? 20;
+        document.getElementById("config-max-score").value = data.maxScore ?? 38;
     } catch (err) {
         console.error("Erro ao carregar config", err);
     }
@@ -26,13 +30,27 @@ async function loadConfig() {
 async function saveConfig() {
     const active = document.getElementById("config-time-active").checked;
     const seconds = document.getElementById("config-time-seconds").value;
+    const stockWithGame = document.getElementById("config-stock-with-game").checked;
+    const pointsPerCardEl = document.getElementById("config-points-per-card");
+    const bonusIdealEl = document.getElementById("config-bonus-ideal");
+    const maxScoreEl = document.getElementById("config-max-score");
+    const pointsPerCard = pointsPerCardEl ? (parseInt(pointsPerCardEl.value, 10) || 3) : 3;
+    const bonusIdeal = bonusIdealEl ? (parseInt(bonusIdealEl.value, 10) || 20) : 20;
+    const maxScore = maxScoreEl ? (parseInt(maxScoreEl.value, 10) || 38) : 38;
     const feedback = document.getElementById("config-feedback");
 
     try {
         const res = await fetch("/api/config", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ timeLimitActive: active, timeLimitSeconds: seconds })
+            body: JSON.stringify({
+                timeLimitActive: active,
+                timeLimitSeconds: seconds,
+                stockWithGame,
+                pointsPerCorrectCard: pointsPerCard,
+                bonusIdealLineup: bonusIdeal,
+                maxScore
+            })
         });
 
         if (res.ok) {

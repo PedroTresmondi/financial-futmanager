@@ -2,24 +2,34 @@
    RANKING SCREEN — VERSÃO "BIG" (Estilo TV/Kiosk)
    ============================================================ */
 
-/* ===== Tela + Fundo ===== */
+/* ===== Tela + Fundo (sem borda branca: ocupa toda a viewport) ===== */
 #ranking-screen.ranking-screen {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
   background: #0d3d2e;
   background-image: url("/assets/backgrounds/fundo-ranking.png");
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
+  overflow: auto;
 }
 
 #ranking-screen.ranking-screen .ranking-wrap {
   position: relative;
   isolation: isolate;
-  width: 100vw;
+  width: 100%;
   min-height: 100vh;
-  padding: 30px 20px 40px; /* Mais respiro nas bordas */
+  min-height: 100dvh;
+  padding: 30px 20px 40px;
   display: flex;
   flex-direction: column;
   align-items: center;
+  box-sizing: border-box;
 }
 
 #ranking-screen.ranking-screen .ranking-wrap::before {

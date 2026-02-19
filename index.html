@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-PT">
+<html lang="pt-BR">
 
 <head>
   <meta charset="UTF-8" />
@@ -17,7 +17,7 @@
   <link rel="stylesheet" href="/styles/profile-modal.css" />
   <link rel="stylesheet" href="/styles/ranking.css" />
 
-  <script defer src="/src/main.js"></script>
+  <script type="module" src="/src/main.js"></script>
 </head>
 
 <body class="app-body">
@@ -42,13 +42,13 @@
           ESTRATÉGIA É TUDO!
         </h1>
         <h2>
-          Descubra seu perfil de investidor e monte sua carteira ideal <br />
-          com os nossos ativos e concorra a um brinde exclusivo.
+          Sua missão: escolha os ativos que melhor se encaixam na carteira sorteada. <br />
+          Acertando, você ganha um brinde exclusivo.
         </h2>
       </div>
 
       <div class="idle-cta-container">
-        <button class="idle-play-btn">ESCALAR MEU TIME</button>
+        <button class="idle-play-btn">ESCALAR MEUS ATIVOS</button>
       </div>
 
     </div>
@@ -102,8 +102,8 @@
         </div>
 
         <div class="vk-display">
-          <input id="name-input" type="text" maxlength="18" autocomplete="off" autocapitalize="characters" spellcheck="false"
-            readonly placeholder="Como deseja ser chamado?" />
+          <input id="name-input" type="text" maxlength="18" autocomplete="off" autocapitalize="characters"
+            spellcheck="false" readonly placeholder="Como deseja ser chamado?" />
         </div>
 
         <div id="name-warning" class="hidden">Digite um nome para continuar.</div>
@@ -190,12 +190,12 @@
           </p>
 
           <p style="margin-top:14px; opacity:0.8;">
-            (Texto placeholder para desenvolvimento — substituir pela versão jurídica final do evento.)
+            [Substituir este bloco pela versão jurídica final dos termos antes do evento.]
           </p>
 
         </div>
       </div>
-      <button id="terms-btn" class="terms-btn" enabled>Li e aceito os termos</button>
+      <button id="terms-btn" class="terms-btn" type="button">Li e aceito os termos</button>
 
       <div class="terms-footer">
         <img src="/assets/logos/logo-rio-bravo-alt.png" class="terms-rb-logo" alt="Rio Bravo" />
@@ -234,7 +234,7 @@
           <img src="/assets/icons/icon-team.png" class="instructions-icon" alt="" />
           <h3 class="instructions-card-title">MONTE SEU TIME</h3>
           <p class="instructions-card-text">
-            Você deve escolher 6 cartas de investimento e arrastá-las para a posição
+            Você deve escolher 6 ativos e arrastá-los para a posição
             tática correta. Lembre-se da regra de ouro: Defesa protege (baixo risco),
             Meio equilibra (médio risco) e Ataque rentabiliza (alto risco).
           </p>
@@ -395,29 +395,27 @@
       <!-- topo -->
       <div class="ranking-top">
         <div class="ranking-top-left">
-          <div class="ranking-dots" aria-hidden="true"></div>
-          <div class="ranking-timer" id="ranking-timer">60</div>
         </div>
-  
+
         <div class="hud-center">
           <img src="/assets/logos/game-logo-alt.png" class="hud-logo" alt="Craques da Carteira" />
         </div>
-  
+
         <button class="ranking-help" type="button" aria-label="Ajuda">Ajuda ?</button>
       </div>
-  
+
       <!-- conteúdo -->
       <div class="ranking-main">
         <h2 class="ranking-h1">PARABÉNS, VOCÊ<br>TERMINOU O DESAFIO!</h2>
-  
+
         <div class="ranking-sub">SUA PONTUAÇÃO:</div>
-        <div id="ranking-score" class="ranking-score">9.146</div>
-  
+        <div id="ranking-score" class="ranking-score">0</div>
+
         <div id="ranking-place" class="ranking-place">Você conquistou o 1º lugar!</div>
 
         <div id="ranking-prize" class="ranking-prize hidden" aria-hidden="true"></div>
 
-        <div class="ranking-top5-title">VEJA O TOP 5 DO DIA:</div>
+        <div class="ranking-top5-title">VEJA O TOP 3 DO DIA:</div>
 
         <!-- lista (JS vai preencher AQUI com os .rank-item) -->
         <div id="ranking-list" class="ranking-list">
@@ -427,7 +425,7 @@
 
       <!-- botão -->
       <button id="back-to-home-btn" class="ranking-back" type="button">VOLTAR AO INÍCIO</button>
-      
+
       <!-- rodapé -->
       <div class="ranking-footer">
         <img src="/assets/logos/logo-rio-bravo-alt.png" class="ranking-footer-icon" alt="" aria-hidden="true" />
@@ -536,18 +534,28 @@
       <button id="reset-btn"></button>
     </div>
 
+    <!-- DEBUG PANEL (tecla P) -->
+    <div id="debug-panel" class="debug-panel debug-only" aria-hidden="true">
+      <div class="debug-panel-header">🐛 DEBUG — P para desligar</div>
+      <div id="debug-panel-content" class="debug-panel-content"></div>
+    </div>
+
   </div>
 
   <!-- HELP MODAL (Precisa de ajuda?) -->
   <div id="help-modal" class="hidden screen-overlay screen-overlay--modal app-modal" data-z="210">
     <div class="app-modal-box">
-      <button type="button" class="app-modal-close" id="help-modal-close" aria-label="Fechar">Cancelar <span aria-hidden="true">×</span></button>
+      <button type="button" class="app-modal-close" id="help-modal-close" aria-label="Fechar">Cancelar <span
+          aria-hidden="true">×</span></button>
       <h2 class="app-modal-title">PRECISA DE AJUDA?</h2>
       <img src="/assets/icons/help-emoji.png" class="app-modal-icon help-modal-icon" alt="" aria-hidden="true" />
-      <p class="app-modal-text">Se precisar de ajuda, basta clicar no botão abaixo, e esperar um pouquinho que um técnico já vai aí para te auxiliar.</p>
+      <p class="app-modal-text">Se precisar de ajuda, basta clicar no botão abaixo, e esperar um pouquinho que um
+        técnico já vai aí para te auxiliar.</p>
       <div class="app-modal-actions app-modal-actions--stacked">
-        <button type="button" class="app-modal-btn app-modal-btn--secondary" id="help-modal-instructions">INSTRUÇÕES DO JOGO</button>
-        <button type="button" class="app-modal-btn app-modal-btn--primary" id="help-modal-call-tech">CHAMAR TÉCNICO</button>
+        <button type="button" class="app-modal-btn app-modal-btn--secondary" id="help-modal-instructions">INSTRUÇÕES DO
+          JOGO</button>
+        <button type="button" class="app-modal-btn app-modal-btn--primary" id="help-modal-call-tech">CHAMAR
+          TÉCNICO</button>
       </div>
     </div>
   </div>
@@ -555,13 +563,15 @@
   <!-- CANCEL MATCH MODAL -->
   <div id="cancel-match-modal" class="hidden screen-overlay screen-overlay--modal app-modal" data-z="210">
     <div class="app-modal-box">
-      <button type="button" class="app-modal-close" id="cancel-match-modal-close" aria-label="Fechar">Cancelar <span aria-hidden="true">×</span></button>
+      <button type="button" class="app-modal-close" id="cancel-match-modal-close" aria-label="Fechar">Cancelar <span
+          aria-hidden="true">×</span></button>
       <h2 class="app-modal-title">CANCELAR A PARTIDA</h2>
       <img src="/assets/icons/cancel-emoji.png" class="app-modal-icon cancel-modal-icon" alt="" aria-hidden="true" />
       <p class="app-modal-text">Tem certeza que deseja cancelar a partida?</p>
       <div class="app-modal-actions">
         <button type="button" class="app-modal-btn app-modal-btn--secondary" id="cancel-match-confirm">ENCERRAR</button>
-        <button type="button" class="app-modal-btn app-modal-btn--primary" id="cancel-match-back">VOLTAR AO JOGO</button>
+        <button type="button" class="app-modal-btn app-modal-btn--primary" id="cancel-match-back">VOLTAR AO
+          JOGO</button>
       </div>
     </div>
   </div>
@@ -569,7 +579,8 @@
   <!-- INSTRUCTIONS CAROUSEL MODAL -->
   <div id="instructions-carousel-modal" class="hidden screen-overlay screen-overlay--modal app-modal" data-z="220">
     <div class="app-modal-box app-modal-box--carousel">
-      <button type="button" class="app-modal-close" id="instructions-carousel-close" aria-label="Fechar">Cancelar <span aria-hidden="true">×</span></button>
+      <button type="button" class="app-modal-close" id="instructions-carousel-close" aria-label="Fechar">Cancelar <span
+          aria-hidden="true">×</span></button>
       <h2 class="app-modal-title">INSTRUÇÕES</h2>
       <div class="instructions-carousel-wrap">
         <button type="button" class="carousel-prev" id="instructions-carousel-prev" aria-label="Anterior">‹</button>
@@ -577,25 +588,33 @@
           <div class="instructions-carousel-slide active" data-slide="0">
             <img src="/assets/icons/icon-profile.png" class="instructions-carousel-icon" alt="" />
             <h3 class="instructions-carousel-subtitle">SEU PERFIL DE INVESTIDOR</h3>
-            <p class="instructions-carousel-text">Você receberá um perfil de investidor: Arrojado, Moderado ou Conservador. Seu desafio é montar um time de investimentos que combine com seu perfil dentro do tempo de 1 minuto e 30 segundos.</p>
+            <p class="instructions-carousel-text">Você receberá um perfil de investidor: Arrojado, Moderado ou
+              Conservador. Seu desafio é montar um time de investimentos que combine com seu perfil dentro do tempo de 1
+              minuto e 30 segundos.</p>
           </div>
           <div class="instructions-carousel-slide" data-slide="1">
             <img src="/assets/icons/icon-team.png" class="instructions-carousel-icon" alt="" />
             <h3 class="instructions-carousel-subtitle">MONTE SEU TIME</h3>
-            <p class="instructions-carousel-text">Você deve escolher 6 cartas de investimento e arrastá-las para a posição tática correta. Lembre-se da regra de ouro: Defesa protege (baixo risco), Meio equilibra (médio risco) e Ataque rentabiliza (alto risco).</p>
+            <p class="instructions-carousel-text">Você deve escolher 6 cartas de investimento e arrastá-las para a
+              posição tática correta. Lembre-se da regra de ouro: Defesa protege (baixo risco), Meio equilibra (médio
+              risco) e Ataque rentabiliza (alto risco).</p>
           </div>
           <div class="instructions-carousel-slide" data-slide="2">
             <img src="/assets/icons/icon-score.png" class="instructions-carousel-icon" alt="" />
             <h3 class="instructions-carousel-subtitle">COMO PONTUAR</h3>
-            <p class="instructions-carousel-text">Para subir no ranking, suas escolhas precisam ser perfeitas. A pontuação máxima é atingida quando você acerta tanto a adequação do ativo ao perfil do investidor quanto a posição dele no campo de futebol.</p>
+            <p class="instructions-carousel-text">Para subir no ranking, suas escolhas precisam ser perfeitas. A
+              pontuação máxima é atingida quando você acerta tanto a adequação do ativo ao perfil do investidor quanto a
+              posição dele no campo de futebol.</p>
           </div>
         </div>
         <button type="button" class="carousel-next" id="instructions-carousel-next" aria-label="Próximo">›</button>
       </div>
       <div class="carousel-dots" id="instructions-carousel-dots"></div>
       <div class="app-modal-actions">
-        <button type="button" class="app-modal-btn app-modal-btn--secondary" id="instructions-carousel-help">AJUDA</button>
-        <button type="button" class="app-modal-btn app-modal-btn--primary" id="instructions-carousel-back">VOLTAR AO JOGO</button>
+        <button type="button" class="app-modal-btn app-modal-btn--secondary"
+          id="instructions-carousel-help">AJUDA</button>
+        <button type="button" class="app-modal-btn app-modal-btn--primary" id="instructions-carousel-back">VOLTAR AO
+          JOGO</button>
       </div>
     </div>
   </div>

@@ -1,139 +1,18 @@
 {
   "assets": [
-    {
-      "id": 1,
-      "name": "Tesouro Selic",
-      "type": "Renda Fixa",
-      "suitability": 10,
-      "retorno": 15,
-      "seguranca": 100,
-      "desc": "O investimento mais seguro do país. Ideal para reservas de emergência e perfis conservadores."
-    },
-    {
-      "id": 2,
-      "name": "CDB Banco",
-      "type": "Renda Fixa",
-      "suitability": 20,
-      "retorno": 25,
-      "seguranca": 90,
-      "desc": "Emprestimo para o banco com garantia do FGC. Retorno superior à poupança."
-    },
-    {
-      "id": 3,
-      "name": "Fundo DI",
-      "type": "Fundo",
-      "suitability": 25,
-      "retorno": 30,
-      "seguranca": 85,
-      "desc": "Carteira diversificada em renda fixa. Liquidez diária e gestão profissional."
-    },
-    {
-      "id": 4,
-      "name": "LCI / LCA",
-      "type": "Isento",
-      "suitability": 30,
-      "retorno": 35,
-      "seguranca": 85,
-      "desc": "Investimento isento de Imposto de Renda, focado nos setores imobiliário e do agronegócio."
-    },
-    {
-      "id": 5,
-      "name": "Debênture",
-      "type": "Crédito",
-      "suitability": 40,
-      "retorno": 45,
-      "seguranca": 70,
-      "desc": "Dívida de empresas privadas. Maior risco de crédito, mas com taxas atrativas."
-    },
-    {
-      "id": 6,
-      "name": "Multimercado",
-      "type": "Fundo",
-      "suitability": 50,
-      "retorno": 55,
-      "seguranca": 60,
-      "desc": "Fundo que mistura renda fixa, ações e câmbio. Busca superar o CDI com volatilidade controlada."
-    },
-    {
-      "id": 7,
-      "name": "FII Papel",
-      "type": "Imobiliário",
-      "suitability": 55,
-      "retorno": 60,
-      "seguranca": 55,
-      "desc": "Fundo imobiliário focado em dívidas (CRIs). Paga dividendos mensais isentos de IR."
-    },
-    {
-      "id": 8,
-      "name": "FII Tijolo",
-      "type": "Imobiliário",
-      "suitability": 60,
-      "retorno": 65,
-      "seguranca": 50,
-      "desc": "Investimento em imóveis físicos como shoppings e galpões. Renda de aluguéis e valorização."
-    },
-    {
-      "id": 9,
-      "name": "ETF S&P500",
-      "type": "Internacional",
-      "suitability": 65,
-      "retorno": 70,
-      "seguranca": 50,
-      "desc": "Exposição às 500 maiores empresas dos EUA. Diversificação em dólar sem sair do Brasil."
-    },
-    {
-      "id": 10,
-      "name": "Ações Blue Chips",
-      "type": "Ações",
-      "suitability": 70,
-      "retorno": 75,
-      "seguranca": 45,
-      "desc": "Ações de empresas grandes, consolidadas e com bom histórico de lucros na Bolsa."
-    },
-    {
-      "id": 11,
-      "name": "Small Caps",
-      "type": "Ações",
-      "suitability": 80,
-      "retorno": 85,
-      "seguranca": 30,
-      "desc": "Ações de empresas menores com alto potencial de crescimento, mas maior volatilidade."
-    },
-    {
-      "id": 12,
-      "name": "Dólar Futuro",
-      "type": "Derivativos",
-      "suitability": 85,
-      "retorno": 80,
-      "seguranca": 30,
-      "desc": "Proteção ou especulação com a variação cambial. Alto risco e alavancagem."
-    },
-    {
-      "id": 13,
-      "name": "Bitcoin",
-      "type": "Cripto",
-      "suitability": 90,
-      "retorno": 95,
-      "seguranca": 20,
-      "desc": "A principal criptomoeda do mercado. Ouro digital, descentralizado e escasso."
-    },
-    {
-      "id": 14,
-      "name": "Altcoins",
-      "type": "Cripto",
-      "suitability": 95,
-      "retorno": 100,
-      "seguranca": 10,
-      "desc": "Criptomoedas alternativas com projetos inovadores, mas risco extremo de oscilação."
-    },
-    {
-      "id": 15,
-      "name": "Opções",
-      "type": "Derivativos",
-      "suitability": 100,
-      "retorno": 100,
-      "seguranca": 5,
-      "desc": "Instrumentos para alavancagem máxima. Potencial de ganhos explosivos ou perda total."
-    }
+    {"id": 1, "name": "Rio Bravo Liquidez", "type": "Crédito", "suitability": 15, "retorno": 22, "seguranca": 95, "desc": "Fundo de liquidez com foco em crédito.", "positions": {"CONSERVADOR": "Defesa", "MODERADO": "Defesa", "ARROJADO": "Meio de campo"}},
+    {"id": 2, "name": "Rio Bravo Infra CDI Incentivado", "type": "Crédito", "suitability": 20, "retorno": 28, "seguranca": 90, "desc": "Infraestrutura com incentivo fiscal.", "positions": {"CONSERVADOR": "Defesa", "MODERADO": "Defesa", "ARROJADO": "Meio de campo"}},
+    {"id": 3, "name": "Rio Bravo Crédito Privado", "type": "Crédito", "suitability": 35, "retorno": 42, "seguranca": 75, "desc": "Exposição a crédito privado.", "positions": {"CONSERVADOR": "Meio de campo", "MODERADO": "Meio de campo", "ARROJADO": "Meio de campo"}},
+    {"id": 4, "name": "Rio Bravo Crédito Privado Essend", "type": "Crédito", "suitability": 38, "retorno": 45, "seguranca": 72, "desc": "Crédito privado Essend.", "positions": {"CONSERVADOR": "Meio de campo", "MODERADO": "Meio de campo", "ARROJADO": "Ataque"}},
+    {"id": 5, "name": "RBIF11", "type": "Crédito", "suitability": 40, "retorno": 48, "seguranca": 70, "desc": "Fundo imobiliário de crédito.", "positions": {"CONSERVADOR": "Meio de campo", "MODERADO": "Meio de campo", "ARROJADO": "Ataque"}},
+    {"id": 6, "name": "RBHG11", "type": "Crédito", "suitability": 42, "retorno": 50, "seguranca": 68, "desc": "FII de crédito.", "positions": {"CONSERVADOR": "Meio de campo", "MODERADO": "Meio de campo", "ARROJADO": "Ataque"}},
+    {"id": 7, "name": "RBHY11", "type": "Crédito", "suitability": 45, "retorno": 52, "seguranca": 65, "desc": "FII de crédito híbrido.", "positions": {"CONSERVADOR": "Meio de campo", "MODERADO": "Ataque", "ARROJADO": "Ataque"}},
+    {"id": 8, "name": "Rio Bravo Hedge Fund", "type": "Crédito", "suitability": 50, "retorno": 58, "seguranca": 60, "desc": "Hedge fund com foco em crédito.", "positions": {"CONSERVADOR": "Meio de campo", "MODERADO": "Ataque", "ARROJADO": "Ataque"}},
+    {"id": 9, "name": "RBFM11", "type": "Imobiliário", "suitability": 52, "retorno": 58, "seguranca": 58, "desc": "Fundo imobiliário.", "positions": {"CONSERVADOR": "Meio de campo", "MODERADO": "Meio de campo", "ARROJADO": "Ataque"}},
+    {"id": 10, "name": "RBVA11", "type": "Imobiliário", "suitability": 55, "retorno": 62, "seguranca": 55, "desc": "FII imobiliário.", "positions": {"CONSERVADOR": "Meio de campo", "MODERADO": "Meio de campo", "ARROJADO": "Ataque"}},
+    {"id": 11, "name": "RCRB11", "type": "Imobiliário", "suitability": 58, "retorno": 65, "seguranca": 52, "desc": "Fundo imobiliário.", "positions": {"CONSERVADOR": "Meio de campo", "MODERADO": "Ataque", "ARROJADO": "Ataque"}},
+    {"id": 12, "name": "TRBL11", "type": "Imobiliário", "suitability": 60, "retorno": 68, "seguranca": 50, "desc": "FII imobiliário.", "positions": {"CONSERVADOR": "Meio de campo", "MODERADO": "Ataque", "ARROJADO": "Ataque"}},
+    {"id": 13, "name": "QLBR11", "type": "Ações e Multiestratégia", "suitability": 72, "retorno": 78, "seguranca": 42, "desc": "Ações e multiestratégia.", "positions": {"CONSERVADOR": "Ataque", "MODERADO": "Ataque", "ARROJADO": "Ataque"}},
+    {"id": 14, "name": "Rio Bravo Radix", "type": "Ações e Multiestratégia", "suitability": 78, "retorno": 85, "seguranca": 35, "desc": "Multiestratégia e ações.", "positions": {"CONSERVADOR": "Ataque", "MODERADO": "Ataque", "ARROJADO": "Ataque"}}
   ]
 }

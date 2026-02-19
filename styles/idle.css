@@ -64,8 +64,6 @@ gap: 50px;
 }
 
 .idle-game-logo {
-width: 90%;
-    /* AUMENTADO: de 550px para 850px (Quase a largura total da tela) */
     max-width: 850px;
     height: auto;
 filter: drop-shadow(0 15px 40px rgba(0, 0, 0, 0.7));

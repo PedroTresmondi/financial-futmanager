@@ -1,4 +1,8 @@
 {
+  "pointsPerCorrectCard": 40,
+  "bonusIdealLineup": 25,
+  "maxScore": 100,
   "timeLimitActive": true,
-  "timeLimitSeconds": 60
+  "timeLimitSeconds": 60,
+  "stockWithGame": true
 }

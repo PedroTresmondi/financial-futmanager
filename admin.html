@@ -37,6 +37,11 @@
                     <input type="number" id="config-time-seconds" min="10" max="300"
                         class="bg-slate-900 border border-slate-600 rounded-lg p-2 w-32 text-center font-mono font-bold text-white focus:border-emerald-500 focus:outline-none">
                 </div>
+                <div class="flex items-center gap-3">
+                    <input type="checkbox" id="config-stock-with-game"
+                        class="w-6 h-6 text-emerald-600 rounded bg-slate-700 border-slate-600 focus:ring-emerald-500">
+                    <label for="config-stock-with-game" class="text-sm font-bold uppercase tracking-wide">Ativar estoque com jogo</label>
+                </div>
 
                 <button id="save-config-btn"
                     class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-6 rounded-lg uppercase text-sm shadow transition-colors ml-auto">
@@ -44,6 +49,37 @@
                 </button>
             </div>
             <div id="config-feedback" class="text-xs font-bold mt-2 h-4"></div>
+        </section>
+
+        <section class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-lg">
+            <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+                🏆 Regras de Pontuação
+            </h2>
+            <p class="text-slate-400 text-sm mb-4">Configure quantos pontos o jogador ganha por carta certa, por escalação ideal e a pontuação máxima da partida.</p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-4">
+                <div>
+                    <label for="config-points-per-card" class="block text-xs text-slate-400 uppercase tracking-widest mb-1">Pontos por carta na posição certa</label>
+                    <input type="number" id="config-points-per-card" min="0" max="50" step="1"
+                        class="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-center font-mono font-bold text-white focus:border-emerald-500 focus:outline-none"
+                        placeholder="3">
+                </div>
+                <div>
+                    <label for="config-bonus-ideal" class="block text-xs text-slate-400 uppercase tracking-widest mb-1">Bônus por escalação ideal</label>
+                    <input type="number" id="config-bonus-ideal" min="0" max="100" step="1"
+                        class="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-center font-mono font-bold text-white focus:border-emerald-500 focus:outline-none"
+                        placeholder="20">
+                </div>
+                <div>
+                    <label for="config-max-score" class="block text-xs text-slate-400 uppercase tracking-widest mb-1">Pontuação máxima da partida</label>
+                    <input type="number" id="config-max-score" min="1" max="999" step="1"
+                        class="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-center font-mono font-bold text-white focus:border-emerald-500 focus:outline-none"
+                        placeholder="38">
+                </div>
+            </div>
+            <p class="text-slate-500 text-xs mb-4">Ex.: 6 cartas certas × 3 pts = 18 pts; se a formação (Defesa/Meio/Ataque) for a ideal do perfil, +20 pts. Máx. 38 pts.</p>
+            <button type="button" id="save-scoring-btn" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-6 rounded-lg uppercase text-sm shadow transition-colors">
+                Salvar regras de pontuação
+            </button>
         </section>
 
         <section class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-lg">
@@ -88,6 +124,14 @@
             </div>
         </section>
 
+        <section class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-lg">
+            <h2 class="text-xl font-bold mb-4">Estoque manual (brindes)</h2>
+            <p class="text-slate-400 text-sm mb-4">Página separada para cadastrar itens e retirar brindes manualmente.</p>
+            <a href="/estoque-manual.html"
+                class="inline-block bg-amber-600 hover:bg-amber-500 text-white font-bold py-2 px-5 rounded-lg transition">
+                Abrir página de estoque manual →
+            </a>
+        </section>
 
         <!-- Menu de navegação (tecla M na idle) -->
         <div id="idle-nav-menu" class="idle-nav-menu hidden" aria-hidden="true">

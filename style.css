@@ -342,6 +342,55 @@ body.debug .premium-card[data-risk="high"] {
   background: radial-gradient(circle at top right, #991b1b 0%, #450a0a 100%);
 }
 
+/* Debug panel (tecla P) */
+body.debug .debug-panel.debug-only {
+  display: block !important;
+}
+
+.debug-panel {
+  position: fixed;
+  bottom: 140px;
+  left: 12px;
+  z-index: 500;
+  max-width: 500px;
+  max-height: 50vh;
+  overflow: auto;
+  background: rgba(0, 0, 0, 0.568);
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-family: "Courier New", monospace;
+  font-size: 32px;
+  line-height: 1.5;
+  color: #94a3b8;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  pointer-events: auto;
+}
+
+.debug-panel-header {
+  font-size: 15px;
+  font-weight: bold;
+  color: #e2e8f0;
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.3);
+}
+
+.debug-panel-content .debug-section {
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+}
+
+.debug-panel-content .debug-section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.debug-panel-content strong {
+  color: #cbd5e1;
+}
+
 /* ============================================================
      TOAST / MENSAGENS DE ERRO E SUCESSO
    ============================================================ */
@@ -1019,25 +1068,14 @@ body.game-mode {
   -webkit-box-orient: vertical;
 }
 
-/* Pílula */
+/* Pill oculto: o fundo da carta já traz o pill */
 #game-root .game-card-base .card-type-pill,
 #game-root .game-card-base .card-pill,
 #game-root .game-card-base .card-type,
 .drag-ghost .game-card-base .card-type-pill,
 .drag-ghost .game-card-base .card-pill,
 .drag-ghost .game-card-base .card-type {
-  margin-top: auto;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 7px 16px !important;
-  font-size: 13px !important;
-  border-radius: 999px;
-  font-family: "Poppins", sans-serif;
-  font-weight: 800;
-  color: rgba(255, 255, 255, 0.95) !important;
-  background: rgba(156, 163, 175, 0.85) !important;
-  margin-bottom: 65px;
+  display: none !important;
 }
 
 #game-root .game-card-base .card-subtitle,
@@ -1093,7 +1131,7 @@ body.game-mode {
   border-radius: 18px;
   position: relative;
   overflow: hidden;
-  background-image: url("/public/assets/backgrounds/modal-background.png");
+  /* background-image definido em openCardDetails() por tipo: modal-background1/2/3 */
   background-size: 100% 100%;
   background-position: center;
   background-repeat: no-repeat;
@@ -1185,37 +1223,91 @@ body.game-mode {
   color: rgba(107, 114, 128, .88);
 }
 
+/* Modal: cores de texto por categoria (igual às cartas) */
+#detail-card-container[data-modal-category="Crédito"] .detail-title,
+#detail-card-container[data-modal-category="Crédito"] .detail-pill,
+#detail-card-container[data-modal-category="Crédito"] .detail-desc {
+  color: #ffffff !important;
+}
+#detail-card-container[data-modal-category="Crédito"] .detail-pill {
+  background: rgba(255, 255, 255, 0.25) !important;
+}
+
+#detail-card-container[data-modal-category="Ações e Multiestratégia"] .detail-title,
+#detail-card-container[data-modal-category="Ações e Multiestratégia"] .detail-desc {
+  color: #4A3C5C !important;
+}
+#detail-card-container[data-modal-category="Ações e Multiestratégia"] .detail-pill {
+  color: rgba(255, 255, 255, 0.95) !important;
+  background: rgba(74, 60, 92, 0.6) !important;
+}
+
+#detail-card-container[data-modal-category="Imobiliário"] .detail-title,
+#detail-card-container[data-modal-category="Imobiliário"] .detail-pill,
+#detail-card-container[data-modal-category="Imobiliário"] .detail-desc {
+  color: rgba(0, 0, 0, 0.88) !important;
+}
+#detail-card-container[data-modal-category="Imobiliário"] .detail-pill {
+  background: rgba(0, 0, 0, 0.2) !important;
+}
 
 #detail-card-container .detail-action {
   display: none;
 }
 
 /* ============================================================
-   10) CORES POR CATEGORIA
+   10) FUNDOS POR CATEGORIA (imagens em /assets/backgrounds/)
+   card-credito | card-imobiliario | card-am (Ações e Multiestratégia)
    ============================================================ */
-#game-root .premium-card[data-category],
-#game-root .field-card[data-category] {
-  --catColor: rgba(160, 160, 160, 0.92);
+#game-root .premium-card[data-category="Crédito"] .game-card-base,
+#game-root .field-card[data-category="Crédito"] .game-card-base,
+.drag-ghost[data-category="Crédito"] .game-card-base {
+  background-image: url("/assets/backgrounds/card-credito.png") !important;
+  background-size: 100% 100% !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  --catColor: rgba(255, 255, 255, 0.95);
 }
 
-#game-root .premium-card[data-category="Crédito"],
-#game-root .field-card[data-category="Crédito"] {
-  --catColor: rgba(160, 160, 160, 0.92);
+#game-root .premium-card[data-category="Imobiliário"] .game-card-base,
+#game-root .field-card[data-category="Imobiliário"] .game-card-base,
+.drag-ghost[data-category="Imobiliário"] .game-card-base {
+  background-image: url("/assets/backgrounds/card-imobiliario.png") !important;
+  background-size: 100% 100% !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  --catColor: rgba(0, 0, 0, 0.75);
 }
 
-#game-root .premium-card[data-category="LCI/LCA"],
-#game-root .field-card[data-category="LCI/LCA"] {
-  --catColor: rgba(34, 197, 94, 0.92);
+#game-root .premium-card[data-category="Ações e Multiestratégia"] .game-card-base,
+#game-root .field-card[data-category="Ações e Multiestratégia"] .game-card-base,
+.drag-ghost[data-category="Ações e Multiestratégia"] .game-card-base {
+  background-image: url("/assets/backgrounds/card-am.png") !important;
+  background-size: 100% 100% !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  --catColor: rgba(255, 255, 255, 0.95);
 }
 
-#game-root .premium-card[data-category="Ações"],
-#game-root .field-card[data-category="Ações"] {
-  --catColor: rgba(239, 68, 68, 0.92);
+/* Crédito: texto branco */
+#game-root .premium-card[data-category="Crédito"] .game-card-base .card-name,
+#game-root .field-card[data-category="Crédito"] .game-card-base .card-name,
+.drag-ghost[data-category="Crédito"] .game-card-base .card-name {
+  color: #ffffff !important;
 }
 
-#game-root .premium-card[data-category="Fundos"],
-#game-root .field-card[data-category="Fundos"] {
-  --catColor: rgba(59, 130, 246, 0.92);
+/* Ações e Multiestratégia (AM): roxo escuro como na referência */
+#game-root .premium-card[data-category="Ações e Multiestratégia"] .game-card-base .card-name,
+#game-root .field-card[data-category="Ações e Multiestratégia"] .game-card-base .card-name,
+.drag-ghost[data-category="Ações e Multiestratégia"] .game-card-base .card-name {
+  color: #4A3C5C !important;
+}
+
+/* Legibilidade: texto escuro na carta amarela (Imobiliário) */
+#game-root .premium-card[data-category="Imobiliário"] .game-card-base .card-name,
+#game-root .field-card[data-category="Imobiliário"] .game-card-base .card-name,
+.drag-ghost[data-category="Imobiliário"] .game-card-base .card-name {
+  color: rgba(0, 0, 0, 0.85) !important;
 }
 
 /* ============================================================
@@ -1464,11 +1556,6 @@ body.game-mode {
   }
 }
 
-/* Helper */
-.hidden {
-  display: none !important;
-}
-
 /* ============================================================
    13) PRIZE MODAL (RESULTADO)
    ============================================================ */
@@ -1539,6 +1626,14 @@ body.game-mode {
   padding: 20px 16px;
   margin-bottom: 24px;
   border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Brinde não é exibido ao usuário */
+#prize-modal .prize-status,
+#prize-modal .prize-name,
+#prize-modal .prize-sep,
+#prize-modal .prize-extra {
+  display: none !important;
 }
 
 .prize-status {
@@ -1704,13 +1799,6 @@ body.debug .game-card-base {
      ✨ JUICE PACK — Transições de telas,
      modais e microinterações (cole no FINAL do seu CSS)
    ============================================================ */
-
-/* 1) NORMALIZA hidden (você tinha duplicado) */
-.hidden {
-  display: none !important;
-  opacity: 0 !important;
-  pointer-events: none !important;
-}
 
 /* 2) Tokens de motion (padrão premium) */
 :root {

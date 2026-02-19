@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estoque manual – Brindes</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;700&display=swap" rel="stylesheet">
+    <script defer src="/src/estoque-manual.js"></script>
+</head>
+
+<body class="bg-slate-900 text-slate-100 min-h-screen p-8 font-sans">
+
+    <header class="max-w-3xl mx-auto mb-8 flex flex-wrap items-center justify-between gap-4">
+        <h1 class="text-3xl font-bold text-amber-500 italic">Estoque manual – Brindes</h1>
+        <a href="/admin.html"
+            class="text-slate-400 hover:text-emerald-400 text-sm font-bold uppercase tracking-wide transition">← Voltar ao Admin</a>
+    </header>
+
+    <main class="max-w-3xl mx-auto space-y-8">
+        <section class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-lg">
+            <h2 class="text-xl font-bold mb-2">Cadastrar item</h2>
+            <p class="text-slate-400 text-sm mb-4">Adicione itens e quantidades. Use "Retirar brinde" quando entregar um.</p>
+            <form id="add-manual-item-form"
+                class="flex flex-wrap gap-4 bg-slate-900/50 p-4 rounded-lg border border-slate-700 items-end">
+                <div class="flex-1 min-w-[200px]">
+                    <label class="block text-xs text-slate-400 mb-1">Nome do item</label>
+                    <input type="text" id="manual-item-name" required placeholder="Ex: Caneta, Camiseta..."
+                        class="w-full bg-slate-800 border border-slate-600 rounded p-2 text-sm focus:border-amber-500 outline-none">
+                </div>
+                <div class="w-28">
+                    <label class="block text-xs text-slate-400 mb-1">Quantidade</label>
+                    <input type="number" id="manual-item-qty" min="0" value="1"
+                        class="w-full bg-slate-800 border border-slate-600 rounded p-2 text-sm focus:border-amber-500 outline-none">
+                </div>
+                <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-5 rounded-lg">
+                    Cadastrar item
+                </button>
+            </form>
+            <div id="manual-stock-feedback" class="text-xs font-bold mt-2 h-4"></div>
+        </section>
+
+        <section class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-lg">
+            <h2 class="text-xl font-bold mb-4">Itens no estoque</h2>
+            <ul id="manual-stock-list" class="space-y-3">
+            </ul>
+            <p id="manual-stock-empty" class="text-slate-500 text-sm">Nenhum item cadastrado. Adicione acima.</p>
+        </section>
+    </main>
+</body>
+
+</html>
