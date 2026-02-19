@@ -54,3 +54,30 @@ if (fs.existsSync(srcDir)) {
         }
     }
 }
+
+// Fallbacks: copiar assets existentes para nomes esperados pela UI (evita 404 no deploy)
+function fallbackCopy(distDir, fromFile, toFile) {
+    const from = path.join(dist, distDir, fromFile);
+    const to = path.join(dist, distDir, toFile);
+    if (fs.existsSync(from) && !fs.existsSync(to)) {
+        fs.mkdirSync(path.dirname(to), { recursive: true });
+        fs.copyFileSync(from, to);
+        console.log(`Fallback: ${distDir}/${fromFile} -> ${toFile}`);
+    }
+}
+const distLogos = "assets/logos";
+const distIcons = "assets/icons";
+const distBg = "assets/backgrounds";
+fallbackCopy(distLogos, "game-logo.png", "logo-rio-bravo.png");
+fallbackCopy(distLogos, "game-logo-alt.png", "logo-rio-bravo-alt.png");
+fallbackCopy(distIcons, "icon-profile.png", "icon-asset.png");
+fallbackCopy(distIcons, "icon-profile.png", "help-emoji.png");
+fallbackCopy(distIcons, "icon-profile.png", "cancel-emoji.png");
+fallbackCopy(distIcons, "icon-profile.png", "profile-conservador.png");
+fallbackCopy(distIcons, "icon-profile.png", "medal.png");
+fallbackCopy(distIcons, "icon-profile.png", "trophy-gold.png");
+fallbackCopy(distIcons, "icon-profile.png", "trophy-silver.png");
+fallbackCopy(distIcons, "icon-profile.png", "trophy-bronze.png");
+fallbackCopy(distBg, "card-credito.png", "card.png");
+fallbackCopy(distBg, "perfil-conservador.png", "profile-conservador.png");
+fallbackCopy(distBg, "fundo-idle.png", "field-game.png");

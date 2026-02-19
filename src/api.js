@@ -1,7 +1,7 @@
 const CARDS_JSON_PATH = "./cards.json";
 
 export async function loadAssets() {
-  const paths = [CARDS_JSON_PATH, "/src/cards.json", "src/cards.json"];
+  const paths = ["/cards.json", CARDS_JSON_PATH, "/src/cards.json", "src/cards.json"];
   for (const path of paths) {
     try {
       const res = await fetch(path, { cache: "no-store" });
