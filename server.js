@@ -11,12 +11,16 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Build do Vite gera em "dist"; em dev o Vite serve o front, então o servidor só precisa da API
+// Build do Vite gera em "dist"; em dev o Vite serve o front, então o servidor só precisa da API
+
 const PUBLIC_DIR = path.join(__dirname, "dist");
 const DATA_DIR = path.join(__dirname, "data");
 const STOCK_FILE = path.join(DATA_DIR, "stock.json");
 const GAMES_FILE = path.join(DATA_DIR, "games.json");
 const CONFIG_FILE = path.join(DATA_DIR, "config.json");
 const MANUAL_STOCK_FILE = path.join(DATA_DIR, "manual-stock.json");
+
+
 
 const ADMIN_API_KEY = process.env.ADMIN_API_KEY || "";
 
