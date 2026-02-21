@@ -1,5 +1,6 @@
 # Rio Bravo Financial Futmanager (Craques da Carteira)
 
+<img src="./public/assets/logos/game-logo.png" alt="Logo" width="48" height="48" valign="middle"> Rio Bravo Financial Futmanager (Craques da Carteira)
 Jogo interativo de perfil de investidor em formato “futebol + carteira” para eventos. O jogador monta um time de ativos e concorre ao ranking do dia e a brindes.
 
 ## Pré-requisitos
