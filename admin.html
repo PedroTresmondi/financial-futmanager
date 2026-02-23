@@ -5,21 +5,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin - Financial Football</title>
-    <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/styles/panel.css">
+    <link rel="stylesheet" href="/styles/idle.css">
+    <script src="https://cdn.tailwindcss.com"></script>
     <script type="module" defer src="/src/admin.js"></script>
 </head>
 
-<body class="bg-slate-900 text-slate-100 min-h-screen p-8 font-sans">
+<body class="panel-page bg-slate-900 text-slate-100 min-h-screen p-8 font-sans">
 
-    <header class="max-w-4xl mx-auto mb-8 flex flex-wrap justify-between items-center gap-4">
+    <header class="panel-header max-w-4xl mx-auto mb-8 flex flex-wrap justify-between items-center gap-4">
         <h1 class="text-3xl font-bold text-emerald-500 italic">ADMIN</h1>
         <a href="/dashboard.html" class="bg-violet-600 hover:bg-violet-500 text-white font-bold py-2 px-5 rounded-lg transition text-sm">
             Ir para Dashboard →
         </a>
     </header>
 
-    <main class="max-w-4xl mx-auto space-y-8">
+    <main class="panel-main max-w-4xl mx-auto space-y-8">
         <p class="idle-nav-hint">Pressione <kbd>M</kbd> para abrir o menu</p>
 
         <section class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-lg">
@@ -156,7 +158,6 @@
                 </nav>
                 <p class="idle-nav-footer">Navegação pelo menu não retorna automaticamente à tela inicial.</p>
             </div>
-        </div>
         </div>
 
     </main>

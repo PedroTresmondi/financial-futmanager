@@ -4,8 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard – Análise de partidas</title>
-  <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles/panel.css">
+  <link rel="stylesheet" href="/styles/idle.css">
+  <script src="https://cdn.tailwindcss.com"></script>
   <style>
     .dashboard-root { height: 100vh; max-height: 100dvh; overflow: hidden; display: flex; flex-direction: column; }
     .dashboard-main { flex: 1; min-height: 0; overflow: hidden; display: grid; gap: 0.5rem; padding: 0.5rem; grid-template-columns: repeat(1, 1fr); grid-template-rows: auto auto 1fr 1fr; grid-auto-rows: minmax(0, 1fr); }
@@ -24,9 +26,9 @@
     .dashboard-stat-num { font-size: 1rem; font-weight: 700; line-height: 1.2; }
     .dashboard-stat-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.05em; color: rgb(148 163 184); }
   </style>
-  <script type="module" defer src="/src/dashboard.js"></script>
+  <script defer src="/src/dashboard.js"></script>
 </head>
-<body class="dashboard-root bg-slate-900 text-slate-100 font-sans text-xs">
+<body class="panel-page dashboard-root bg-slate-900 text-slate-100 font-sans text-xs">
   <header class="flex-shrink-0 px-3 py-2 flex justify-between items-center border-b border-slate-700">
     <h1 class="text-lg font-bold text-violet-400 italic truncate">Dashboard</h1>
     <a href="/admin.html" class="text-slate-400 hover:text-emerald-400 font-bold uppercase tracking-wide transition shrink-0">← Admin</a>

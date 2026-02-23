@@ -5,20 +5,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Estoque manual – Brindes</title>
-    <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/styles/panel.css">
+    <script src="https://cdn.tailwindcss.com"></script>
     <script type="module" defer src="/src/estoque-manual.js"></script>
 </head>
 
-<body class="bg-slate-900 text-slate-100 min-h-screen p-8 font-sans">
+<body class="panel-page bg-slate-900 text-slate-100 min-h-screen p-8 font-sans">
 
-    <header class="max-w-3xl mx-auto mb-8 flex flex-wrap items-center justify-between gap-4">
+    <header class="panel-header max-w-3xl mx-auto mb-8 flex flex-wrap items-center justify-between gap-4">
         <h1 class="text-3xl font-bold text-amber-500 italic">Estoque manual – Brindes</h1>
         <a href="/admin.html"
             class="text-slate-400 hover:text-emerald-400 text-sm font-bold uppercase tracking-wide transition">← Voltar ao Admin</a>
     </header>
 
-    <main class="max-w-3xl mx-auto space-y-8">
+    <main class="panel-main max-w-3xl mx-auto space-y-8">
         <section class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-lg">
             <h2 class="text-xl font-bold mb-2">Cadastrar item</h2>
             <p class="text-slate-400 text-sm mb-4">Adicione itens e quantidades. Use "Retirar brinde" quando entregar um.</p>

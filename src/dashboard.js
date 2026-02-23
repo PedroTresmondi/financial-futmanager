@@ -1,5 +1,3 @@
-import * as api from "./api.js";
-
 document.addEventListener("DOMContentLoaded", () => {
   loadDashboard();
   document.querySelectorAll(".heatmap-filter-btn").forEach((btn) => {
@@ -25,11 +23,12 @@ async function loadDashboard() {
   const content = document.getElementById("dashboard-content");
   const errEl = document.getElementById("dashboard-error");
   try {
-    const data = await api.getGames();
+    const res = await fetch("/api/admin/games");
+    if (!res.ok) throw new Error("Não autorizado ou erro no servidor");
+    const data = await res.json();
     allGames = data.games || [];
     loading.classList.add("hidden");
     content.classList.remove("hidden");
-    content.classList.add("contents");
     renderStats();
     renderProfileMetrics();
     renderMatrixAssetProfile();
@@ -40,7 +39,7 @@ async function loadDashboard() {
   } catch (err) {
     loading.classList.add("hidden");
     errEl.classList.remove("hidden");
-    errEl.textContent = err.message || "Erro ao carregar partidas.";
+    errEl.textContent = err.message || "Erro ao carregar partidas. Verifique se está logado no admin.";
   }
 }
 
@@ -104,17 +103,15 @@ function renderProfileMetrics() {
 function buildMatrixAssetProfile() {
   const map = {};
   const profiles = ["CONSERVADOR", "MODERADO", "ARROJADO"];
-  const games =
-    heatmapProfile === "ALL"
-      ? allGames
-      : allGames.filter((g) => (g.profile || "").toUpperCase() === heatmapProfile);
-  games.forEach((g) => {
+  allGames.forEach((g) => {
+    const profile = (g.profile || "").toUpperCase();
+    if (!profiles.includes(profile)) return;
     (g.cards || []).forEach((c) => {
       const assetKey = String(c.assetId ?? c.assetName ?? "?");
       const name = c.assetName || `Ativo ${c.assetId}`;
-      const profile = (g.profile || "").toUpperCase();
-      if (!profiles.includes(profile)) return;
-      if (!map[assetKey]) map[assetKey] = { name, CONSERVADOR: 0, MODERADO: 0, ARROJADO: 0 };
+      if (!map[assetKey]) {
+        map[assetKey] = { name, CONSERVADOR: 0, MODERADO: 0, ARROJADO: 0 };
+      }
       if (map[assetKey][profile] !== undefined) map[assetKey][profile]++;
     });
   });
@@ -149,6 +146,71 @@ function renderMatrixAssetProfile() {
           <td class="p-1 text-center font-mono" style="background:${heatColor(r.ARROJADO || 0)}">${r.ARROJADO || 0}</td>
           <td class="p-1 text-center font-mono font-bold">${r.total}</td>
         </tr>`
+    )
+    .join("");
+}
+
+function renderTopByZone() {
+  const zones = { defense: [], midfield: [], attack: [] };
+  const key = (c) => String(c.assetId ?? c.assetName ?? "?");
+  const name = (c) => c.assetName || `Ativo ${c.assetId}`;
+  allGames.forEach((g) => {
+    (g.cards || []).forEach((c) => {
+      const z = (c.zone || "").toLowerCase();
+      if (z === "defense") {
+        const k = key(c);
+        const existing = zones.defense.find((x) => x.id === k);
+        if (existing) existing.count++;
+        else zones.defense.push({ id: k, name: name(c), count: 1 });
+      } else if (z === "midfield") {
+        const k = key(c);
+        const existing = zones.midfield.find((x) => x.id === k);
+        if (existing) existing.count++;
+        else zones.midfield.push({ id: k, name: name(c), count: 1 });
+      } else if (z === "attack") {
+        const k = key(c);
+        const existing = zones.attack.find((x) => x.id === k);
+        if (existing) existing.count++;
+        else zones.attack.push({ id: k, name: name(c), count: 1 });
+      }
+    });
+  });
+  const listIds = ["top-defense-list", "top-midfield-list", "top-attack-list"];
+  const zoneKeys = ["defense", "midfield", "attack"];
+  zoneKeys.forEach((zk, i) => {
+    const el = document.getElementById(listIds[i]);
+    if (!el) return;
+    const sorted = zones[zk].sort((a, b) => b.count - a.count).slice(0, 10);
+    el.innerHTML = sorted.map((a) => `<li class="flex justify-between gap-1 text-[0.65rem]"><span class="truncate">${escapeHtml(a.name)}</span><span class="font-mono text-slate-400 shrink-0">${a.count}</span></li>`).join("");
+  });
+}
+
+function renderByDay() {
+  const byDay = new Map();
+  const now = new Date();
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date(now);
+    d.setDate(d.getDate() - i);
+    const key = d.toISOString().slice(0, 10);
+    byDay.set(key, 0);
+  }
+  allGames.forEach((g) => {
+    const t = g.timestamp ? new Date(g.timestamp).toISOString().slice(0, 10) : null;
+    if (t && byDay.has(t)) byDay.set(t, byDay.get(t) + 1);
+    else if (t) byDay.set(t, (byDay.get(t) || 0) + 1);
+  });
+  const rows = Array.from(byDay.entries())
+    .sort((a, b) => b[0].localeCompare(a[0]))
+    .map(([date, count]) => ({
+      date: new Date(date + "T12:00:00").toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "2-digit", year: "numeric" }),
+      count,
+    }));
+  const tbody = document.getElementById("table-by-day");
+  if (!tbody) return;
+  tbody.innerHTML = rows
+    .map(
+      (r) =>
+        `<tr class="hover:bg-slate-700/50"><td class="p-1.5">${escapeHtml(r.date)}</td><td class="p-1.5 text-right font-mono">${r.count}</td></tr>`
     )
     .join("");
 }
@@ -222,71 +284,6 @@ function renderHeatmap() {
           <td class="p-1 text-center font-mono" style="background:${heatColor(r.midfield)}">${r.midfield}</td>
           <td class="p-1 text-center font-mono" style="background:${heatColor(r.attack)}">${r.attack}</td>
         </tr>`
-    )
-    .join("");
-}
-
-function renderTopByZone() {
-  const zones = { defense: [], midfield: [], attack: [] };
-  const key = (c) => String(c.assetId ?? c.assetName ?? "?");
-  const name = (c) => c.assetName || `Ativo ${c.assetId}`;
-  allGames.forEach((g) => {
-    (g.cards || []).forEach((c) => {
-      const z = (c.zone || "").toLowerCase();
-      if (z === "defense") {
-        const k = key(c);
-        const existing = zones.defense.find((x) => x.id === k);
-        if (existing) existing.count++;
-        else zones.defense.push({ id: k, name: name(c), count: 1 });
-      } else if (z === "midfield") {
-        const k = key(c);
-        const existing = zones.midfield.find((x) => x.id === k);
-        if (existing) existing.count++;
-        else zones.midfield.push({ id: k, name: name(c), count: 1 });
-      } else if (z === "attack") {
-        const k = key(c);
-        const existing = zones.attack.find((x) => x.id === k);
-        if (existing) existing.count++;
-        else zones.attack.push({ id: k, name: name(c), count: 1 });
-      }
-    });
-  });
-  const listIds = ["top-defense-list", "top-midfield-list", "top-attack-list"];
-  const zoneKeys = ["defense", "midfield", "attack"];
-  zoneKeys.forEach((zk, i) => {
-    const el = document.getElementById(listIds[i]);
-    if (!el) return;
-    const sorted = zones[zk].sort((a, b) => b.count - a.count).slice(0, 10);
-    el.innerHTML = sorted.map((a) => `<li class="flex justify-between gap-1 text-[0.65rem]"><span class="truncate">${escapeHtml(a.name)}</span><span class="font-mono text-slate-400 shrink-0">${a.count}</span></li>`).join("");
-  });
-}
-
-function renderByDay() {
-  const byDay = new Map();
-  const now = new Date();
-  for (let i = 29; i >= 0; i--) {
-    const d = new Date(now);
-    d.setDate(d.getDate() - i);
-    const key = d.toISOString().slice(0, 10);
-    byDay.set(key, 0);
-  }
-  allGames.forEach((g) => {
-    const t = g.timestamp ? new Date(g.timestamp).toISOString().slice(0, 10) : null;
-    if (t && byDay.has(t)) byDay.set(t, byDay.get(t) + 1);
-    else if (t) byDay.set(t, (byDay.get(t) || 0) + 1);
-  });
-  const rows = Array.from(byDay.entries())
-    .sort((a, b) => b[0].localeCompare(a[0]))
-    .map(([date, count]) => ({
-      date: new Date(date + "T12:00:00").toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "2-digit", year: "numeric" }),
-      count,
-    }));
-  const tbody = document.getElementById("table-by-day");
-  if (!tbody) return;
-  tbody.innerHTML = rows
-    .map(
-      (r) =>
-        `<tr class="hover:bg-slate-700/50"><td class="p-1.5">${escapeHtml(r.date)}</td><td class="p-1.5 text-right font-mono">${r.count}</td></tr>`
     )
     .join("");
 }
