@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "concurrently -k \"vite\" \"node server.js\"",
+    "dev:host": "concurrently -k \"vite --host\" \"node server.js\"",
     "build": "vite build && node scripts/copy-to-dist.js",
     "preview": "vite preview",
     "server": "node server.js",

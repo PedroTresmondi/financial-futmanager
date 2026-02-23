@@ -9,11 +9,13 @@ import {
   zoneFromPoint,
   expectedZoneFor,
   getExpectedZoneForAsset,
+  isExpectedZone,
+  formatExpectedZoneLabel,
   getRiskLevel,
   escapeHtml,
   formatPtsBR
 } from "./utils.js";
-import { loadAssets, tryAwardPrize as apiTryAwardPrize } from "./api.js";
+import { loadAssets, tryAwardPrize as apiTryAwardPrize, getConfig, getRanking } from "./api.js";
 
 const PROFILES = {
   CONSERVADOR: { min: 15, max: 35, color: "text-blue-400", label: "Conservador" },
@@ -25,6 +27,7 @@ const MAX_PLAYERS = 6;
 const PLAYER_NAME_KEY = "ffm_player_name";
 /** Regras de pontuação (carregadas do /api/config ao iniciar a partida) */
 let POINTS_PER_CORRECT_CARD = 3;
+let POINTS_PER_WRONG_CARD = 0;
 let BONUS_IDEAL_LINEUP = 20;
 let MAX_SCORE = 38;
 
@@ -255,7 +258,7 @@ function updateDebugPanel() {
     html += "<div class=\"debug-section\"><strong>Cartas no campo</strong><br>";
     placedCards.forEach((c, i) => {
       const exp = currentProfileKey ? getExpectedZoneForAsset(c.asset, currentProfileKey) : "?";
-      const expLabel = zoneMap[exp] || exp;
+      const expLabel = Array.isArray(exp) ? formatExpectedZoneLabel(exp, zoneMap) : (zoneMap[exp] || exp);
       const actLabel = zoneMap[c.zone] || c.zone;
       const ok = c.correct ? "✓" : "✗";
       html += `${i + 1}. ${escapeHtml(c.asset.name)} · suit ${c.asset.suitability} · esperado ${expLabel} → ${actLabel} ${ok}<br>`;
@@ -306,9 +309,11 @@ function isIdealFormation() {
 
 function recomputeScore() {
   const correctCount = placedCards.reduce((acc, c) => acc + (c.correct ? 1 : 0), 0);
+  const wrongCount = placedCards.length - correctCount;
   const ptsCartas = correctCount * POINTS_PER_CORRECT_CARD;
   const bonusIdeal = isIdealFormation() ? BONUS_IDEAL_LINEUP : 0;
-  gameScore = Math.min(MAX_SCORE, ptsCartas + bonusIdeal);
+  const penalty = wrongCount * POINTS_PER_WRONG_CARD;
+  gameScore = Math.max(0, Math.min(MAX_SCORE, ptsCartas + bonusIdeal - penalty));
   if (debugMode && els.scoreVal) els.scoreVal.innerText = String(gameScore);
   updateDebugPanel();
 }
@@ -368,8 +373,7 @@ async function showRankingScreen(opts = {}) {
   if (timerEl) timerEl.textContent = "60";
 
   try {
-    const res = await fetch("/api/ranking", { cache: "no-store" });
-    const data = await res.json();
+    const data = await getRanking();
 
     // Top 3
     const top3 = Array.isArray(data) ? data.slice(0, 3) : [];
@@ -478,8 +482,7 @@ async function showRankingScreen(opts = {}) {
 
 
 function startCountdown() {
-  fetch("/api/config")
-    .then(r => r.json())
+  getConfig()
     .then(config => {
       matchTimeConfig.active = config.timeLimitActive;
       matchTimeConfig.seconds = config.timeLimitSeconds;
@@ -659,7 +662,7 @@ function getStars(percentage) {
 function createPremiumCardHTML(asset) {
   const zone = currentProfileKey ? getExpectedZoneForAsset(asset, currentProfileKey) : "?";
   const zoneMap = { attack: "ATQ", midfield: "MEIO", defense: "DEF" };
-  const zoneLabel = zoneMap[zone] || zone;
+  const zoneLabel = formatExpectedZoneLabel(zone, zoneMap);
   const riskLabel = getRiskLevel(asset.suitability);
 
   return `
@@ -679,7 +682,7 @@ function createPremiumCardHTML(asset) {
 function fieldCardContentHTML(asset) {
   const zone = currentProfileKey ? getExpectedZoneForAsset(asset, currentProfileKey) : "?";
   const zoneMap = { attack: "ATQ", midfield: "MEIO", defense: "DEF" };
-  const zoneLabel = zoneMap[zone] || zone;
+  const zoneLabel = formatExpectedZoneLabel(zone, zoneMap);
   const riskLabel = getRiskLevel(asset.suitability);
 
   return `
@@ -1434,7 +1437,7 @@ function processDrop(assetId, clientX, clientY, offsetX, offsetY, sourceEl) {
 
   const actualZone = zoneFromPoint(y + (CARD_H / 2), rect.height);
   const expected = getExpectedZoneForAsset(asset, currentProfileKey);
-  const correct = (actualZone === expected);
+  const correct = isExpectedZone(actualZone, expected);
 
   // se está reposicionando no campo
   if (existingIndex !== -1) {
@@ -1604,11 +1607,13 @@ async function finalizeGame() {
   timerPausedByAppModal = { help: false, cancel: false };
   if (matchTimerInterval) clearInterval(matchTimerInterval);
 
-  // 2. Calcula a pontuação: +3 por carta na posição certa, +20 se a formação (qtd por zona) for a ideal do perfil; máx. 38
+  // 2. Calcula a pontuação: +N por carta certa, +bônus formação ideal, -M por carta errada; máx. MAX_SCORE
   const correctCount = placedCards.reduce((acc, c) => acc + (c.correct ? 1 : 0), 0);
+  const wrongCount = placedCards.length - correctCount;
   const ptsCartas = correctCount * POINTS_PER_CORRECT_CARD;
   const bonusIdeal = isIdealFormation() ? BONUS_IDEAL_LINEUP : 0;
-  gameScore = Math.min(MAX_SCORE, ptsCartas + bonusIdeal);
+  const penalty = wrongCount * POINTS_PER_WRONG_CARD;
+  gameScore = Math.max(0, Math.min(MAX_SCORE, ptsCartas + bonusIdeal - penalty));
 
   // 3. Mostra o splash de "FIM DE JOGO"
   showScreen('endSplash');
@@ -1701,9 +1706,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
 function applyScoringConfig(config) {
   if (!config) return;
-  if ("pointsPerCorrectCard" in config) POINTS_PER_CORRECT_CARD = Math.max(0, Number(config.pointsPerCorrectCard) || 3);
-  if ("bonusIdealLineup" in config) BONUS_IDEAL_LINEUP = Math.max(0, Number(config.bonusIdealLineup) || 20);
-  if ("maxScore" in config) MAX_SCORE = Math.max(1, Number(config.maxScore) || 38);
+  POINTS_PER_CORRECT_CARD = Math.max(0, Number(config.pointsPerCorrectCard) || 3);
+  BONUS_IDEAL_LINEUP = Math.max(0, Number(config.bonusIdealLineup) || 20);
+  MAX_SCORE = Math.max(1, Number(config.maxScore) || 38);
+  POINTS_PER_WRONG_CARD = Math.max(0, Number(config.pointsPerWrongCard) || 0);
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -1714,7 +1720,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   setDebugMode(false);
 
   // Carrega regras de pontuação do admin logo ao abrir o jogo (e de novo no countdown)
-  fetch("/api/config").then(r => r.json()).then(applyScoringConfig).catch(() => {});
+  getConfig().then(applyScoringConfig).catch(() => {});
 
   if (els.finishBtn) els.finishBtn.addEventListener("click", finalizeGame);
   if (els.revealScoreBtn) els.revealScoreBtn.addEventListener("click", revealScoreAndAward);

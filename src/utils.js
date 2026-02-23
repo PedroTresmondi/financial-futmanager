@@ -60,19 +60,36 @@ function normalizeZoneName(value) {
 }
 
 /**
- * Retorna a zona ideal do ativo para o perfil do jogador.
- * Se o ativo tiver "positions" (Defesa/Meio de campo/Ataque por tipo de carteira), usa isso.
- * Caso contrário, usa a fórmula por suitability (fallback).
+ * Retorna a zona(is) ideal(is) do ativo para o perfil.
+ * Pode ser string (uma zona) ou string[] (várias zonas válidas, ex.: Meio ou Ataque no arrojado).
  */
 export function getExpectedZoneForAsset(asset, profileKey) {
   const positions = asset?.positions;
   if (positions && profileKey) {
     const raw = positions[profileKey];
+    if (Array.isArray(raw)) {
+      const zones = raw.map((r) => normalizeZoneName(r)).filter(Boolean);
+      if (zones.length > 0) return zones;
+    }
     const zone = normalizeZoneName(raw);
     if (zone) return zone;
   }
   const suit = asset?.suitability ?? 50;
   return expectedZoneFor(suit, profileKey);
+}
+
+/** Retorna true se a zona atual está entre as zonas esperadas (uma ou várias). */
+export function isExpectedZone(actualZone, expected) {
+  if (Array.isArray(expected)) return expected.includes(actualZone);
+  return actualZone === expected;
+}
+
+/** Formata zona(is) para exibição (ex.: "MEIO" ou "MEIO ou ATQ"). zoneMap: { defense: "DEF", midfield: "MEIO", attack: "ATQ" } */
+export function formatExpectedZoneLabel(expected, zoneMap = { defense: "DEF", midfield: "MEIO", attack: "ATQ" }) {
+  if (Array.isArray(expected)) {
+    return expected.map((z) => zoneMap[z] || z).join(" ou ");
+  }
+  return zoneMap[expected] || expected;
 }
 
 export function zoneFlags(expectedZone) {

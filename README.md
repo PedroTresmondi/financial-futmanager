@@ -1,6 +1,5 @@
 # Rio Bravo Financial Futmanager (Craques da Carteira)
 
-<img src="./public/assets/logos/game-logo.png" alt="Logo" width="48" height="48" valign="middle"> Rio Bravo Financial Futmanager (Craques da Carteira)
 Jogo interativo de perfil de investidor em formato “futebol + carteira” para eventos. O jogador monta um time de ativos e concorre ao ranking do dia e a brindes.
 
 ## Pré-requisitos
@@ -42,12 +41,34 @@ Jogo interativo de perfil de investidor em formato “futebol + carteira” para
 
 3. Acesse `http://localhost:3000` (ou a porta definida em `PORT`).
 
+## Alternando backend (server.js) vs sessionStorage (Vercel)
+
+O app pode rodar de duas formas:
+
+- **Deploy estático (Vercel, etc.)** – Sem variável de ambiente: a API usa **sessionStorage** no navegador (dados por aba, sem servidor).
+- **Com backend Express** – Defina no **front** (ex.: `.env.local`):
+  - `VITE_USE_SERVER=true` – o `api.js` passa a usar `fetch` para o `server.js`.
+  - `VITE_ADMIN_KEY=<chave>` – mesma chave do servidor, para rotas de admin.
+
+Para voltar a usar o backend como antes:
+
+1. Crie ou edite `.env.local` na raiz do projeto:
+   ```bash
+   VITE_USE_SERVER=true
+   VITE_ADMIN_KEY=sua_chave_se_quiser
+   ```
+2. Reinicie o dev: `npm run dev` (Vite + server). O front continuará usando a API em `http://localhost:3000` via proxy.
+
+Para deploy na Vercel, **não** defina `VITE_USE_SERVER` no projeto (ou deixe em branco); o build usará sessionStorage.
+
 ## Variáveis de ambiente
 
-| Variável       | Descrição |
-|----------------|-----------|
-| `PORT`         | Porta do servidor (padrão: 3000). |
-| `ADMIN_API_KEY`| (Opcional) Chave para proteger rotas de admin. Se definida, exige header `X-Admin-Key` ou `Authorization: Bearer <chave>` em POST `/api/config` e em POST/PATCH/DELETE `/api/prizes`. |
+| Variável         | Onde       | Descrição |
+|------------------|------------|-----------|
+| `PORT`           | Servidor   | Porta do servidor (padrão: 3000). |
+| `ADMIN_API_KEY`  | Servidor   | (Opcional) Chave para proteger rotas de admin. |
+| `VITE_USE_SERVER`| Front (build) | `true` = usar API do server.js; ausente/false = sessionStorage. |
+| `VITE_ADMIN_KEY` | Front (build) | Chave enviada no header nas rotas de admin (quando `VITE_USE_SERVER=true`). |
 
 ## API (resumo)
 

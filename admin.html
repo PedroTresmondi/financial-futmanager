@@ -7,13 +7,16 @@
     <title>Admin - Financial Football</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;700&display=swap" rel="stylesheet">
-    <script defer src="/src/admin.js"></script>
+    <script type="module" defer src="/src/admin.js"></script>
 </head>
 
 <body class="bg-slate-900 text-slate-100 min-h-screen p-8 font-sans">
 
-    <header class="max-w-4xl mx-auto mb-8 flex justify-between items-center">
-        <h1 class="text-3xl font-bold text-emerald-500 italic">ADMIN DASHBOARD</h1>
+    <header class="max-w-4xl mx-auto mb-8 flex flex-wrap justify-between items-center gap-4">
+        <h1 class="text-3xl font-bold text-emerald-500 italic">ADMIN</h1>
+        <a href="/dashboard.html" class="bg-violet-600 hover:bg-violet-500 text-white font-bold py-2 px-5 rounded-lg transition text-sm">
+            Ir para Dashboard →
+        </a>
     </header>
 
     <main class="max-w-4xl mx-auto space-y-8">
@@ -75,8 +78,14 @@
                         class="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-center font-mono font-bold text-white focus:border-emerald-500 focus:outline-none"
                         placeholder="38">
                 </div>
+                <div>
+                    <label for="config-points-per-wrong" class="block text-xs text-slate-400 uppercase tracking-widest mb-1">Pontos subtraídos por carta errada</label>
+                    <input type="number" id="config-points-per-wrong" min="0" max="500" step="1"
+                        class="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-center font-mono font-bold text-white focus:border-emerald-500 focus:outline-none"
+                        placeholder="0">
+                </div>
             </div>
-            <p class="text-slate-500 text-xs mb-4">Ex.: 6 cartas certas × 3 pts = 18 pts; se a formação (Defesa/Meio/Ataque) for a ideal do perfil, +20 pts. Máx. 38 pts.</p>
+            <p class="text-slate-500 text-xs mb-4">Ex.: 6 cartas certas × 3 pts = 18 pts; se a formação for a ideal, +20 pts. Cada carta na posição errada subtrai o valor acima (0 = sem penalidade). Máx. da partida conforme campo acima.</p>
             <button type="button" id="save-scoring-btn" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-6 rounded-lg uppercase text-sm shadow transition-colors">
                 Salvar regras de pontuação
             </button>

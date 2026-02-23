@@ -11,16 +11,12 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Build do Vite gera em "dist"; em dev o Vite serve o front, então o servidor só precisa da API
-// Build do Vite gera em "dist"; em dev o Vite serve o front, então o servidor só precisa da API
-
 const PUBLIC_DIR = path.join(__dirname, "dist");
 const DATA_DIR = path.join(__dirname, "data");
 const STOCK_FILE = path.join(DATA_DIR, "stock.json");
 const GAMES_FILE = path.join(DATA_DIR, "games.json");
 const CONFIG_FILE = path.join(DATA_DIR, "config.json");
 const MANUAL_STOCK_FILE = path.join(DATA_DIR, "manual-stock.json");
-
-
 
 const ADMIN_API_KEY = process.env.ADMIN_API_KEY || "";
 
@@ -110,7 +106,8 @@ function pickAward(prizes, points) {
 const DEFAULT_SCORING = {
     pointsPerCorrectCard: 3,
     bonusIdealLineup: 20,
-    maxScore: 38
+    maxScore: 38,
+    pointsPerWrongCard: 0
 };
 
 async function readConfig() {
@@ -198,6 +195,16 @@ async function writeManualStock(data) {
     return out;
 }
 
+app.get("/api/admin/games", requireAdmin, async (_req, res) => {
+    try {
+        const games = await readGames();
+        res.json({ games, total: games.length });
+    } catch (err) {
+        console.error("GET /api/admin/games", err);
+        res.status(500).json({ ok: false, error: "Erro ao carregar partidas" });
+    }
+});
+
 app.get("/api/config", async (_req, res) => {
     try {
         const config = await readConfig();
@@ -217,7 +224,8 @@ app.post("/api/config", requireAdmin, async (req, res) => {
             stockWithGame: req.body.stockWithGame !== undefined ? !!req.body.stockWithGame : current.stockWithGame,
             pointsPerCorrectCard: req.body.pointsPerCorrectCard !== undefined ? Math.max(0, toInt(req.body.pointsPerCorrectCard, 3)) : current.pointsPerCorrectCard,
             bonusIdealLineup: req.body.bonusIdealLineup !== undefined ? Math.max(0, toInt(req.body.bonusIdealLineup, 20)) : current.bonusIdealLineup,
-            maxScore: req.body.maxScore !== undefined ? Math.max(1, toInt(req.body.maxScore, 38)) : current.maxScore
+            maxScore: req.body.maxScore !== undefined ? Math.max(1, toInt(req.body.maxScore, 38)) : current.maxScore,
+            pointsPerWrongCard: req.body.pointsPerWrongCard !== undefined ? Math.max(0, toInt(req.body.pointsPerWrongCard, 0)) : (current.pointsPerWrongCard ?? 0)
         };
         await writeConfig(newConfig);
         res.json({ ok: true, config: newConfig });
