@@ -1300,7 +1300,7 @@ body.game-mode {
 #game-root .premium-card[data-category="Ações e Multiestratégia"] .game-card-base .card-name,
 #game-root .field-card[data-category="Ações e Multiestratégia"] .game-card-base .card-name,
 .drag-ghost[data-category="Ações e Multiestratégia"] .game-card-base .card-name {
-  color: #4A3C5C !important;
+  color: #ffffff !important;
 }
 
 /* Legibilidade: texto escuro na carta amarela (Imobiliário) */
